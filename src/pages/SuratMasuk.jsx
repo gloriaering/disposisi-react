@@ -87,6 +87,14 @@ function SuratMasuk() {
       return "-";
     }
 
+    // Jika tanggal sudah dalam format DD-MM-YYYY
+    if (
+      typeof tanggal === "string" &&
+      /^\d{2}-\d{2}-\d{4}$/.test(tanggal)
+    ) {
+      return tanggal;
+    }
+
     const date = new Date(tanggal);
 
     if (Number.isNaN(date.getTime())) {
@@ -104,7 +112,7 @@ function SuratMasuk() {
     const tahun =
       date.getFullYear();
 
-    return `${hari}/${bulan}/${tahun}`;
+    return `${hari}-${bulan}-${tahun}`;
   };
 
   /* =========================================================

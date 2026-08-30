@@ -1,0 +1,950 @@
+/* =========================================================
+   GLOBAL
+========================================================= */
+
+* {
+  box-sizing: border-box;
+}
+
+.tambah-page {
+  min-height: 100vh;
+  background: #edf3f8;
+  color: #17344e;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+
+/* =========================================================
+   SIDEBAR
+========================================================= */
+
+.tambah-sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 245px;
+  height: 100vh;
+  padding: 30px 0;
+
+  background:
+    radial-gradient(
+      circle at 15% 5%,
+      rgba(69, 150, 255, 0.18),
+      transparent 25%
+    ),
+    linear-gradient(
+      160deg,
+      #081b33 0%,
+      #0b2d52 48%,
+      #0c426b 100%
+    );
+
+  color: #ffffff;
+  z-index: 100;
+  overflow: hidden;
+
+  box-shadow:
+    8px 0 35px rgba(4, 25, 48, 0.16);
+}
+
+.tambah-sidebar::before {
+  content: "";
+  position: absolute;
+
+  width: 380px;
+  height: 380px;
+
+  right: -240px;
+  bottom: -100px;
+
+  border-radius: 50%;
+  border: 1px solid rgba(111, 190, 255, 0.13);
+
+  box-shadow:
+    0 0 80px rgba(58, 157, 255, 0.08);
+
+  pointer-events: none;
+}
+
+.tambah-sidebar::after {
+  content: "";
+  position: absolute;
+
+  width: 250px;
+  height: 250px;
+
+  left: -160px;
+  bottom: 90px;
+
+  border-radius: 50%;
+  background: rgba(75, 165, 255, 0.045);
+
+  pointer-events: none;
+}
+
+
+/* =========================================================
+   BRAND
+========================================================= */
+
+.tambah-brand {
+  position: relative;
+  z-index: 2;
+
+  display: flex;
+  align-items: center;
+
+  gap: 13px;
+
+  padding: 0 20px;
+  margin-bottom: 58px;
+}
+
+.tambah-brand-logo {
+  width: 51px;
+  height: 51px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tambah-brand-logo img {
+  width: 51px;
+  height: 51px;
+
+  object-fit: contain;
+
+  filter:
+    drop-shadow(
+      0 4px 8px rgba(0, 0, 0, 0.18)
+    );
+}
+
+.tambah-brand-text h2 {
+  margin: 0;
+
+  color: #ffffff;
+
+  font-size: 14px;
+  line-height: 1.25;
+  font-weight: 700;
+
+  letter-spacing: 0.3px;
+}
+
+.tambah-brand-text span {
+  display: block;
+
+  margin-top: 5px;
+
+  color: rgba(220, 238, 255, 0.62);
+
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+
+/* =========================================================
+   MENU
+========================================================= */
+
+.tambah-menu {
+  position: relative;
+  z-index: 2;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 8px;
+}
+
+.tambah-menu-title {
+  margin: 0 0 9px 21px;
+
+  color: rgba(197, 224, 248, 0.48);
+
+  font-size: 9px;
+  font-weight: 700;
+
+  letter-spacing: 1.5px;
+}
+
+.tambah-menu-item {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+
+  gap: 14px;
+
+  height: 48px;
+
+  padding: 0 19px;
+  margin-right: 15px;
+
+  border-radius: 0 13px 13px 0;
+
+  color: rgba(226, 240, 252, 0.72);
+
+  text-decoration: none;
+
+  font-size: 13px;
+  font-weight: 500;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    transform 0.22s ease;
+}
+
+.tambah-menu-item span {
+  width: 18px;
+
+  flex-shrink: 0;
+
+  text-align: center;
+
+  font-size: 17px;
+
+  color: rgba(203, 228, 249, 0.65);
+}
+
+.tambah-menu-item:hover {
+  background: rgba(91, 176, 255, 0.09);
+
+  color: #ffffff;
+
+  transform: translateX(3px);
+}
+
+.tambah-menu-item.active {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(73, 159, 238, 0.22),
+      rgba(73, 159, 238, 0.07)
+    );
+
+  color: #ffffff;
+
+  font-weight: 600;
+}
+
+.tambah-menu-item.active span {
+  color: #68c4ff;
+}
+
+.tambah-menu-item.active::before {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  top: 8px;
+
+  width: 4px;
+  height: 32px;
+
+  border-radius: 0 5px 5px 0;
+
+  background: #58baff;
+
+  box-shadow:
+    0 0 12px rgba(88, 186, 255, 0.55);
+}
+
+
+/* =========================================================
+   MAIN
+========================================================= */
+
+.tambah-main {
+  position: relative;
+
+  margin-left: 245px;
+
+  min-height: 100vh;
+
+  background:
+    radial-gradient(
+      circle at 90% 0%,
+      rgba(65, 150, 255, 0.13),
+      transparent 24%
+    ),
+    radial-gradient(
+      circle at 15% 90%,
+      rgba(76, 173, 216, 0.07),
+      transparent 25%
+    ),
+    linear-gradient(
+      135deg,
+      #f5f8fc 0%,
+      #edf3f8 55%,
+      #e8f1f7 100%
+    );
+
+  overflow: hidden;
+}
+
+
+/* =========================================================
+   TOPBAR
+========================================================= */
+
+.tambah-topbar {
+  position: relative;
+  z-index: 5;
+
+  height: 82px;
+
+  display: flex;
+  align-items: center;
+
+  padding: 0 34px;
+
+  background: rgba(255, 255, 255, 0.88);
+
+  backdrop-filter: blur(14px);
+
+  border-bottom:
+    1px solid rgba(207, 220, 232, 0.75);
+
+  box-shadow:
+    0 5px 25px rgba(15, 48, 77, 0.045);
+}
+
+.tambah-topbar-left h1 {
+  margin: 0;
+
+  color: #102f4d;
+
+  font-size: 23px;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.tambah-topbar-left p {
+  margin: 6px 0 0;
+
+  color: #8292a1;
+
+  font-size: 12px;
+}
+
+
+/* =========================================================
+   CONTENT
+========================================================= */
+
+.tambah-content {
+  position: relative;
+  z-index: 2;
+
+  padding: 32px;
+}
+
+
+/* =========================================================
+   PAGE HEADER
+========================================================= */
+
+.tambah-page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+
+  gap: 25px;
+
+  margin-bottom: 25px;
+}
+
+.tambah-page-title > span {
+  display: block;
+
+  margin-bottom: 8px;
+
+  color: #6e8ba1;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  letter-spacing: 1.5px;
+}
+
+.tambah-page-title h2 {
+  margin: 0;
+
+  color: #123b5b;
+
+  font-size: 27px;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.tambah-page-title p {
+  margin: 8px 0 0;
+
+  color: #7d8e9d;
+
+  font-size: 12px;
+}
+
+
+/* =========================================================
+   BACK BUTTON
+========================================================= */
+
+.tambah-btn-back {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  height: 44px;
+
+  padding: 0 18px;
+
+  border-radius: 11px;
+
+  background: #ffffff;
+
+  border: 1px solid #d6e3eb;
+
+  color: #3d708a;
+
+  text-decoration: none;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  box-shadow:
+    0 6px 16px rgba(24, 66, 96, 0.06);
+
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease;
+}
+
+.tambah-btn-back:hover {
+  transform: translateY(-2px);
+
+  background: #f5fafc;
+}
+
+
+/* =========================================================
+   ERROR
+========================================================= */
+
+.tambah-error {
+  margin-bottom: 20px;
+
+  padding: 13px 16px;
+
+  border: 1px solid #fecdd3;
+
+  border-radius: 11px;
+
+  background: #fff1f2;
+
+  color: #be123c;
+
+  font-size: 12px;
+}
+
+
+/* =========================================================
+   FORM CARD
+========================================================= */
+
+.tambah-form-card {
+  width: 100%;
+
+  overflow: hidden;
+
+  border:
+    1px solid rgba(207, 222, 233, 0.9);
+
+  border-radius: 19px;
+
+  background:
+    rgba(255, 255, 255, 0.95);
+
+  box-shadow:
+    0 10px 30px
+    rgba(24, 66, 96, 0.06);
+}
+
+
+/* =========================================================
+   FORM TOP
+========================================================= */
+
+.tambah-form-top {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 19px 22px;
+
+  border-bottom:
+    1px solid #e5edf3;
+
+  background:
+    rgba(248, 251, 253, 0.88);
+}
+
+.tambah-form-top h3 {
+  margin: 0;
+
+  color: #294c63;
+
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.tambah-form-top p {
+  margin: 5px 0 0;
+
+  color: #8b9ba8;
+
+  font-size: 10px;
+}
+
+
+/* =========================================================
+   FORM GRID
+========================================================= */
+
+.tambah-form-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 20px 22px;
+
+  padding: 24px 22px 8px;
+}
+
+
+/* =========================================================
+   FORM GROUP
+========================================================= */
+
+.tambah-form-group {
+  display: flex;
+
+  flex-direction: column;
+
+  min-width: 0;
+}
+
+.tambah-form-group label {
+  margin-bottom: 8px;
+
+  color: #38566a;
+
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.tambah-form-group label b {
+  color: #d44d5c;
+}
+
+.tambah-form-group input,
+.tambah-form-group textarea {
+  width: 100%;
+
+  border:
+    1px solid #d6e2ea;
+
+  border-radius: 9px;
+
+  background: #ffffff;
+
+  color: #304e62;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 12px;
+
+  outline: none;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.tambah-form-group input {
+  height: 42px;
+
+  padding: 0 12px;
+}
+
+.tambah-form-group textarea {
+  min-height: 105px;
+
+  padding: 11px 12px;
+
+  resize: vertical;
+
+  line-height: 1.5;
+}
+
+.tambah-form-group input::placeholder,
+.tambah-form-group textarea::placeholder {
+  color: #a1afb9;
+}
+
+.tambah-form-group input:focus,
+.tambah-form-group textarea:focus {
+  border-color: #68a9c7;
+
+  background: #fbfdff;
+
+  box-shadow:
+    0 0 0 3px rgba(104, 169, 199, 0.12);
+}
+
+.tambah-form-group small {
+  margin-top: 6px;
+
+  color: #91a0ab;
+
+  font-size: 9px;
+
+  line-height: 1.4;
+}
+
+
+/* =========================================================
+   FULL WIDTH
+========================================================= */
+
+.tambah-full {
+  margin: 0 22px;
+
+  padding-top: 13px;
+}
+
+
+/* =========================================================
+   DATE / TIME
+========================================================= */
+
+.tambah-form-group input[type="date"],
+.tambah-form-group input[type="time"] {
+  color: #405d70;
+
+  cursor: pointer;
+}
+
+
+/* =========================================================
+   FORM ACTIONS
+========================================================= */
+
+.tambah-form-actions {
+  display: flex;
+
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 10px;
+
+  padding: 20px 22px 22px;
+
+  margin-top: 8px;
+
+  border-top:
+    1px solid #edf1f4;
+
+  background:
+    rgba(250, 252, 253, 0.8);
+}
+
+
+/* =========================================================
+   CANCEL BUTTON
+========================================================= */
+
+.tambah-btn-cancel {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  height: 40px;
+
+  padding: 0 18px;
+
+  border-radius: 9px;
+
+  border:
+    1px solid #d6e2ea;
+
+  background: #ffffff;
+
+  color: #607989;
+
+  text-decoration: none;
+
+  font-size: 11px;
+  font-weight: 600;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.tambah-btn-cancel:hover {
+  background: #f3f8fb;
+
+  transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   SAVE BUTTON
+========================================================= */
+
+.tambah-btn-save {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  min-width: 135px;
+
+  height: 40px;
+
+  padding: 0 18px;
+
+  border: none;
+
+  border-radius: 9px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #245b7a,
+      #327d9e
+    );
+
+  color: #ffffff;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 6px 15px rgba(36, 91, 122, 0.18);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.tambah-btn-save:hover:not(:disabled) {
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 9px 20px rgba(36, 91, 122, 0.24);
+}
+
+.tambah-btn-save:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.tambah-btn-save:disabled {
+  opacity: 0.65;
+
+  cursor: not-allowed;
+}
+
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 1000px) {
+
+  .tambah-sidebar {
+    width: 215px;
+  }
+
+  .tambah-main {
+    margin-left: 215px;
+  }
+
+  .tambah-content {
+    padding: 25px;
+  }
+
+  .tambah-page-header {
+    align-items: flex-start;
+
+    flex-direction: column;
+  }
+
+  .tambah-btn-back {
+    align-self: flex-end;
+  }
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 650px) {
+
+  .tambah-sidebar {
+    position: relative;
+
+    width: 100%;
+    height: auto;
+
+    min-height: auto;
+
+    padding: 20px 0;
+  }
+
+  .tambah-brand {
+    margin-bottom: 25px;
+  }
+
+  .tambah-menu-item {
+    margin-left: 12px;
+    margin-right: 12px;
+
+    border-radius: 9px;
+  }
+
+  .tambah-menu-item.active::before {
+    display: none;
+  }
+
+  .tambah-main {
+    margin-left: 0;
+  }
+
+  .tambah-topbar {
+    height: auto;
+
+    min-height: 75px;
+
+    padding: 16px 20px;
+  }
+
+  .tambah-topbar-left h1 {
+    font-size: 19px;
+  }
+
+  .tambah-topbar-left p {
+    font-size: 11px;
+  }
+
+  .tambah-content {
+    padding: 20px;
+  }
+
+  .tambah-page-title h2 {
+    font-size: 23px;
+  }
+
+  .tambah-page-title p {
+    font-size: 11px;
+  }
+
+  .tambah-btn-back {
+    width: 100%;
+
+    align-self: stretch;
+  }
+
+  .tambah-form-card {
+    border-radius: 15px;
+  }
+
+  .tambah-form-grid {
+    grid-template-columns: 1fr;
+
+    gap: 18px;
+
+    padding: 20px 18px 5px;
+  }
+
+  .tambah-full {
+    margin: 0 18px;
+
+    padding-top: 15px;
+  }
+
+  .tambah-form-actions {
+    padding: 18px;
+
+    flex-direction: column-reverse;
+
+    align-items: stretch;
+  }
+
+  .tambah-btn-cancel,
+  .tambah-btn-save {
+    width: 100%;
+  }
+}
+
+
+/* =========================================================
+   VERY SMALL
+========================================================= */
+
+@media (max-width: 400px) {
+
+  .tambah-content {
+    padding: 15px;
+  }
+
+  .tambah-topbar {
+    padding: 14px 15px;
+  }
+
+  .tambah-topbar-left h1 {
+    font-size: 17px;
+  }
+
+  .tambah-page-title h2 {
+    font-size: 21px;
+  }
+
+  .tambah-form-top {
+    padding: 17px;
+  }
+
+  .tambah-form-grid {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+
+  .tambah-full {
+    margin-left: 15px;
+    margin-right: 15px;
+  }
+
+  .tambah-form-actions {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+}

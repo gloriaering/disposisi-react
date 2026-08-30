@@ -4,7 +4,12 @@ import "../assets/css/CetakSurat.css";
 import logoSulut from "../assets/images/logo-sulut.png";
 
 /* =========================================================
-   FORMAT TANGGAL
+   FORMAT TANGGAL LOKAL
+   Bisa membaca:
+   - YYYY-MM-DD
+   - YYYY-MM-DDTHH:mm:ss
+   - Date dari MongoDB
+   - format tanggal lainnya
 ========================================================= */
 
 function parseDateLocal(value) {
@@ -12,13 +17,18 @@ function parseDateLocal(value) {
 
   const text = String(value).trim();
 
+  // Format YYYY-MM-DD
   const match = text.match(/^(\d{4})-(\d{2})-(\d{2})/);
 
   if (match) {
+    const tahun = Number(match[1]);
+    const bulan = Number(match[2]);
+    const tanggal = Number(match[3]);
+
     const date = new Date(
-      Number(match[1]),
-      Number(match[2]) - 1,
-      Number(match[3])
+      tahun,
+      bulan - 1,
+      tanggal
     );
 
     if (!Number.isNaN(date.getTime())) {
@@ -26,37 +36,62 @@ function parseDateLocal(value) {
     }
   }
 
+  // Coba format Date biasa
   const date = new Date(value);
 
-  return Number.isNaN(date.getTime()) ? null : date;
+  if (!Number.isNaN(date.getTime())) {
+    return date;
+  }
+
+  return null;
 }
 
 /* =========================================================
-   TANGGAL SURAT
+   FORMAT TANGGAL SURAT
+   Contoh:
+   2026-08-28
+   menjadi:
+   28/08/2026
 ========================================================= */
 
 function formatTanggal(value) {
+  if (!value) return "-";
+
   const date = parseDateLocal(value);
 
-  if (!date) return "";
+  if (!date) {
+    return String(value);
+  }
 
-  return `${String(date.getDate()).padStart(
-    2,
-    "0"
-  )}/${String(date.getMonth() + 1).padStart(
-    2,
-    "0"
-  )}/${date.getFullYear()}`;
+  const tanggal = String(
+    date.getDate()
+  ).padStart(2, "0");
+
+  const bulan = String(
+    date.getMonth() + 1
+  ).padStart(2, "0");
+
+  const tahun = date.getFullYear();
+
+  return `${tanggal}/${bulan}/${tahun}`;
 }
 
 /* =========================================================
-   TANGGAL DITERIMA
+   FORMAT TANGGAL DITERIMA
+   Contoh:
+   2026-08-28
+   menjadi:
+   28 Agustus -
 ========================================================= */
 
 function formatTanggalDiterima(value) {
+  if (!value) return "-";
+
   const date = parseDateLocal(value);
 
-  if (!date) return "";
+  if (!date) {
+    return String(value);
+  }
 
   const namaBulan = [
     "Januari",
@@ -73,17 +108,20 @@ function formatTanggalDiterima(value) {
     "Desember",
   ];
 
-  return `${String(date.getDate()).padStart(
-    2,
-    "0"
-  )} ${namaBulan[date.getMonth()]} -`;
+  const tanggal = String(
+    date.getDate()
+  ).padStart(2, "0");
+
+  return `${tanggal} ${namaBulan[date.getMonth()]} -`;
 }
 
 /* =========================================================
-   TAHUN
+   FORMAT TAHUN
 ========================================================= */
 
 function formatTahun(value) {
+  if (!value) return "";
+
   const date = parseDateLocal(value);
 
   if (!date) return "";
@@ -92,17 +130,25 @@ function formatTahun(value) {
 }
 
 /* =========================================================
-   JAM
+   FORMAT JAM
+   Contoh:
+   14:30
+   menjadi:
+   14.30
 ========================================================= */
 
 function formatJam(value) {
   if (!value) return "";
 
-  const match = String(value)
-    .trim()
-    .match(/^(\d{1,2}):(\d{2})/);
+  const text = String(value).trim();
 
-  if (!match) return value;
+  const match = text.match(
+    /^(\d{1,2}):(\d{2})/
+  );
+
+  if (!match) {
+    return text;
+  }
 
   return `${String(match[1]).padStart(
     2,
@@ -111,29 +157,23 @@ function formatJam(value) {
 }
 
 /* =========================================================
-   ITEM PILIHAN DISPOSISI
-
-   PENTING:
-   Kotak selalu kosong karena akan dicentang
-   secara manual oleh Kadis pada hasil cetak.
+   PILIHAN DISPOSISI
 ========================================================= */
 
 function Pilihan({ text }) {
   return (
     <div className="pilihan">
-
       <span className="checkbox"></span>
 
       <span className="pilihan-text">
         {text}
       </span>
-
     </div>
   );
 }
 
 /* =========================================================
-   DAFTAR DITERUSKAN KEPADA
+   DITERUSKAN KEPADA
 ========================================================= */
 
 const diteruskanList = [
@@ -147,7 +187,7 @@ const diteruskanList = [
 ];
 
 /* =========================================================
-   DAFTAR DENGAN HORMAT HARAP
+   DENGAN HORMAT HARAP
 ========================================================= */
 
 const hormatList = [
@@ -164,7 +204,7 @@ const hormatList = [
 ];
 
 /* =========================================================
-   COMPONENT CETAK SURAT
+   COMPONENT
 ========================================================= */
 
 export default function CetakSurat() {
@@ -175,7 +215,7 @@ export default function CetakSurat() {
   const [error, setError] = useState("");
 
   /* =======================================================
-     AMBIL DATA SURAT DARI MONGODB
+     AMBIL DATA SURAT
   ======================================================= */
 
   useEffect(() => {
@@ -202,6 +242,26 @@ export default function CetakSurat() {
             "Data surat tidak tersedia."
           );
         }
+
+        console.log(
+          "DATA SURAT DARI DATABASE:",
+          result.data
+        );
+
+        console.log(
+          "TANGGAL SURAT:",
+          result.data.tanggal_surat
+        );
+
+        console.log(
+          "TANGGAL DITERIMA:",
+          result.data.tanggal_diterima
+        );
+
+        console.log(
+          "JAM DITERIMA:",
+          result.data.jam_diterima
+        );
 
         setSurat(result.data);
 
@@ -235,7 +295,7 @@ export default function CetakSurat() {
   }, [id]);
 
   /* =======================================================
-     FUNGSI CETAK
+     CETAK
   ======================================================= */
 
   const handlePrint = () => {
@@ -249,9 +309,7 @@ export default function CetakSurat() {
   if (loading) {
     return (
       <div className="not-found">
-
         <div className="not-found-box">
-
           <h2>
             Memuat data surat...
           </h2>
@@ -260,21 +318,18 @@ export default function CetakSurat() {
             Sedang mengambil data surat
             dari database.
           </p>
-
         </div>
-
       </div>
     );
   }
 
   /* =======================================================
-     JIKA SURAT TIDAK DITEMUKAN
+     DATA TIDAK ADA
   ======================================================= */
 
   if (!surat) {
     return (
       <div className="not-found">
-
         <div className="not-found-box">
 
           <h2>
@@ -294,20 +349,48 @@ export default function CetakSurat() {
           </Link>
 
         </div>
-
       </div>
     );
   }
 
   /* =======================================================
-     DATA TANGGAL DAN JAM
+     DATA TANGGAL & JAM
   ======================================================= */
 
+  const tanggalSurat =
+    surat.tanggal_surat;
+
   const tanggalDiterima =
-    surat.tanggal_diterima || "";
+    surat.tanggal_diterima;
 
   const jamDiterima =
-    surat.jam_diterima || "";
+    surat.jam_diterima;
+
+  /* =======================================================
+     DEBUG
+  ======================================================= */
+
+  console.log(
+    "Tanggal Surat:",
+    tanggalSurat
+  );
+
+  console.log(
+    "Hasil Format Tanggal Surat:",
+    formatTanggal(tanggalSurat)
+  );
+
+  console.log(
+    "Tanggal Diterima:",
+    tanggalDiterima
+  );
+
+  console.log(
+    "Hasil Format Tanggal Diterima:",
+    formatTanggalDiterima(
+      tanggalDiterima
+    )
+  );
 
   /* =======================================================
      TAHUN TANDA TANGAN
@@ -357,15 +440,11 @@ export default function CetakSurat() {
 
         <header className="kop">
 
-          {/* LOGO */}
-
           <img
             src={logoSulut}
             className="logo"
             alt="Logo Pemerintah Provinsi Sulawesi Utara"
           />
-
-          {/* TEKS KOP */}
 
           <div className="kop-text">
 
@@ -446,7 +525,7 @@ export default function CetakSurat() {
                 </span>
 
                 <span className="info-value">
-                  {surat.asal_surat || ""}
+                  {surat.asal_surat || "-"}
                 </span>
 
               </div>
@@ -464,7 +543,7 @@ export default function CetakSurat() {
                 </span>
 
                 <span className="info-value">
-                  {surat.nomor_surat || ""}
+                  {surat.nomor_surat || "-"}
                 </span>
 
               </div>
@@ -483,7 +562,7 @@ export default function CetakSurat() {
 
                 <span className="info-value">
                   {formatTanggal(
-                    surat.tanggal_surat
+                    tanggalSurat
                   )}
                 </span>
 
@@ -552,7 +631,7 @@ export default function CetakSurat() {
                 </span>
 
                 <span className="info-value">
-                  {surat.nomor_agenda || ""}
+                  {surat.nomor_agenda || "-"}
                 </span>
 
               </div>
@@ -591,12 +670,7 @@ export default function CetakSurat() {
 
               </div>
 
-              {/* =================================================
-                  SIFAT
-
-                  KOTAK SENGAJA DIKOSONGKAN.
-                  AKAN DICENTANG MANUAL PADA HASIL CETAK.
-              ================================================== */}
+              {/* SIFAT */}
 
               <div className="sifat-row">
 
@@ -649,7 +723,7 @@ export default function CetakSurat() {
 
           {/* =================================================
               HAL
-          ================================================== */}
+          ================================================= */}
 
           <div className="hal-box">
 
@@ -666,7 +740,7 @@ export default function CetakSurat() {
             </div>
 
             <div className="hal-value">
-              {surat.perihal || ""}
+              {surat.perihal || "-"}
             </div>
 
           </div>
@@ -691,14 +765,9 @@ export default function CetakSurat() {
 
         {/* =================================================
             ISI DISPOSISI
-
-            SEMUA KOTAK KOSONG.
-            TIDAK MENGAMBIL DATA DARI DATABASE.
         ================================================= */}
 
         <div className="disposisi-body">
-
-          {/* KOLOM KIRI */}
 
           <div className="disposisi-kiri">
 
@@ -712,8 +781,6 @@ export default function CetakSurat() {
             )}
 
           </div>
-
-          {/* KOLOM KANAN */}
 
           <div className="disposisi-kanan">
 
@@ -732,7 +799,7 @@ export default function CetakSurat() {
 
         {/* =================================================
             CATATAN + TANDA TANGAN
-        ================================================== */}
+        ================================================= */}
 
         <div className="bottom">
 
