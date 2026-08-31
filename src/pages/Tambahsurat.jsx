@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import logoSulut from "../assets/images/logo-sulut.png";
 import "../assets/css/Tambahsurat.css";
+import "../assets/css/TambahSurat.css";
 
 function TambahSurat() {
   const navigate = useNavigate();
