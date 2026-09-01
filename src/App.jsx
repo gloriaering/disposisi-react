@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Dashboard from "./pages/Dashboard";
 import SuratMasuk from "./pages/SuratMasuk";
-import TambahSurat from "./pages/TambahSurat";
+import TambahSurat from "./pages/Tambahsurat";
 import DetailSurat from "./pages/DetailSurat";
 import EditSurat from "./pages/EditSurat";
 import CetakSurat from "./pages/CetakSurat";
