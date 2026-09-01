@@ -1,42 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import logoSulut from "../assets/images/logo-sulut.png";
-
-/* =========================================
-   WAKTU INDONESIA - WITA
-========================================= */
-
-function getTanggalIndonesia() {
-  const sekarang = new Date();
-
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Makassar",
-  }).format(sekarang);
-}
-
-function getJamIndonesia() {
-  const sekarang = new Date();
-
-  return new Intl.DateTimeFormat("en-GB", {
-    timeZone: "Asia/Makassar",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false,
-  }).format(sekarang);
-}
-
-/* =========================================
-   EDIT SURAT
-========================================= */
+import "../assets/css/TambahSurat.css";
 
 function EditSurat() {
   const { id } = useParams();
   const navigate = useNavigate();
-
-  /* =========================================
-     FORM
-  ========================================= */
 
   const [form, setForm] = useState({
     nomor_surat: "",
@@ -46,491 +15,1418 @@ function EditSurat() {
     tanggal_diterima: "",
     jam_diterima: "",
     perihal: "",
-
-    // Tetap disimpan agar tidak merusak struktur
-    // database/backend
     sifat_surat: "",
     diteruskan_kepada: [],
     dengan_hormat_harap: [],
     catatan: "",
   });
 
-  const [loading, setLoading] = useState(true);
+  const [arsipFile, setArsipFile] = useState(null);
+  const [arsipLama, setArsipLama] = useState(null);
+  const [previewBaru, setPreviewBaru] = useState("");
 
-  /* =========================================
-     AMBIL DATA SURAT
-  ========================================= */
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  // =========================================================
+  // AMBIL DATA SURAT
+  // =========================================================
 
   useEffect(() => {
     const getSurat = async () => {
       try {
+        setLoading(true);
+        setError("");
+
         const response = await fetch(
-          `http://localhost:5000/api/surat/${id}`
+          "http://localhost:5000/api/surat/" + id
         );
 
         const result = await response.json();
 
         if (!response.ok) {
           throw new Error(
-            result.message || "Gagal mengambil data surat"
+            result.message ||
+              "Gagal mengambil data surat."
           );
         }
 
         const surat = result.data || result;
 
         setForm({
-          nomor_surat: surat.nomor_surat || "",
-          asal_surat: surat.asal_surat || "",
-          tanggal_surat: surat.tanggal_surat || "",
-          nomor_agenda: surat.nomor_agenda || "",
-          tanggal_diterima:
-            surat.tanggal_diterima || getTanggalIndonesia(),
-          jam_diterima:
-            surat.jam_diterima || getJamIndonesia(),
-          perihal: surat.perihal || "",
+          nomor_surat:
+            surat.nomor_surat || "",
 
-          // Tetap ada di data agar backend aman
-          sifat_surat: surat.sifat_surat || "",
+          asal_surat:
+            surat.asal_surat || "",
+
+          tanggal_surat:
+            surat.tanggal_surat || "",
+
+          nomor_agenda:
+            surat.nomor_agenda || "",
+
+          tanggal_diterima:
+            surat.tanggal_diterima || "",
+
+          jam_diterima:
+            surat.jam_diterima || "",
+
+          perihal:
+            surat.perihal || "",
+
+          sifat_surat:
+            surat.sifat_surat || "",
+
           diteruskan_kepada:
-            surat.diteruskan_kepada || [],
+            Array.isArray(
+              surat.diteruskan_kepada
+            )
+              ? surat.diteruskan_kepada
+              : [],
+
           dengan_hormat_harap:
-            surat.dengan_hormat_harap || [],
-          catatan: surat.catatan || "",
+            Array.isArray(
+              surat.dengan_hormat_harap
+            )
+              ? surat.dengan_hormat_harap
+              : [],
+
+          catatan:
+            surat.catatan || "",
         });
-      } catch (error) {
+
+        // =====================================================
+        // ARSIP LAMA
+        // =====================================================
+
+        if (
+          surat.arsip_surat &&
+          typeof surat.arsip_surat === "object" &&
+          surat.arsip_surat.url_file
+        ) {
+          setArsipLama(
+            surat.arsip_surat
+          );
+        } else {
+          setArsipLama(null);
+        }
+
+      } catch (err) {
+
         console.error(
           "Gagal mengambil data surat:",
-          error
+          err
         );
 
-        alert(
-          "Gagal mengambil data surat. Pastikan backend sedang berjalan."
+        setError(
+          err.message ||
+            "Gagal mengambil data surat. Pastikan backend sedang berjalan."
         );
 
-        navigate("/surat");
       } finally {
+
         setLoading(false);
+
       }
     };
 
-    getSurat();
-  }, [id, navigate]);
+    if (id) {
+      getSurat();
+    }
 
-  /* =========================================
-     INPUT BIASA
-  ========================================= */
+  }, [id]);
+
+  // =========================================================
+  // BERSIHKAN PREVIEW FILE BARU
+  // =========================================================
+
+  useEffect(() => {
+
+    return () => {
+
+      if (previewBaru) {
+        URL.revokeObjectURL(
+          previewBaru
+        );
+      }
+
+    };
+
+  }, [previewBaru]);
+
+  // =========================================================
+  // HANDLE INPUT
+  // =========================================================
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+
+    const {
+      name,
+      value
+    } = e.target;
 
     setForm((prev) => ({
       ...prev,
       [name]: value,
     }));
+
   };
 
-  /* =========================================
-     SIMPAN PERUBAHAN
-  ========================================= */
+  // =========================================================
+  // HANDLE TANGGAL SURAT
+  // =========================================================
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleTanggalSuratChange = (e) => {
 
-    try {
-      const response = await fetch(
-        `http://localhost:5000/api/surat/${id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(form),
-        }
-      );
+    let value =
+      e.target.value.replace(/\D/g, "");
 
-      const result = await response.json();
+    if (value.length > 8) {
+      value = value.slice(0, 8);
+    }
 
-      if (!response.ok) {
-        throw new Error(
-          result.message || "Gagal memperbarui surat"
+    if (value.length > 2) {
+
+      value =
+        value.slice(0, 2) +
+        "-" +
+        value.slice(2);
+
+    }
+
+    if (value.length > 5) {
+
+      value =
+        value.slice(0, 5) +
+        "-" +
+        value.slice(5);
+
+    }
+
+    setForm((prev) => ({
+      ...prev,
+      tanggal_surat: value,
+    }));
+
+  };
+
+  // =========================================================
+  // CEK FILE YANG DIIZINKAN
+  // =========================================================
+
+  const fileDiizinkan = (file) => {
+
+    const tipeDiizinkan = [
+
+      "application/pdf",
+
+      "image/jpeg",
+
+      "image/jpg",
+
+      "image/png",
+
+      "image/webp",
+
+      "application/zip",
+
+      "application/x-zip-compressed",
+
+    ];
+
+    return tipeDiizinkan.includes(
+      file.type
+    );
+
+  };
+
+  // =========================================================
+  // PROSES FILE BARU
+  // =========================================================
+
+  const prosesArsip = (file, inputElement = null) => {
+
+    setError("");
+
+    if (!file) {
+
+      setArsipFile(null);
+
+      if (previewBaru) {
+
+        URL.revokeObjectURL(
+          previewBaru
         );
+
       }
 
-      alert("Data surat berhasil diperbarui.");
+      setPreviewBaru("");
 
-      navigate("/surat");
-    } catch (error) {
-      console.error(
-        "Gagal memperbarui surat:",
-        error
-      );
+      return;
 
-      alert(
-        "Gagal memperbarui surat. Pastikan backend sedang berjalan."
-      );
     }
+
+    // =======================================================
+    // CEK TIPE FILE
+    // =======================================================
+
+    if (!fileDiizinkan(file)) {
+
+      setError(
+        "Format file tidak didukung. Gunakan PDF, JPG, JPEG, PNG, WEBP, atau ZIP."
+      );
+
+      if (inputElement) {
+        inputElement.value = "";
+      }
+
+      setArsipFile(null);
+
+      setPreviewBaru("");
+
+      return;
+
+    }
+
+    // =======================================================
+    // CEK UKURAN FILE
+    // =======================================================
+
+    if (
+      file.size >
+      20 * 1024 * 1024
+    ) {
+
+      setError(
+        "Ukuran file maksimal 20 MB."
+      );
+
+      if (inputElement) {
+        inputElement.value = "";
+      }
+
+      setArsipFile(null);
+
+      setPreviewBaru("");
+
+      return;
+
+    }
+
+    // =======================================================
+    // HAPUS PREVIEW LAMA
+    // =======================================================
+
+    if (previewBaru) {
+
+      URL.revokeObjectURL(
+        previewBaru
+      );
+
+    }
+
+    // =======================================================
+    // BUAT PREVIEW BARU
+    // =======================================================
+
+    const url =
+      URL.createObjectURL(file);
+
+    setArsipFile(file);
+
+    setPreviewBaru(url);
+
   };
 
-  /* =========================================
-     LOADING
-  ========================================= */
+  // =========================================================
+  // HANDLE PILIH FILE
+  // =========================================================
+
+  const handleArsipChange = (e) => {
+
+    const file =
+      e.target.files?.[0] || null;
+
+    prosesArsip(
+      file,
+      e.target
+    );
+
+  };
+
+  // =========================================================
+  // HANDLE FOTO DARI KAMERA
+  // =========================================================
+
+  const handleCameraChange = (e) => {
+
+    const file =
+      e.target.files?.[0] || null;
+
+    prosesArsip(
+      file,
+      e.target
+    );
+
+  };
+
+  // =========================================================
+  // CEK JENIS FILE
+  // =========================================================
+
+  const adalahGambar = (file) => {
+
+    if (!file) return false;
+
+    return file.type.startsWith(
+      "image/"
+    );
+
+  };
+
+  const adalahPDF = (file) => {
+
+    if (!file) return false;
+
+    return file.type ===
+      "application/pdf";
+
+  };
+
+  const adalahZIP = (file) => {
+
+    if (!file) return false;
+
+    return (
+
+      file.type ===
+        "application/zip" ||
+
+      file.type ===
+        "application/x-zip-compressed"
+
+    );
+
+  };
+
+  // =========================================================
+  // SIMPAN PERUBAHAN
+  // =========================================================
+
+  const handleSubmit = async (e) => {
+
+    e.preventDefault();
+
+    setError("");
+
+    if (
+
+      !form.nomor_surat.trim() ||
+
+      !form.asal_surat.trim() ||
+
+      !form.tanggal_surat.trim() ||
+
+      !form.nomor_agenda.trim() ||
+
+      !form.tanggal_diterima.trim() ||
+
+      !form.jam_diterima.trim() ||
+
+      !form.perihal.trim()
+
+    ) {
+
+      setError(
+        "Semua field bertanda * wajib diisi."
+      );
+
+      return;
+
+    }
+
+    // =======================================================
+    // CEK FILE BARU JIKA ADA
+    // =======================================================
+
+    if (arsipFile) {
+
+      if (!fileDiizinkan(arsipFile)) {
+
+        setError(
+          "Format file tidak didukung."
+        );
+
+        return;
+
+      }
+
+      if (
+        arsipFile.size >
+        20 * 1024 * 1024
+      ) {
+
+        setError(
+          "Ukuran file maksimal 20 MB."
+        );
+
+        return;
+
+      }
+
+    }
+
+    try {
+
+      setSaving(true);
+
+      const data =
+        new FormData();
+
+      data.append(
+        "nomor_surat",
+        form.nomor_surat.trim()
+      );
+
+      data.append(
+        "asal_surat",
+        form.asal_surat.trim()
+      );
+
+      data.append(
+        "tanggal_surat",
+        form.tanggal_surat.trim()
+      );
+
+      data.append(
+        "nomor_agenda",
+        form.nomor_agenda.trim()
+      );
+
+      data.append(
+        "tanggal_diterima",
+        form.tanggal_diterima
+      );
+
+      data.append(
+        "jam_diterima",
+        form.jam_diterima
+      );
+
+      data.append(
+        "perihal",
+        form.perihal.trim()
+      );
+
+      data.append(
+        "sifat_surat",
+        form.sifat_surat || ""
+      );
+
+      data.append(
+        "diteruskan_kepada",
+
+        JSON.stringify(
+          form.diteruskan_kepada || []
+        )
+
+      );
+
+      data.append(
+        "dengan_hormat_harap",
+
+        JSON.stringify(
+          form.dengan_hormat_harap || []
+        )
+
+      );
+
+      data.append(
+        "catatan",
+        form.catatan || ""
+      );
+
+      // =====================================================
+      // FILE BARU
+      // =====================================================
+
+      if (arsipFile) {
+
+        data.append(
+          "arsip_surat",
+          arsipFile
+        );
+
+      }
+
+      const response =
+        await fetch(
+
+          "http://localhost:5000/api/surat/" +
+            id,
+
+          {
+
+            method: "PUT",
+
+            body: data,
+
+          }
+
+        );
+
+      const result =
+        await response.json();
+
+      if (!response.ok) {
+
+        throw new Error(
+
+          result.message ||
+            "Gagal memperbarui surat."
+
+        );
+
+      }
+
+      alert(
+        "✓ Surat berhasil diperbarui."
+      );
+
+      navigate("/surat");
+
+    } catch (err) {
+
+      console.error(
+        "Gagal memperbarui surat:",
+        err
+      );
+
+      setError(
+
+        err.message ||
+          "Gagal memperbarui surat."
+
+      );
+
+    } finally {
+
+      setSaving(false);
+
+    }
+
+  };
+
+  // =========================================================
+  // LOADING
+  // =========================================================
 
   if (loading) {
+
     return (
-      <div className="app">
+
+      <div className="tambah-page">
+
         <main
-          className="main-content"
+          className="tambah-main"
           style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            minHeight: "100vh",
+            marginLeft: 0,
+            width: "100%",
           }}
         >
-          <p>Memuat data surat...</p>
+
+          <div
+            style={{
+              padding: "60px",
+              textAlign: "center",
+            }}
+          >
+            Memuat data surat...
+          </div>
+
         </main>
+
       </div>
+
     );
+
   }
 
-  /* =========================================
-     TAMPILAN
-  ========================================= */
+  // =========================================================
+  // TAMPILAN
+  // =========================================================
 
   return (
-    <div className="app">
 
-      {/* =====================================
+    <div className="tambah-page">
+
+      {/* =====================================================
           SIDEBAR
-      ===================================== */}
+      ===================================================== */}
 
-      <aside className="sidebar">
+      <aside className="tambah-sidebar">
 
-        <div className="brand">
+        <div className="tambah-brand">
 
-          <div className="brand-logo">
+          <div className="tambah-brand-logo">
+
             <img
               src={logoSulut}
               alt="Logo Sulawesi Utara"
             />
+
           </div>
 
-          <div>
+          <div className="tambah-brand-text">
+
             <h2>
-              DISNAKERTRANSDA
+              DISNAKERTRANS
             </h2>
 
             <span>
               Sulawesi Utara
             </span>
+
           </div>
 
         </div>
 
-        <nav className="menu">
+        <nav className="tambah-menu">
+
+          <p className="tambah-menu-title">
+            MENU UTAMA
+          </p>
 
           <Link
             to="/"
-            className="menu-item"
+            className="tambah-menu-item"
           >
-            <span>
-              ⌂
-            </span>
-
+            <span>⌂</span>
             Dashboard
           </Link>
 
           <Link
             to="/surat"
-            className="menu-item active"
+            className="tambah-menu-item active"
           >
-            <span>
-              ▣
-            </span>
-
+            <span>▣</span>
             Surat Masuk
+          </Link>
+
+          <Link
+            to="/riwayat"
+            className="tambah-menu-item"
+          >
+            <span>↶</span>
+            Riwayat Surat
           </Link>
 
         </nav>
 
       </aside>
 
-      {/* =====================================
+
+      {/* =====================================================
           MAIN
-      ===================================== */}
+      ===================================================== */}
 
-      <main className="main-content">
+      <main className="tambah-main">
 
-        {/* ===================================
-            TOPBAR
-        =================================== */}
+        <header className="tambah-topbar">
 
-        <header className="topbar">
-
-          <div>
+          <div className="tambah-topbar-left">
 
             <h1>
               Edit Surat
             </h1>
 
             <p>
-              Perbarui data surat masuk
+              Sistem Informasi Disposisi Surat
             </p>
 
           </div>
 
-          <div className="user-info">
-            Administrator
-          </div>
-
         </header>
 
-        {/* ===================================
-            CONTENT
-        =================================== */}
 
-        <section className="page-content">
+        <section className="tambah-content">
 
-          {/* PAGE HEADER */}
+          <div className="tambah-page-header">
 
-          <div className="page-header">
+            <div className="tambah-page-title">
 
-            <div>
+              <span>
+                DATA ADMINISTRASI
+              </span>
 
               <h2>
-                Form Edit Surat Masuk
+                Edit Surat Masuk
               </h2>
 
               <p>
-                Periksa dan perbarui data surat
-                dengan benar.
+                Perbarui informasi surat yang telah tersimpan.
               </p>
 
             </div>
 
             <Link
               to="/surat"
-              className="btn-secondary"
+              className="tambah-btn-back"
             >
               ← Kembali
             </Link>
 
           </div>
 
-          {/* =================================
-              FORM CARD
-          ================================= */}
 
-          <div className="form-card">
+          {/* ERROR */}
 
-            <form onSubmit={handleSubmit}>
+          {error && (
 
-              {/* =================================
-                  INFORMASI SURAT
-              ================================= */}
+            <div className="tambah-error">
+              {error}
+            </div>
 
-              <div className="form-section">
+          )}
+
+
+          {/* =================================================
+              FORM
+          ================================================= */}
+
+          <form
+            className="tambah-form-card"
+            onSubmit={handleSubmit}
+          >
+
+            <div className="tambah-form-top">
+
+              <div>
 
                 <h3>
                   Informasi Surat
                 </h3>
 
-                <div className="form-grid">
+                <p>
+                  Periksa dan perbarui informasi surat dengan benar.
+                </p>
 
-                  {/* =================================
-                      SURAT DARI
-                  ================================= */}
+              </div>
 
-                  <div className="form-group">
+            </div>
 
-                    <label htmlFor="asal_surat">
-                      Surat Dari
-                    </label>
 
-                    <input
-                      id="asal_surat"
-                      name="asal_surat"
-                      type="text"
-                      value={form.asal_surat}
-                      onChange={handleChange}
-                      placeholder="Masukkan asal surat"
-                      required
-                    />
+            {/* =================================================
+                FORM GRID
+            ================================================= */}
+
+            <div className="tambah-form-grid">
+
+
+              {/* SURAT DARI */}
+
+              <div className="tambah-form-group">
+
+                <label>
+                  Surat Dari <b>*</b>
+                </label>
+
+                <input
+                  type="text"
+                  name="asal_surat"
+                  value={form.asal_surat}
+                  onChange={handleChange}
+                  placeholder="Contoh: Dinas Pendidikan"
+                  autoComplete="off"
+                />
+
+              </div>
+
+
+              {/* TANGGAL DITERIMA */}
+
+              <div className="tambah-form-group">
+
+                <label>
+                  Tanggal Diterima <b>*</b>
+                </label>
+
+                <input
+                  type="text"
+                  name="tanggal_diterima"
+                  value={form.tanggal_diterima}
+                  readOnly
+                />
+
+              </div>
+
+
+              {/* NOMOR SURAT */}
+
+              <div className="tambah-form-group">
+
+                <label>
+                  Nomor Surat <b>*</b>
+                </label>
+
+                <input
+                  type="text"
+                  name="nomor_surat"
+                  value={form.nomor_surat}
+                  onChange={handleChange}
+                  placeholder="Contoh: 005/123/DISNAKERTRANS"
+                  autoComplete="off"
+                />
+
+              </div>
+
+
+              {/* NOMOR AGENDA */}
+
+              <div className="tambah-form-group">
+
+                <label>
+                  Nomor Agenda <b>*</b>
+                </label>
+
+                <input
+                  type="text"
+                  name="nomor_agenda"
+                  value={form.nomor_agenda}
+                  onChange={handleChange}
+                  placeholder="Contoh: 001"
+                  autoComplete="off"
+                />
+
+              </div>
+
+
+              {/* TANGGAL SURAT */}
+
+              <div className="tambah-form-group">
+
+                <label>
+                  Tanggal Surat <b>*</b>
+                </label>
+
+                <input
+                  type="text"
+                  name="tanggal_surat"
+                  value={form.tanggal_surat}
+                  onChange={handleTanggalSuratChange}
+                  placeholder="Contoh: 28-08-2026"
+                  maxLength={10}
+                  inputMode="numeric"
+                  autoComplete="off"
+                />
+
+              </div>
+
+
+              {/* JAM DITERIMA */}
+
+              <div className="tambah-form-group">
+
+                <label>
+                  Jam Diterima <b>*</b>
+                </label>
+
+                <input
+                  type="time"
+                  name="jam_diterima"
+                  value={form.jam_diterima}
+                  readOnly
+                />
+
+              </div>
+
+            </div>
+
+
+            {/* =================================================
+                PERIHAL
+            ================================================= */}
+
+            <div className="tambah-form-group tambah-full">
+
+              <label>
+                Perihal <b>*</b>
+              </label>
+
+              <textarea
+                name="perihal"
+                value={form.perihal}
+                onChange={handleChange}
+                placeholder="Masukkan perihal surat"
+                rows="4"
+              />
+
+            </div>
+
+
+            {/* =================================================
+                ARSIP SURAT
+            ================================================= */}
+
+            <div className="tambah-form-group tambah-full">
+
+              <label>
+                Arsip Surat
+              </label>
+
+
+              {/* PILIH FILE */}
+
+              <input
+                type="file"
+                accept="
+                  application/pdf,
+                  image/jpeg,
+                  image/png,
+                  image/webp,
+                  application/zip,
+                  application/x-zip-compressed,
+                  .pdf,
+                  .jpg,
+                  .jpeg,
+                  .png,
+                  .webp,
+                  .zip
+                "
+                onChange={handleArsipChange}
+              />
+
+
+              {/* =================================================
+                  KAMERA
+              ================================================= */}
+
+              <div
+                style={{
+                  marginTop: "12px",
+                }}
+              >
+
+                <label
+                  style={{
+                    display: "inline-block",
+                    marginBottom: "8px",
+                    fontWeight: "600",
+                  }}
+                >
+                  📷 Ambil Foto Langsung
+                </label>
+
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handleCameraChange}
+                />
+
+              </div>
+
+
+              <small>
+
+                Kamu dapat memilih PDF, JPG, JPEG,
+                PNG, WEBP, ZIP atau langsung mengambil
+                foto menggunakan kamera.
+
+                <br />
+
+                Maksimal ukuran file 20 MB.
+
+              </small>
+
+
+              {/* =================================================
+                  FILE BARU
+              ================================================= */}
+
+              {arsipFile && (
+
+                <div
+                  style={{
+                    marginTop: "18px",
+                    border:
+                      "1px solid #d9dee5",
+                    borderRadius:
+                      "12px",
+                    overflow:
+                      "hidden",
+                    background:
+                      "#f7f8fa",
+                  }}
+                >
+
+                  <div
+                    style={{
+                      padding:
+                        "12px 16px",
+
+                      background:
+                        "#eef1f5",
+
+                      borderBottom:
+                        "1px solid #d9dee5",
+
+                      display:
+                        "flex",
+
+                      justifyContent:
+                        "space-between",
+
+                      alignItems:
+                        "center",
+
+                      gap:
+                        "10px",
+
+                      flexWrap:
+                        "wrap",
+                    }}
+                  >
+
+                    <strong>
+
+                      {adalahPDF(arsipFile)
+                        ? "📄 Preview PDF Baru"
+                        : adalahGambar(arsipFile)
+                        ? "🖼️ Preview Gambar Baru"
+                        : adalahZIP(arsipFile)
+                        ? "📦 File ZIP Baru"
+                        : "📁 File Baru"}
+
+                    </strong>
+
+                    <span>
+                      {arsipFile.name}
+                    </span>
 
                   </div>
 
-                  {/* =================================
-                      NOMOR AGENDA
-                  ================================= */}
 
-                  <div className="form-group">
+                  {/* PREVIEW PDF */}
 
-                    <label htmlFor="nomor_agenda">
-                      Nomor Agenda
-                    </label>
+                  {adalahPDF(arsipFile) && (
 
-                    <input
-                      id="nomor_agenda"
-                      name="nomor_agenda"
-                      type="text"
-                      value={form.nomor_agenda}
-                      onChange={handleChange}
-                      placeholder="Masukkan nomor agenda"
-                      required
+                    <iframe
+                      src={previewBaru}
+                      title="Preview PDF Baru"
+                      style={{
+                        width: "100%",
+                        height: "650px",
+                        border: "none",
+                        display: "block",
+                      }}
                     />
+
+                  )}
+
+
+                  {/* PREVIEW GAMBAR */}
+
+                  {adalahGambar(arsipFile) && (
+
+                    <div
+                      style={{
+                        padding: "20px",
+                        textAlign: "center",
+                      }}
+                    >
+
+                      <img
+                        src={previewBaru}
+                        alt="Preview Arsip Baru"
+                        style={{
+                          maxWidth: "100%",
+                          maxHeight: "650px",
+                          borderRadius: "8px",
+                        }}
+                      />
+
+                    </div>
+
+                  )}
+
+
+                  {/* ZIP */}
+
+                  {adalahZIP(arsipFile) && (
+
+                    <div
+                      style={{
+                        padding: "25px",
+                        textAlign: "center",
+                        color: "#555",
+                      }}
+                    >
+
+                      <div
+                        style={{
+                          fontSize: "40px",
+                          marginBottom: "10px",
+                        }}
+                      >
+                        📦
+                      </div>
+
+                      <strong>
+                        File ZIP siap diupload
+                      </strong>
+
+                      <p>
+                        File ZIP tidak memiliki preview langsung.
+                      </p>
+
+                    </div>
+
+                  )}
+
+                </div>
+
+              )}
+
+
+              {/* =================================================
+                  ARSIP LAMA
+              ================================================= */}
+
+              {!arsipFile &&
+                arsipLama &&
+                arsipLama.url_file && (
+
+                <div
+                  style={{
+                    marginTop: "18px",
+                    border:
+                      "1px solid #d9dee5",
+                    borderRadius:
+                      "12px",
+                    overflow:
+                      "hidden",
+                    background:
+                      "#f7f8fa",
+                  }}
+                >
+
+                  <div
+                    style={{
+                      padding:
+                        "12px 16px",
+
+                      background:
+                        "#eef1f5",
+
+                      borderBottom:
+                        "1px solid #d9dee5",
+
+                      display:
+                        "flex",
+
+                      justifyContent:
+                        "space-between",
+
+                      alignItems:
+                        "center",
+
+                      gap:
+                        "10px",
+
+                      flexWrap:
+                        "wrap",
+                    }}
+                  >
+
+                    <strong>
+                      📁 Arsip Surat Saat Ini
+                    </strong>
+
+                    <span>
+                      {arsipLama.nama_file ||
+                        "Arsip Surat"}
+                    </span>
 
                   </div>
 
-                  {/* =================================
-                      NOMOR SURAT
-                  ================================= */}
 
-                  <div className="form-group">
+                  {/* =================================================
+                      PDF LAMA
+                  ================================================= */}
 
-                    <label htmlFor="nomor_surat">
-                      Nomor Surat
-                    </label>
+                  {arsipLama.tipe_file ===
+                  "application/pdf" ? (
 
-                    <input
-                      id="nomor_surat"
-                      name="nomor_surat"
-                      type="text"
-                      value={form.nomor_surat}
-                      onChange={handleChange}
-                      placeholder="Masukkan nomor surat"
-                      required
+                    <iframe
+                      src={
+                        "http://localhost:5000/api/surat/preview/" +
+                        id
+                      }
+                      title="Preview Arsip Surat"
+                      style={{
+                        width: "100%",
+                        height: "650px",
+                        border: "none",
+                        display: "block",
+                        background: "#fff",
+                      }}
                     />
 
-                  </div>
+                  ) : arsipLama.tipe_file?.startsWith(
+                      "image/"
+                    ) ? (
 
-                  {/* =================================
-                      TANGGAL DITERIMA
-                  ================================= */}
+                    <div
+                      style={{
+                        padding: "20px",
+                        textAlign: "center",
+                      }}
+                    >
 
-                  <div className="form-group">
+                      <img
+                        src={arsipLama.url_file}
+                        alt="Arsip Surat"
+                        style={{
+                          maxWidth: "100%",
+                          maxHeight: "650px",
+                          borderRadius: "8px",
+                        }}
+                      />
 
-                    <label htmlFor="tanggal_diterima">
-                      Tanggal Diterima
-                    </label>
+                    </div>
 
-                    <input
-                      id="tanggal_diterima"
-                      name="tanggal_diterima"
-                      type="text"
-                      value={form.tanggal_diterima}
-                      readOnly
-                    />
+                  ) : (
 
-                  </div>
+                    <div
+                      style={{
+                        padding: "25px",
+                        textAlign: "center",
+                      }}
+                    >
 
-                  {/* =================================
-                      TANGGAL SURAT
-                      DIKETIK MANUAL
-                  ================================= */}
+                      📦 File arsip tersimpan.
 
-                  <div className="form-group">
+                    </div>
 
-                    <label htmlFor="tanggal_surat">
-                      Tanggal Surat
-                    </label>
+                  )}
 
-                    <input
-                      id="tanggal_surat"
-                      name="tanggal_surat"
-                      type="text"
-                      value={form.tanggal_surat}
-                      onChange={handleChange}
-                      placeholder="Contoh: 20-08-2026"
-                      required
-                    />
 
-                  </div>
+                  {/* BUKA FILE */}
 
-                  {/* =================================
-                      JAM DITERIMA
-                  ================================= */}
+                  <div
+                    style={{
+                      padding:
+                        "12px 16px",
 
-                  <div className="form-group">
+                      borderTop:
+                        "1px solid #d9dee5",
 
-                    <label htmlFor="jam_diterima">
-                      Jam Diterima
-                    </label>
+                      background:
+                        "#fff",
+                    }}
+                  >
 
-                    <input
-                      id="jam_diterima"
-                      name="jam_diterima"
-                      type="text"
-                      value={form.jam_diterima}
-                      readOnly
-                    />
+                    <a
+                      href={arsipLama.url_file}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display:
+                          "inline-block",
+
+                        padding:
+                          "9px 15px",
+
+                        borderRadius:
+                          "8px",
+
+                        background:
+                          "#173f5f",
+
+                        color:
+                          "#fff",
+
+                        textDecoration:
+                          "none",
+
+                        fontWeight:
+                          "600",
+                      }}
+                    >
+                      📂 Buka Arsip
+                    </a>
 
                   </div>
 
                 </div>
 
-              </div>
+              )}
 
-              {/* =================================
-                  PERIHAL
-              ================================= */}
 
-              <div className="form-section">
+              {/* =================================================
+                  BELUM ADA ARSIP
+              ================================================= */}
 
-                <h3>
-                  Perihal
-                </h3>
+              {!arsipFile &&
+                !arsipLama && (
 
-                <div className="form-group">
-
-                  <label htmlFor="perihal">
-                    Perihal Surat
-                  </label>
-
-                  <textarea
-                    id="perihal"
-                    name="perihal"
-                    value={form.perihal}
-                    onChange={handleChange}
-                    placeholder="Masukkan perihal surat"
-                    rows="4"
-                    required
-                  />
-
+                <div
+                  style={{
+                    marginTop: "15px",
+                    padding: "20px",
+                    textAlign: "center",
+                    border:
+                      "1px dashed #cfd5dc",
+                    borderRadius: "10px",
+                    color: "#777",
+                  }}
+                >
+                  Belum ada arsip untuk surat ini.
                 </div>
 
-              </div>
+              )}
 
-              {/* =================================
-                  BUTTON
-              ================================= */}
+            </div>
 
-              <div className="form-actions">
 
-                <Link
-                  to="/surat"
-                  className="btn-secondary"
-                >
-                  Batal
-                </Link>
+            {/* =================================================
+                BUTTON
+            ================================================= */}
 
-                <button
-                  type="submit"
-                  className="btn-primary"
-                >
-                  Simpan Perubahan
-                </button>
+            <div className="tambah-form-actions">
 
-              </div>
+              <Link
+                to="/surat"
+                className="tambah-btn-cancel"
+              >
+                Batal
+              </Link>
 
-            </form>
+              <button
+                type="submit"
+                className="tambah-btn-save"
+                disabled={saving}
+              >
 
-          </div>
+                {saving
+                  ? "Menyimpan..."
+                  : "✓ Simpan Perubahan"}
+
+              </button>
+
+            </div>
+
+          </form>
 
         </section>
 
       </main>
 
     </div>
+
   );
 }
 

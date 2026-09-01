@@ -9,6 +9,12 @@ function RiwayatSurat() {
   const [error, setError] = useState("");
 
   /* =========================================================
+     STATE SURAT YANG DIPILIH
+  ========================================================= */
+
+  const [selectedSurat, setSelectedSurat] = useState([]);
+
+  /* =========================================================
      AMBIL DATA RIWAYAT SURAT
   ========================================================= */
 
@@ -32,6 +38,11 @@ function RiwayatSurat() {
       setSuratList(
         Array.isArray(result.data) ? result.data : []
       );
+
+      /* Reset pilihan */
+
+      setSelectedSurat([]);
+
     } catch (error) {
       console.error(
         "Gagal mengambil riwayat surat:",
@@ -47,7 +58,7 @@ function RiwayatSurat() {
   };
 
   /* =========================================================
-     LOAD DATA SAAT HALAMAN DIBUKA
+     LOAD DATA
   ========================================================= */
 
   useEffect(() => {
@@ -98,6 +109,53 @@ function RiwayatSurat() {
   };
 
   /* =========================================================
+     PILIH SATU SURAT
+  ========================================================= */
+
+  const handleSelectSurat = (id) => {
+    setSelectedSurat((prev) => {
+
+      if (prev.includes(id)) {
+        return prev.filter(
+          (selectedId) => selectedId !== id
+        );
+      }
+
+      return [...prev, id];
+
+    });
+  };
+
+  /* =========================================================
+     PILIH SEMUA SURAT
+  ========================================================= */
+
+  const handleSelectAll = () => {
+
+    /* Kalau semua sudah dipilih → kosongkan */
+
+    if (
+      selectedSurat.length === suratList.length &&
+      suratList.length > 0
+    ) {
+
+      setSelectedSurat([]);
+
+    } else {
+
+      /* Pilih semua ID */
+
+      const semuaId = suratList.map(
+        (surat) => surat._id
+      );
+
+      setSelectedSurat(semuaId);
+
+    }
+
+  };
+
+  /* =========================================================
      PULIHKAN SURAT
   ========================================================= */
 
@@ -133,10 +191,21 @@ function RiwayatSurat() {
         )
       );
 
+      /* Hapus dari pilihan */
+
+      setSelectedSurat((prev) =>
+        prev.filter(
+          (selectedId) =>
+            String(selectedId) !== String(id)
+        )
+      );
+
       alert(
         "Surat berhasil dipulihkan dan kembali ke Surat Masuk."
       );
+
     } catch (error) {
+
       console.error(
         "Gagal memulihkan surat:",
         error
@@ -145,16 +214,18 @@ function RiwayatSurat() {
       alert(
         "Gagal memulihkan surat. Pastikan backend sedang berjalan."
       );
+
     }
   };
 
   /* =========================================================
-     HAPUS PERMANEN
+     HAPUS PERMANEN SATU SURAT
   ========================================================= */
 
   const handlePermanentDelete = async (id) => {
+
     const yakin = window.confirm(
-      "PERINGATAN!\n\nSurat ini akan dihapus secara permanen dari database dan tidak dapat dipulihkan lagi.\n\nApakah Anda benar-benar yakin ingin menghapusnya?"
+      "PERINGATAN!\n\nSurat ini akan dihapus secara permanen dan tidak dapat dipulihkan lagi.\n\nApakah Anda yakin?"
     );
 
     if (!yakin) {
@@ -162,6 +233,7 @@ function RiwayatSurat() {
     }
 
     try {
+
       const response = await fetch(
         `http://localhost:5000/api/surat/${id}/permanen`,
         {
@@ -174,7 +246,7 @@ function RiwayatSurat() {
       if (!response.ok) {
         throw new Error(
           result.message ||
-            "Gagal menghapus surat secara permanen."
+          "Gagal menghapus surat secara permanen."
         );
       }
 
@@ -185,19 +257,126 @@ function RiwayatSurat() {
         )
       );
 
+      /* Hapus dari selected */
+
+      setSelectedSurat((prev) =>
+        prev.filter(
+          (selectedId) =>
+            String(selectedId) !== String(id)
+        )
+      );
+
       alert(
         "Surat berhasil dihapus secara permanen."
       );
+
     } catch (error) {
+
       console.error(
         "Gagal menghapus surat permanen:",
         error
       );
 
       alert(
-        "Gagal menghapus surat secara permanen. Pastikan backend sedang berjalan."
+        "Gagal menghapus surat secara permanen."
       );
+
     }
+  };
+
+  /* =========================================================
+     HAPUS BEBERAPA SURAT SEKALIGUS
+  ========================================================= */
+
+  const handleDeleteSelected = async () => {
+
+    if (selectedSurat.length === 0) {
+
+      alert(
+        "Pilih minimal satu surat terlebih dahulu."
+      );
+
+      return;
+    }
+
+    const yakin = window.confirm(
+      `PERINGATAN!\n\nAnda akan menghapus ${selectedSurat.length} surat secara permanen.\n\nData tidak dapat dipulihkan lagi.\n\nApakah Anda yakin?`
+    );
+
+    if (!yakin) {
+      return;
+    }
+
+    try {
+
+      /* Hapus semua surat yang dipilih */
+
+      const hasil = await Promise.all(
+
+        selectedSurat.map(async (id) => {
+
+          const response = await fetch(
+            `http://localhost:5000/api/surat/${id}/permanen`,
+            {
+              method: "DELETE",
+            }
+          );
+
+          const result = await response.json();
+
+          if (!response.ok) {
+
+            throw new Error(
+              result.message ||
+              "Gagal menghapus salah satu surat."
+            );
+
+          }
+
+          return id;
+
+        })
+
+      );
+
+
+      /* Hapus dari tampilan */
+
+      setSuratList((prev) =>
+        prev.filter(
+          (surat) =>
+            !hasil.includes(surat._id)
+        )
+      );
+
+
+      /* Kosongkan pilihan */
+
+      setSelectedSurat([]);
+
+
+      alert(
+        `${hasil.length} surat berhasil dihapus secara permanen.`
+      );
+
+    } catch (error) {
+
+      console.error(
+        "Gagal menghapus surat terpilih:",
+        error
+      );
+
+      alert(
+        error.message ||
+        "Terjadi kesalahan saat menghapus surat."
+      );
+
+      /* Refresh data */
+
+      fetchRiwayat();
+
+    }
+
   };
 
   /* =========================================================
@@ -205,15 +384,12 @@ function RiwayatSurat() {
   ========================================================= */
 
   return (
+
     <div className="riwayat-page">
 
-      {/* =====================================================
-          SIDEBAR
-      ===================================================== */}
+      {/* SIDEBAR */}
 
       <aside className="riwayat-sidebar">
-
-        {/* BRAND */}
 
         <div className="riwayat-brand">
 
@@ -241,16 +417,12 @@ function RiwayatSurat() {
         </div>
 
 
-        {/* MENU */}
-
         <nav className="riwayat-menu">
 
           <p className="riwayat-menu-title">
             MENU UTAMA
           </p>
 
-
-          {/* DASHBOARD */}
 
           <Link
             to="/"
@@ -261,8 +433,6 @@ function RiwayatSurat() {
           </Link>
 
 
-          {/* SURAT MASUK */}
-
           <Link
             to="/surat"
             className="riwayat-menu-item"
@@ -271,8 +441,6 @@ function RiwayatSurat() {
             Surat Masuk
           </Link>
 
-
-          {/* RIWAYAT */}
 
           <Link
             to="/riwayat"
@@ -287,19 +455,14 @@ function RiwayatSurat() {
       </aside>
 
 
-      {/* =====================================================
-          MAIN CONTENT
-      ===================================================== */}
+      {/* MAIN */}
 
       <main className="riwayat-main">
 
-        {/* ===================================================
-            CONTENT
-        =================================================== */}
-
         <section className="riwayat-content">
 
-          {/* PAGE HEADER */}
+
+          {/* HEADER */}
 
           <div className="riwayat-page-header">
 
@@ -313,8 +476,10 @@ function RiwayatSurat() {
                 Riwayat Surat
               </h2>
 
-            <p>Surat yang telah dihapus dari
-                  daftar aktif</p> 
+              <p>
+                Surat yang telah dihapus dari daftar aktif
+              </p>
+
             </div>
 
 
@@ -331,17 +496,18 @@ function RiwayatSurat() {
           {/* ERROR */}
 
           {error && (
+
             <div className="riwayat-error">
               {error}
             </div>
+
           )}
 
 
-          {/* =================================================
-              TABLE CARD
-          ================================================= */}
+          {/* TABLE CARD */}
 
           <div className="riwayat-table-card">
+
 
             {/* TABLE HEADER */}
 
@@ -352,21 +518,54 @@ function RiwayatSurat() {
                 <strong>
                   Daftar Riwayat Surat
                 </strong>
+
+                {/* INFO SURAT TERPILIH */}
+
+                {selectedSurat.length > 0 && (
+
+                  <span className="riwayat-selected-info">
+
+                    {selectedSurat.length} surat dipilih
+
+                  </span>
+
+                )}
+
               </div>
 
 
-              <div className="riwayat-count">
+              <div className="riwayat-top-actions">
 
-                Total {suratList.length} surat
+                {/* TOTAL */}
+
+                <div className="riwayat-count">
+
+                  Total {suratList.length} surat
+
+                </div>
+
+
+                {/* HAPUS TERPILIH */}
+
+                {selectedSurat.length > 0 && (
+
+                  <button
+                    type="button"
+                    className="riwayat-delete-selected"
+                    onClick={handleDeleteSelected}
+                  >
+                    🗑 Hapus Terpilih
+                    ({selectedSurat.length})
+                  </button>
+
+                )}
 
               </div>
 
             </div>
 
 
-            {/* =================================================
-                LOADING
-            ================================================= */}
+            {/* LOADING */}
 
             {loading ? (
 
@@ -391,17 +590,12 @@ function RiwayatSurat() {
                 </div>
 
                 <p>
-                  Data riwayat surat belum dapat
-                  ditampilkan.
+                  Data riwayat surat belum dapat ditampilkan.
                 </p>
 
               </div>
 
             ) : (
-
-              /* =================================================
-                 TABLE
-              ================================================= */
 
               <div className="riwayat-table-wrapper">
 
@@ -410,6 +604,24 @@ function RiwayatSurat() {
                   <thead>
 
                     <tr>
+
+
+                      {/* CHECKBOX PILIH SEMUA */}
+
+                      <th className="riwayat-checkbox-column">
+
+                        <input
+                          type="checkbox"
+                          checked={
+                            suratList.length > 0 &&
+                            selectedSurat.length === suratList.length
+                          }
+                          onChange={handleSelectAll}
+                          title="Pilih semua surat"
+                        />
+
+                      </th>
+
 
                       <th className="riwayat-col-no">
                         No
@@ -453,7 +665,30 @@ function RiwayatSurat() {
 
                           <tr
                             key={row._id}
+                            className={
+                              selectedSurat.includes(row._id)
+                                ? "riwayat-row-selected"
+                                : ""
+                            }
                           >
+
+
+                            {/* CHECKBOX */}
+
+                            <td className="riwayat-checkbox-column">
+
+                              <input
+                                type="checkbox"
+                                checked={
+                                  selectedSurat.includes(row._id)
+                                }
+                                onChange={() =>
+                                  handleSelectSurat(row._id)
+                                }
+                              />
+
+                            </td>
+
 
                             {/* NO */}
 
@@ -551,30 +786,27 @@ function RiwayatSurat() {
 
                               <div className="riwayat-action">
 
+
                                 {/* PULIHKAN */}
 
                                 <button
                                   type="button"
                                   className="riwayat-action-btn restore"
                                   onClick={() =>
-                                    handleRestore(
-                                      row._id
-                                    )
+                                    handleRestore(row._id)
                                   }
                                 >
                                   ♻️ Pulihkan
                                 </button>
 
 
-                                {/* HAPUS PERMANEN */}
+                                {/* HAPUS SATU */}
 
                                 <button
                                   type="button"
                                   className="riwayat-action-btn permanent"
                                   onClick={() =>
-                                    handlePermanentDelete(
-                                      row._id
-                                    )
+                                    handlePermanentDelete(row._id)
                                   }
                                 >
                                   🗑️ Hapus Permanen
@@ -594,7 +826,7 @@ function RiwayatSurat() {
                       <tr>
 
                         <td
-                          colSpan="7"
+                          colSpan="8"
                           className="riwayat-empty-table"
                         >
 
@@ -607,9 +839,7 @@ function RiwayatSurat() {
                           </p>
 
                           <small>
-                            Surat yang dihapus dari
-                            Surat Masuk akan muncul di
-                            sini.
+                            Surat yang dihapus dari Surat Masuk akan muncul di sini.
                           </small>
 
                         </td>
@@ -633,6 +863,7 @@ function RiwayatSurat() {
       </main>
 
     </div>
+
   );
 }
 

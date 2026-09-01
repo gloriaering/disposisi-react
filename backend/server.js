@@ -21,8 +21,13 @@ app.use(express.json());
 app.get("/", (req, res) => {
   res.json({
     success: true,
-    message: "Backend Disposisi Surat berhasil berjalan 🚀",
+    message: "Backend Disposisi Surat berhasil berjalan",
   });
+});
+
+
+app.get("/test-preview", (req, res) => {
+  res.send("TEST PREVIEW ROUTE BERHASIL");
 });
 
 // =========================================================
@@ -36,26 +41,31 @@ app.use("/api/surat", suratRoutes);
 // =========================================================
 
 if (!process.env.MONGODB_URI) {
-  console.error("❌ MONGODB_URI belum ditemukan di file .env");
+  console.error("MONGODB_URI belum ditemukan di file .env");
   process.exit(1);
 }
 
 // =========================================================
-// KONEKSI MONGODB + JALANKAN SERVER
+// KONEKSI MONGODB
 // =========================================================
 
 mongoose
   .connect(process.env.MONGODB_URI)
   .then(() => {
-    console.log("✅ Berhasil terhubung ke MongoDB Atlas");
+    console.log("Berhasil terhubung ke MongoDB Atlas");
+
+    // =======================================================
+    // JALANKAN SERVER
+    // =======================================================
 
     const PORT = process.env.PORT || 5000;
 
     app.listen(PORT, () => {
-      console.log(`🚀 Server berjalan di http://localhost:${PORT}`);
+      console.log(`Server berjalan di http://localhost:${PORT}`);
     });
   })
   .catch((error) => {
-    console.error("❌ Gagal terhubung ke MongoDB Atlas");
+    console.error("Gagal terhubung ke MongoDB Atlas");
     console.error(error.message);
+    process.exit(1);
   });

@@ -44,79 +44,66 @@ const suratSchema = new mongoose.Schema(
       trim: true,
     },
 
+    /*
+      SIFAT SURAT
+
+      Tidak lagi wajib diisi dari komputer.
+      Nilainya boleh kosong karena akan
+      diisi manual pada lembar disposisi.
+    */
     sifat_surat: {
       type: String,
       default: "",
       trim: true,
     },
 
+    /*
+      DITERUSKAN KEPADA
+
+      Akan dicentang manual pada lembar disposisi.
+    */
     diteruskan_kepada: {
       type: [String],
       default: [],
     },
 
+    /*
+      DENGAN HORMAT HARAP
+
+      Akan dicentang manual pada lembar disposisi.
+    */
     dengan_hormat_harap: {
       type: [String],
       default: [],
     },
 
+    /*
+      CATATAN
+
+      Akan ditulis manual pada lembar cetak.
+    */
     catatan: {
       type: String,
       default: "",
       trim: true,
     },
 
-    /* =====================================================
-       ARSIP / SCAN SURAT
-    ===================================================== */
+    /*
+      STATUS HAPUS
 
-    arsip_surat: {
+      false = surat masih aktif
+      true  = surat masuk riwayat
 
-      nama_file: {
-        type: String,
-        default: "",
-      },
-
-      url_file: {
-        type: String,
-        default: "",
-      },
-
-      public_id: {
-        type: String,
-        default: "",
-      },
-
-      tipe_file: {
-        type: String,
-        default: "",
-      },
-
-      resource_type: {
-        type: String,
-        default: "",
-      },
-
-    },
-
-    /* =====================================================
-       STATUS
-    ===================================================== */
-
+      Surat tidak langsung dihapus dari MongoDB.
+    */
     isDeleted: {
       type: Boolean,
       default: false,
     },
-
   },
-
   {
     timestamps: true,
   }
 );
 
-module.exports =
-  mongoose.model(
-    "Surat",
-    suratSchema
-  );
+module.exports = mongoose.model("Surat", suratSchema);

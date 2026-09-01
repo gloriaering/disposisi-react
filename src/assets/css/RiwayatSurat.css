@@ -987,3 +987,70 @@
   }
 
 }
+
+/* =========================================================
+   CHECKBOX PILIH SURAT
+========================================================= */
+
+.riwayat-checkbox-column {
+  width: 45px;
+  text-align: center;
+}
+
+.riwayat-checkbox-column input {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+
+/* =========================================================
+   SURAT TERPILIH
+========================================================= */
+
+.riwayat-row-selected {
+  background: #f0f7ff !important;
+}
+
+
+/* =========================================================
+   INFO SURAT DIPILIH
+========================================================= */
+
+.riwayat-selected-info {
+  display: block;
+  margin-top: 5px;
+  font-size: 12px;
+  color: #2563eb;
+}
+
+
+/* =========================================================
+   BAGIAN KANAN HEADER
+========================================================= */
+
+.riwayat-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+
+/* =========================================================
+   BUTTON HAPUS TERPILIH
+========================================================= */
+
+.riwayat-delete-selected {
+  border: none;
+  padding: 9px 14px;
+  border-radius: 7px;
+  cursor: pointer;
+  background: #dc2626;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.riwayat-delete-selected:hover {
+  opacity: 0.9;
+}

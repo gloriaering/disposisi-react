@@ -1,8 +1,8 @@
+```jsx
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import logoSulut from "../assets/images/logo-sulut.png";
 import "../assets/css/TambahSurat.css";
-import CameraCapture from "../components/CameraCapture";
 
 function TambahSurat() {
   const navigate = useNavigate();
@@ -17,15 +17,10 @@ function TambahSurat() {
     perihal: "",
   });
 
+  const [arsipFile, setArsipFile] = useState(null);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [scanSurat, setScanSurat] = useState(null);
-
-  // =========================================================
-  // STATE KAMERA
-  // =========================================================
-
-  const [showCamera, setShowCamera] = useState(false);
 
   // =========================================================
   // TANGGAL & JAM DITERIMA OTOMATIS - WITA
@@ -128,76 +123,42 @@ function TambahSurat() {
   };
 
   // =========================================================
-  // CEK FILE
+  // HANDLE FILE PDF
   // =========================================================
 
-  const validFileTypes = [
-    "application/pdf",
-    "image/jpeg",
-    "image/jpg",
-    "image/png",
-  ];
+  const handleArsipChange = (e) => {
+    const file = e.target.files[0];
 
-  const validateFile = (file) => {
+    setError("");
+
     if (!file) {
-      return false;
+      setArsipFile(null);
+      return;
     }
 
-    if (!validFileTypes.includes(file.type)) {
+    // Harus PDF
+    if (file.type !== "application/pdf") {
       setError(
-        "File scan surat harus berupa PDF, JPG, JPEG, atau PNG."
+        "Arsip surat harus berupa file PDF."
       );
 
-      return false;
+      e.target.value = "";
+      setArsipFile(null);
+      return;
     }
 
+    // Maksimal 20 MB
     if (file.size > 20 * 1024 * 1024) {
       setError(
-        "Ukuran scan surat maksimal 20 MB."
+        "Ukuran PDF maksimal 20 MB."
       );
 
-      return false;
-    }
-
-    return true;
-  };
-
-  // =========================================================
-  // HANDLE SCAN SURAT DARI FILE
-  // =========================================================
-
-  const handleScanChange = (e) => {
-    const file = e.target.files?.[0] || null;
-
-    setError("");
-
-    if (!file) {
-      setScanSurat(null);
-      return;
-    }
-
-    if (!validateFile(file)) {
-      setScanSurat(null);
       e.target.value = "";
+      setArsipFile(null);
       return;
     }
 
-    setScanSurat(file);
-  };
-
-  // =========================================================
-  // HASIL FOTO DARI KAMERA
-  // =========================================================
-
-  const handleCameraCapture = (file) => {
-    setError("");
-
-    if (!validateFile(file)) {
-      return;
-    }
-
-    setScanSurat(file);
-    setShowCamera(false);
+    setArsipFile(file);
   };
 
   // =========================================================
@@ -218,23 +179,19 @@ function TambahSurat() {
       !formData.jam_diterima ||
       !formData.perihal.trim()
     ) {
-      setError("Semua field bertanda * wajib diisi.");
-      return;
-    }
-
-    if (!scanSurat) {
       setError(
-        "Scan surat wajib dipilih atau difoto."
+        "Semua field bertanda * wajib diisi."
       );
-      return;
-    }
 
-    if (!validateFile(scanSurat)) {
       return;
     }
 
     try {
       setLoading(true);
+
+      // =====================================================
+      // FORM DATA
+      // =====================================================
 
       const data = new FormData();
 
@@ -273,6 +230,7 @@ function TambahSurat() {
         formData.perihal.trim()
       );
 
+      // Field tambahan sesuai model MongoDB
       data.append(
         "sifat_surat",
         ""
@@ -293,10 +251,20 @@ function TambahSurat() {
         ""
       );
 
-      data.append(
-        "arsip_surat",
-        scanSurat
-      );
+      // =====================================================
+      // PDF
+      // =====================================================
+
+      if (arsipFile) {
+        data.append(
+          "arsip_surat",
+          arsipFile
+        );
+      }
+
+      // =====================================================
+      // KIRIM KE BACKEND
+      // =====================================================
 
       const response = await fetch(
         "http://localhost:5000/api/surat",
@@ -315,12 +283,13 @@ function TambahSurat() {
         );
       }
 
-      alert("✓ Surat berhasil disimpan.");
+      alert(
+        "Surat berhasil disimpan."
+      );
 
       navigate("/surat");
 
     } catch (error) {
-
       console.error(
         "Gagal menyimpan surat:",
         error
@@ -332,9 +301,7 @@ function TambahSurat() {
       );
 
     } finally {
-
       setLoading(false);
-
     }
   };
 
@@ -345,7 +312,13 @@ function TambahSurat() {
   return (
     <div className="tambah-page">
 
+      {/* =====================================================
+          SIDEBAR
+      ===================================================== */}
+
       <aside className="tambah-sidebar">
+
+        {/* BRAND */}
 
         <div className="tambah-brand">
 
@@ -371,6 +344,8 @@ function TambahSurat() {
           </div>
 
         </div>
+
+        {/* MENU */}
 
         <nav className="tambah-menu">
 
@@ -406,7 +381,13 @@ function TambahSurat() {
 
       </aside>
 
+      {/* =====================================================
+          MAIN
+      ===================================================== */}
+
       <main className="tambah-main">
+
+        {/* TOPBAR */}
 
         <header className="tambah-topbar">
 
@@ -424,7 +405,11 @@ function TambahSurat() {
 
         </header>
 
+        {/* CONTENT */}
+
         <section className="tambah-content">
+
+          {/* PAGE HEADER */}
 
           <div className="tambah-page-header">
 
@@ -448,16 +433,20 @@ function TambahSurat() {
               to="/surat"
               className="tambah-btn-back"
             >
-              ← Kembali ke Surat Masuk
+              ← Kembali
             </Link>
 
           </div>
+
+          {/* ERROR */}
 
           {error && (
             <div className="tambah-error">
               {error}
             </div>
           )}
+
+          {/* FORM */}
 
           <form
             className="tambah-form-card"
@@ -480,7 +469,13 @@ function TambahSurat() {
 
             </div>
 
+            {/* =================================================
+                FORM GRID
+            ================================================= */}
+
             <div className="tambah-form-grid">
+
+              {/* SURAT DARI */}
 
               <div className="tambah-form-group">
 
@@ -498,6 +493,8 @@ function TambahSurat() {
                 />
 
               </div>
+
+              {/* TANGGAL DITERIMA */}
 
               <div className="tambah-form-group">
 
@@ -519,6 +516,8 @@ function TambahSurat() {
 
               </div>
 
+              {/* NOMOR SURAT */}
+
               <div className="tambah-form-group">
 
                 <label>
@@ -536,6 +535,8 @@ function TambahSurat() {
 
               </div>
 
+              {/* NOMOR AGENDA */}
+
               <div className="tambah-form-group">
 
                 <label>
@@ -552,6 +553,8 @@ function TambahSurat() {
                 />
 
               </div>
+
+              {/* TANGGAL SURAT */}
 
               <div className="tambah-form-group">
 
@@ -577,6 +580,8 @@ function TambahSurat() {
 
               </div>
 
+              {/* JAM DITERIMA */}
+
               <div className="tambah-form-group">
 
                 <label>
@@ -599,6 +604,10 @@ function TambahSurat() {
 
             </div>
 
+            {/* =================================================
+                PERIHAL
+            ================================================= */}
+
             <div className="tambah-form-group tambah-full">
 
               <label>
@@ -616,55 +625,40 @@ function TambahSurat() {
             </div>
 
             {/* =================================================
-                SCAN SURAT
+                ARSIP SURAT
             ================================================= */}
 
             <div className="tambah-form-group tambah-full">
 
-              <label htmlFor="arsip_surat">
-                Scan Surat <b>*</b>
+              <label>
+                Arsip Surat
               </label>
 
               <input
-                id="arsip_surat"
-                name="arsip_surat"
                 type="file"
-                accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
-                className="tambah-scan-input"
-                onChange={handleScanChange}
+                accept="application/pdf,.pdf"
+                onChange={handleArsipChange}
               />
 
-              <button
-                type="button"
-                onClick={() => setShowCamera(true)}
-                className="tambah-btn-camera"
-                style={{
-                  marginTop: "10px",
-                  padding: "10px 15px",
-                  cursor: "pointer",
-                }}
-              >
-                📷 Ambil Foto dengan Kamera
-              </button>
-
-              {scanSurat && (
-
-                <div className="tambah-scan-selected">
-
-                  ✓ {scanSurat.name}
-
-                </div>
-
-              )}
-
-              <small className="tambah-scan-info">
-
-                Upload PDF, JPG, JPEG, atau PNG.
-                Maksimal 20 MB.
-
+              <small>
+                Upload hasil scan surat dalam format PDF.
+                Maksimal 20 MB. Arsip bersifat opsional.
               </small>
 
+              {arsipFile && (
+                <small>
+                  File dipilih:{" "}
+                  <strong>
+                    {arsipFile.name}
+                  </strong>
+                </small>
+              )}
+
             </div>
+
+            {/* =================================================
+                ACTION
+            ================================================= */}
 
             <div className="tambah-form-actions">
 
@@ -680,9 +674,11 @@ function TambahSurat() {
                 className="tambah-btn-save"
                 disabled={loading}
               >
+
                 {loading
                   ? "Menyimpan..."
                   : "✓ Simpan Surat"}
+
               </button>
 
             </div>
@@ -693,21 +689,9 @@ function TambahSurat() {
 
       </main>
 
-      {/* =====================================================
-          MODAL KAMERA
-      ===================================================== */}
-
-      {showCamera && (
-
-        <CameraCapture
-          onCapture={handleCameraCapture}
-          onClose={() => setShowCamera(false)}
-        />
-
-      )}
-
     </div>
   );
 }
 
 export default TambahSurat;
+```

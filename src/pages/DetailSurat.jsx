@@ -12,6 +12,7 @@ function parseDateLocal(value) {
   const text = String(value).trim();
 
   /* Format YYYY-MM-DD */
+
   const match = text.match(/^(\d{4})-(\d{2})-(\d{2})/);
 
   if (match) {
@@ -33,7 +34,6 @@ function parseDateLocal(value) {
 
 /* =========================================================
    FORMAT TANGGAL
-   Contoh: 19/08/2026
 ========================================================= */
 
 function formatTanggal(value) {
@@ -54,7 +54,6 @@ function formatTanggal(value) {
 
 /* =========================================================
    FORMAT JAM
-   Contoh: 15:30 WITA
 ========================================================= */
 
 function formatJam(value) {
@@ -75,56 +74,6 @@ function formatJam(value) {
     "0"
   )}:${match[2]} WITA`;
 }
-
-/* =========================================================
-   FORMAT LIST DISPOSISI
-========================================================= */
-
-function parseList(value) {
-  if (!value) return [];
-
-  if (Array.isArray(value)) {
-    return value
-      .map((item) => String(item).trim())
-      .filter(Boolean);
-  }
-
-  return String(value)
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
-
-/* =========================================================
-   PILIHAN DITERUSKAN KEPADA
-========================================================= */
-
-const diteruskanOptions = [
-  "Sekretaris",
-  "Kabid. HI & Jaminan Sosial Tenaga Kerja",
-  "Kabid. Pengawasan Ketenagakerjaan",
-  "Kabid. Pelatihan & penempatan T.K",
-  "Kabid. Ketransmigrasian",
-  "Ka. UPTD Balai Pengawasan Tenaga Kerja",
-  "Ka. UPTD Balai Pelatihan Tenaga Kerja",
-];
-
-/* =========================================================
-   PILIHAN DENGAN HORMAT HARAP
-========================================================= */
-
-const hormatOptions = [
-  "Buat Tanggapan dan saran",
-  "Tangani / Proses lebih Lanjut",
-  "Proses Sesuai Ketentuan",
-  "Laporkan Kepada Saya",
-  "Koordinasi",
-  "Untuk Minta Perhatian",
-  "Tindak Lanjut",
-  "Buatkan Materi / Sambutan",
-  "Mewakili",
-  "File",
-];
 
 /* =========================================================
    KOMPONEN SIDEBAR
@@ -226,6 +175,7 @@ function Topbar() {
 ========================================================= */
 
 function DetailSurat() {
+
   const { id } = useParams();
 
   const [surat, setSurat] = useState(null);
@@ -233,6 +183,13 @@ function DetailSurat() {
   const [loading, setLoading] = useState(true);
 
   const [error, setError] = useState("");
+
+  /* =======================================================
+     STATE UNTUK TAMPILAN ARSIP LAYAR PENUH
+  ======================================================= */
+
+  const [lihatArsip, setLihatArsip] =
+    useState(false);
 
   /* =======================================================
      AMBIL DATA DARI BACKEND
@@ -257,12 +214,14 @@ function DetailSurat() {
 
           throw new Error(
             result.message ||
-              "Data surat tidak ditemukan."
+            "Data surat tidak ditemukan."
           );
 
         }
 
-        setSurat(result.data);
+        setSurat(
+          result.data || result
+        );
 
       } catch (error) {
 
@@ -272,6 +231,7 @@ function DetailSurat() {
         );
 
         setError(
+          error.message ||
           "Data surat tidak tersedia atau gagal mengambil data dari server."
         );
 
@@ -386,18 +346,6 @@ function DetailSurat() {
   }
 
   /* =======================================================
-     DATA DISPOSISI
-  ======================================================= */
-
-  const diteruskan = parseList(
-    surat.diteruskan_kepada
-  );
-
-  const hormat = parseList(
-    surat.dengan_hormat_harap
-  );
-
-  /* =======================================================
      RENDER
   ======================================================= */
 
@@ -410,7 +358,6 @@ function DetailSurat() {
 
       <Sidebar />
 
-
       {/* =================================================
           MAIN
       ================================================= */}
@@ -421,13 +368,11 @@ function DetailSurat() {
 
         <Topbar />
 
-
         {/* =================================================
             CONTENT
         ================================================= */}
 
         <section className="page-content">
-
 
           {/* =================================================
               PAGE HEADER
@@ -442,8 +387,7 @@ function DetailSurat() {
               </h2>
 
               <p>
-                Informasi lengkap data surat
-                dan disposisi.
+                Informasi lengkap data surat.
               </p>
 
             </div>
@@ -457,13 +401,11 @@ function DetailSurat() {
 
           </div>
 
-
           {/* =================================================
               FORM CARD
           ================================================= */}
 
           <div className="form-card">
-
 
             {/* =================================================
                 INFORMASI SURAT
@@ -475,9 +417,7 @@ function DetailSurat() {
                 Informasi Surat
               </h3>
 
-
               <div className="form-grid">
-
 
                 {/* NOMOR SURAT */}
 
@@ -497,7 +437,6 @@ function DetailSurat() {
 
                 </div>
 
-
                 {/* NOMOR AGENDA */}
 
                 <div className="form-group">
@@ -515,7 +454,6 @@ function DetailSurat() {
                   />
 
                 </div>
-
 
                 {/* SURAT DARI */}
 
@@ -535,7 +473,6 @@ function DetailSurat() {
 
                 </div>
 
-
                 {/* SIFAT SURAT */}
 
                 <div className="form-group">
@@ -554,7 +491,6 @@ function DetailSurat() {
 
                 </div>
 
-
                 {/* TANGGAL SURAT */}
 
                 <div className="form-group">
@@ -565,14 +501,15 @@ function DetailSurat() {
 
                   <input
                     type="text"
-                    value={formatTanggal(
-                      surat.tanggal_surat
-                    )}
+                    value={
+                      formatTanggal(
+                        surat.tanggal_surat
+                      )
+                    }
                     readOnly
                   />
 
                 </div>
-
 
                 {/* TANGGAL DITERIMA */}
 
@@ -584,14 +521,15 @@ function DetailSurat() {
 
                   <input
                     type="text"
-                    value={formatTanggal(
-                      surat.tanggal_diterima
-                    )}
+                    value={
+                      formatTanggal(
+                        surat.tanggal_diterima
+                      )
+                    }
                     readOnly
                   />
 
                 </div>
-
 
                 {/* JAM DITERIMA */}
 
@@ -603,19 +541,19 @@ function DetailSurat() {
 
                   <input
                     type="text"
-                    value={formatJam(
-                      surat.jam_diterima
-                    )}
+                    value={
+                      formatJam(
+                        surat.jam_diterima
+                      )
+                    }
                     readOnly
                   />
 
                 </div>
 
-
               </div>
 
             </div>
-
 
             {/* =================================================
                 PERIHAL
@@ -645,214 +583,116 @@ function DetailSurat() {
 
             </div>
 
-
             {/* =================================================
-                DISPOSISI
+                SCAN SURAT
             ================================================= */}
 
             <div className="form-section">
 
               <h3>
-                Disposisi
+                Scan Surat
               </h3>
 
+              {surat.arsip_surat?.url_file ? (
 
-              <div className="disposisi-grid">
+                <div>
 
+                  <p
+                    style={{
+                      marginTop: 0,
+                      marginBottom: "12px",
+                      color: "#6b7280",
+                      fontSize: "12px",
+                    }}
+                  >
+                    {surat.arsip_surat.nama_file ||
+                      "Arsip surat"}
+                  </p>
 
-                {/* =================================================
-                    DITERUSKAN KEPADA
-                ================================================= */}
+                  {/* PREVIEW DI HALAMAN DETAIL */}
 
-                <div className="disposisi-box">
+                  <iframe
+                    title="Preview Scan Surat"
+                    src={
+                      `http://localhost:5000/api/surat/preview/${surat._id}`
+                    }
+                    style={{
+                      width: "100%",
+                      height: "700px",
+                      border: "1px solid #d6e2ea",
+                      borderRadius: "10px",
+                      background: "#f8fafc",
+                    }}
+                  />
 
-                  <h4>
-                    Diteruskan Kepada
-                  </h4>
+                  {/* =================================================
+                      BUTTON
+                  ================================================= */}
 
+                  <div
+                    style={{
+                      marginTop: "12px",
+                      display: "flex",
+                      gap: "10px",
+                      flexWrap: "wrap",
+                    }}
+                  >
 
-                  <div className="checkbox-list">
+                    {/* LIHAT ARSIP LAYAR PENUH */}
 
-                    {diteruskan.length > 0 ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setLihatArsip(true)
+                      }
+                      className="btn-primary"
+                      style={{
+                        border: "none",
+                        cursor: "pointer",
+                      }}
+                    >
+                      ⛶ Lihat Arsip Layar Penuh
+                    </button>
 
-                      diteruskanOptions.map(
-                        (option) => {
+                    {/* DOWNLOAD ARSIP */}
 
-                          const checked =
-                            diteruskan.includes(
-                              option
-                            );
-
-                          return (
-                            <div
-                              className="check-row"
-                              key={option}
-                            >
-
-                              <span
-                                className="check-box"
-                                style={
-                                  checked
-                                    ? {
-                                        background:
-                                          "#123b5d",
-                                        borderColor:
-                                          "#123b5d",
-                                        color:
-                                          "#ffffff",
-                                      }
-                                    : {}
-                                }
-                              >
-                                {checked
-                                  ? "✓"
-                                  : ""}
-                              </span>
-
-                              <span className="check-text">
-                                {option}
-                              </span>
-
-                            </div>
-                          );
-
-                        }
-                      )
-
-                    ) : (
-
-                      <div
-                        style={{
-                          fontSize: "12px",
-                          color: "#6b7280",
-                          padding: "7px 0",
-                        }}
-                      >
-                        Tidak ada pilihan.
-                      </div>
-
-                    )}
+                    <a
+                      href={
+                        `http://localhost:5000/api/surat/download/${surat._id}`
+                      }
+                      className="btn-primary"
+                      style={{
+                        textDecoration: "none",
+                      }}
+                    >
+                      ↓ Download Arsip
+                    </a>
 
                   </div>
 
                 </div>
 
+              ) : (
 
-                {/* =================================================
-                    DENGAN HORMAT HARAP
-                ================================================= */}
-
-                <div className="disposisi-box">
-
-                  <h4>
-                    Dengan Hormat Harap
-                  </h4>
-
-
-                  <div className="checkbox-list">
-
-                    {hormat.length > 0 ? (
-
-                      hormatOptions.map(
-                        (option) => {
-
-                          const checked =
-                            hormat.includes(
-                              option
-                            );
-
-                          return (
-                            <div
-                              className="check-row"
-                              key={option}
-                            >
-
-                              <span
-                                className="check-box"
-                                style={
-                                  checked
-                                    ? {
-                                        background:
-                                          "#123b5d",
-                                        borderColor:
-                                          "#123b5d",
-                                        color:
-                                          "#ffffff",
-                                      }
-                                    : {}
-                                }
-                              >
-                                {checked
-                                  ? "✓"
-                                  : ""}
-                              </span>
-
-                              <span className="check-text">
-                                {option}
-                              </span>
-
-                            </div>
-                          );
-
-                        }
-                      )
-
-                    ) : (
-
-                      <div
-                        style={{
-                          fontSize: "12px",
-                          color: "#6b7280",
-                          padding: "7px 0",
-                        }}
-                      >
-                        Tidak ada pilihan.
-                      </div>
-
-                    )}
-
-                  </div>
-
+                <div
+                  style={{
+                    padding: "14px",
+                    borderRadius: "8px",
+                    background: "#f8fafc",
+                    border: "1px solid #e5e7eb",
+                    color: "#6b7280",
+                    fontSize: "12px",
+                  }}
+                >
+                  Scan surat belum tersedia.
                 </div>
 
-
-              </div>
-
-            </div>
-
-
-            {/* =================================================
-                CATATAN
-            ================================================= */}
-
-            <div className="form-section">
-
-              <h3>
-                Catatan
-              </h3>
-
-
-              <div className="form-group">
-
-                <label>
-                  Catatan
-                </label>
-
-                <textarea
-                  value={
-                    surat.catatan || ""
-                  }
-                  readOnly
-                  rows="4"
-                />
-
-              </div>
+              )}
 
             </div>
 
-
             {/* =================================================
-                BUTTON
+                BUTTON BAWAH
             ================================================= */}
 
             <div className="form-actions">
@@ -864,7 +704,6 @@ function DetailSurat() {
                 ← Kembali
               </Link>
 
-
               <Link
                 to={`/surat/edit/${surat._id}`}
                 className="btn-primary"
@@ -874,12 +713,115 @@ function DetailSurat() {
 
             </div>
 
-
           </div>
 
         </section>
 
       </main>
+
+      {/* =====================================================
+          MODAL ARSIP LAYAR PENUH
+      ====================================================== */}
+
+      {lihatArsip &&
+        surat.arsip_surat?.url_file && (
+
+          <div
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              background: "#ffffff",
+              zIndex: 9999,
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+
+            {/* =================================================
+                HEADER MODAL
+            ================================================= */}
+
+            <div
+              style={{
+                padding: "15px 25px",
+                borderBottom:
+                  "1px solid #d6e2ea",
+                display: "flex",
+                justifyContent:
+                  "space-between",
+                alignItems: "center",
+                gap: "15px",
+                flexWrap: "wrap",
+                background: "#ffffff",
+              }}
+            >
+
+              <div>
+
+                <h3
+                  style={{
+                    margin: 0,
+                  }}
+                >
+                  Scan Surat
+                </h3>
+
+                <p
+                  style={{
+                    margin:
+                      "4px 0 0 0",
+                    color: "#6b7280",
+                    fontSize: "12px",
+                  }}
+                >
+                  {surat.arsip_surat.nama_file ||
+                    "Arsip surat"}
+                </p>
+
+              </div>
+
+              {/* =================================================
+                  TOMBOL KEMBALI
+              ================================================= */}
+
+              <button
+                type="button"
+                onClick={() =>
+                  setLihatArsip(false)
+                }
+                className="btn-secondary"
+                style={{
+                  cursor: "pointer",
+                }}
+              >
+                ← Kembali ke Detail Surat
+              </button>
+
+            </div>
+
+            {/* =================================================
+                ARSIP LAYAR PENUH
+            ================================================= */}
+
+            <iframe
+              title="Arsip Surat Layar Penuh"
+              src={
+                `http://localhost:5000/api/surat/preview/${surat._id}`
+              }
+              style={{
+                width: "100%",
+                flex: 1,
+                border: "none",
+                background: "#f8fafc",
+              }}
+            />
+
+          </div>
+
+        )}
 
     </div>
   );
