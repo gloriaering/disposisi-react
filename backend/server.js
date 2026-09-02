@@ -29,10 +29,13 @@ app.get("/", (req, res) => {
 
 // =========================================================
 // TEST MONGODB
+// BUKA: /test-mongodb
 // =========================================================
 
 app.get("/test-mongodb", async (req, res) => {
   try {
+
+    // CEK APAKAH MONGODB_URI ADA
     if (!process.env.MONGODB_URI) {
       return res.status(500).json({
         success: false,
@@ -40,9 +43,14 @@ app.get("/test-mongodb", async (req, res) => {
       });
     }
 
-    await mongoose.connect(process.env.MONGODB_URI, {
-      serverSelectionTimeoutMS: 10000,
-    });
+    // JIKA BELUM TERHUBUNG, COBA HUBUNGKAN
+    if (mongoose.connection.readyState !== 1) {
+
+      await mongoose.connect(process.env.MONGODB_URI, {
+        serverSelectionTimeoutMS: 10000,
+      });
+
+    }
 
     return res.json({
       success: true,
@@ -60,7 +68,32 @@ app.get("/test-mongodb", async (req, res) => {
       message: "GAGAL TERHUBUNG KE MONGODB",
       error: error.message,
     });
+
   }
+});
+
+// =========================================================
+// CEK STATUS DATABASE
+// BUKA: /api/status-db
+// =========================================================
+
+app.get("/api/status-db", (req, res) => {
+
+  const status = mongoose.connection.readyState;
+
+  const statusDatabase = {
+    0: "DISCONNECTED",
+    1: "CONNECTED",
+    2: "CONNECTING",
+    3: "DISCONNECTING",
+  };
+
+  return res.json({
+    success: status === 1,
+    database_status: statusDatabase[status],
+    readyState: status,
+  });
+
 });
 
 // =========================================================
@@ -72,12 +105,15 @@ app.use(async (req, res, next) => {
   try {
 
     if (!process.env.MONGODB_URI) {
+
       return res.status(500).json({
         success: false,
         message: "MONGODB_URI belum ditemukan di Vercel",
       });
+
     }
 
+    // JIKA SUDAH CONNECTED, JANGAN CONNECT LAGI
     if (mongoose.connection.readyState !== 1) {
 
       await mongoose.connect(process.env.MONGODB_URI, {
@@ -85,6 +121,7 @@ app.use(async (req, res, next) => {
       });
 
       console.log("MongoDB Atlas berhasil terhubung");
+
     }
 
     next();
@@ -99,6 +136,7 @@ app.use(async (req, res, next) => {
       message: "Gagal terhubung ke database.",
       error: error.message,
     });
+
   }
 
 });
