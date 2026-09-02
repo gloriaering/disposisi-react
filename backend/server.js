@@ -32,7 +32,7 @@ app.get("/", (req, res) => {
 // BUKA: /test-mongodb
 // =========================================================
 
-app.get("/test-mongodb", async (req, res) => {
+app.get("/api/test-mongodb", async (req, res) => {
   try {
 
     // CEK APAKAH MONGODB_URI ADA
