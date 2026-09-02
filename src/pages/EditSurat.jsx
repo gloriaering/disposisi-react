@@ -40,7 +40,7 @@ function EditSurat() {
         setError("");
 
         const response = await fetch(
-          "http://localhost:5000/api/surat/" + id
+          "https://disposisi-react-8vdu.vercel.app/api/surat/" + id
         );
 
         const result = await response.json();
@@ -564,7 +564,7 @@ function EditSurat() {
       const response =
         await fetch(
 
-          "http://localhost:5000/api/surat/" +
+          "https://disposisi-react-8vdu.vercel.app/api/surat/" +
             id,
 
           {
@@ -1262,7 +1262,7 @@ function EditSurat() {
 
                     <iframe
                       src={
-                        "http://localhost:5000/api/surat/preview/" +
+                        "https://disposisi-react-8vdu.vercel.app/api/surat/preview/" +
                         id
                       }
                       title="Preview Arsip Surat"

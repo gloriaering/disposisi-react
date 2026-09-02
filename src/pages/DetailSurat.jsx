@@ -228,7 +228,7 @@ function DetailSurat() {
 
           const response =
             await fetch(
-              `http://localhost:5000/api/surat/${id}`
+              `https://disposisi-react-8vdu.vercel.app/api/surat/${id}`
             );
 
           const result =
@@ -376,10 +376,10 @@ function DetailSurat() {
   ======================================================= */
 
   const urlPreview =
-    `http://localhost:5000/api/surat/preview/${surat._id}`;
+    `https://disposisi-react-8vdu.vercel.app/api/surat/preview/${surat._id}`;
 
   const urlDownload =
-    `http://localhost:5000/api/surat/download/${surat._id}`;
+    `https://disposisi-react-8vdu.vercel.app/api/surat/download/${surat._id}`;
 
 
   /* =======================================================

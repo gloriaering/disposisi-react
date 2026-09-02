@@ -26,7 +26,7 @@ function RiwayatSurat() {
       setError("");
 
       const response = await fetch(
-        "http://localhost:5000/api/surat/riwayat"
+        "https://disposisi-react-8vdu.vercel.app/api/surat/riwayat"
       );
 
       const result = await response.json();
@@ -172,7 +172,7 @@ function RiwayatSurat() {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/surat/${id}/pulihkan`,
+        `https://disposisi-react-8vdu.vercel.app/api/surat/${id}/pulihkan`,
         {
           method: "PUT",
         }
@@ -237,7 +237,7 @@ function RiwayatSurat() {
     try {
 
       const response = await fetch(
-        `http://localhost:5000/api/surat/${id}/permanen`,
+        `https://disposisi-react-8vdu.vercel.app/api/surat/${id}/permanen`,
         {
           method: "DELETE",
         }
@@ -318,7 +318,7 @@ function RiwayatSurat() {
         selectedSurat.map(async (id) => {
 
           const response = await fetch(
-            `http://localhost:5000/api/surat/${id}/permanen`,
+            `https://disposisi-react-8vdu.vercel.app/api/surat/${id}/permanen`,
             {
               method: "DELETE",
             }

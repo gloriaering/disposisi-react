@@ -15,7 +15,7 @@ function PreviewSurat() {
         setError("");
 
         const response = await fetch(
-          `http://localhost:5000/api/surat/${id}`
+          `https://disposisi-react-8vdu.vercel.app/api/surat/${id}`
         );
 
         const result = await response.json();
@@ -81,7 +81,7 @@ function PreviewSurat() {
   }
 
   const arsipUrl =
-    `http://localhost:5000/api/surat/preview/${id}`;
+    `https://disposisi-react-8vdu.vercel.app/api/surat/preview/${id}`;
 
   return (
     <div
