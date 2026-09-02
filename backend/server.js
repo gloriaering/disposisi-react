@@ -28,53 +28,49 @@ app.get("/", (req, res) => {
 });
 
 // =========================================================
-// TEST MONGODB
-// BUKA: /test-mongodb
+// KONEKSI MONGODB
 // =========================================================
 
-app.get("/api/test-mongodb", async (req, res) => {
+const connectMongoDB = async () => {
   try {
-
-    // CEK APAKAH MONGODB_URI ADA
-    if (!process.env.MONGODB_URI) {
-      return res.status(500).json({
-        success: false,
-        message: "MONGODB_URI TIDAK ADA di Environment Variables Vercel",
-      });
+    // Kalau sudah terhubung, tidak perlu connect lagi
+    if (mongoose.connection.readyState === 1) {
+      return;
     }
 
-    // JIKA BELUM TERHUBUNG, COBA HUBUNGKAN
-    if (mongoose.connection.readyState !== 1) {
+    await mongoose.connect(process.env.MONGODB_URI);
 
-      await mongoose.connect(process.env.MONGODB_URI, {
-        serverSelectionTimeoutMS: 10000,
-      });
-
-    }
-
-    return res.json({
-      success: true,
-      message: "BERHASIL TERHUBUNG KE MONGODB ATLAS",
-      database: mongoose.connection.name,
-      status: mongoose.connection.readyState,
-    });
+    console.log("=================================");
+    console.log("MongoDB Atlas BERHASIL TERHUBUNG");
+    console.log("Database:", mongoose.connection.name);
+    console.log("=================================");
 
   } catch (error) {
+    console.error("GAGAL TERHUBUNG KE MONGODB:");
+    console.error(error.message);
 
-    console.error("ERROR MONGODB:", error);
+    throw error;
+  }
+};
 
-    return res.status(500).json({
+// =========================================================
+// MIDDLEWARE KONEK DATABASE
+// =========================================================
+
+app.use(async (req, res, next) => {
+  try {
+    await connectMongoDB();
+    next();
+  } catch (error) {
+    res.status(500).json({
       success: false,
-      message: "GAGAL TERHUBUNG KE MONGODB",
-      error: error.message,
+      message: "Gagal terhubung ke database",
     });
-
   }
 });
 
 // =========================================================
-// CEK STATUS DATABASE
-// BUKA: /api/status-db
+// TEST STATUS DATABASE
 // =========================================================
 
 app.get("/api/status-db", (req, res) => {
@@ -88,7 +84,7 @@ app.get("/api/status-db", (req, res) => {
     3: "DISCONNECTING",
   };
 
-  return res.json({
+  res.json({
     success: status === 1,
     database_status: statusDatabase[status],
     readyState: status,
@@ -97,47 +93,16 @@ app.get("/api/status-db", (req, res) => {
 });
 
 // =========================================================
-// KONEKSI MONGODB SEBELUM API DIGUNAKAN
+// TEST MONGODB
 // =========================================================
 
-app.use(async (req, res, next) => {
+app.get("/api/test-mongodb", (req, res) => {
 
-  try {
-
-    if (!process.env.MONGODB_URI) {
-
-      return res.status(500).json({
-        success: false,
-        message: "MONGODB_URI belum ditemukan di Vercel",
-      });
-
-    }
-
-    // JIKA SUDAH CONNECTED, JANGAN CONNECT LAGI
-    if (mongoose.connection.readyState !== 1) {
-
-      await mongoose.connect(process.env.MONGODB_URI, {
-        serverSelectionTimeoutMS: 10000,
-      });
-
-      console.log("MongoDB Atlas berhasil terhubung");
-
-    }
-
-    next();
-
-  } catch (error) {
-
-    console.error("GAGAL KONEK MONGODB:");
-    console.error(error.message);
-
-    return res.status(500).json({
-      success: false,
-      message: "Gagal terhubung ke database.",
-      error: error.message,
-    });
-
-  }
+  res.json({
+    success: mongoose.connection.readyState === 1,
+    message: "BERHASIL TERHUBUNG KE MONGODB ATLAS",
+    database: mongoose.connection.name,
+  });
 
 });
 
@@ -146,6 +111,30 @@ app.use(async (req, res, next) => {
 // =========================================================
 
 app.use("/api/surat", suratRoutes);
+
+// =========================================================
+// JALANKAN SERVER DI LOCALHOST SAJA
+// =========================================================
+
+const PORT = process.env.PORT || 5000;
+
+if (require.main === module) {
+
+  connectMongoDB()
+    .then(() => {
+
+      app.listen(PORT, () => {
+        console.log(
+          `Server berjalan di http://localhost:${PORT}`
+        );
+      });
+
+    })
+    .catch(() => {
+      console.log("Server tidak dapat dijalankan.");
+    });
+
+}
 
 // =========================================================
 // EXPORT UNTUK VERCEL

@@ -333,10 +333,18 @@ function TambahSurat() {
         scanSurat
       );
 
-      /* KIRIM KE BACKEND */
+      /* =====================================================
+         KIRIM KE BACKEND
+         
+         DIUBAH DARI:
+         http://localhost:5000/api/surat
+
+         MENJADI:
+         /api/surat
+      ===================================================== */
 
       const response = await fetch(
-        "http://localhost:5000/api/surat",
+        "/api/surat",
         {
           method: "POST",
           body: data,

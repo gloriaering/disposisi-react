@@ -138,7 +138,6 @@ function EditSurat() {
 
   }, [id]);
 
-
   // =========================================================
   // BERSIHKAN PREVIEW FILE BARU
   // =========================================================
@@ -157,7 +156,6 @@ function EditSurat() {
 
   }, [previewBaru]);
 
-
   // =========================================================
   // HANDLE INPUT
   // =========================================================
@@ -175,7 +173,6 @@ function EditSurat() {
     }));
 
   };
-
 
   // =========================================================
   // HANDLE TANGGAL SURAT
@@ -215,7 +212,6 @@ function EditSurat() {
 
   };
 
-
   // =========================================================
   // CEK FILE YANG DIIZINKAN
   // =========================================================
@@ -246,7 +242,6 @@ function EditSurat() {
 
   };
 
-
   // =========================================================
   // PROSES FILE BARU
   // =========================================================
@@ -273,8 +268,9 @@ function EditSurat() {
 
     }
 
-
+    // =======================================================
     // CEK TIPE FILE
+    // =======================================================
 
     if (!fileDiizinkan(file)) {
 
@@ -294,8 +290,9 @@ function EditSurat() {
 
     }
 
-
+    // =======================================================
     // CEK UKURAN FILE
+    // =======================================================
 
     if (
       file.size >
@@ -318,8 +315,9 @@ function EditSurat() {
 
     }
 
-
+    // =======================================================
     // HAPUS PREVIEW LAMA
+    // =======================================================
 
     if (previewBaru) {
 
@@ -329,8 +327,9 @@ function EditSurat() {
 
     }
 
-
+    // =======================================================
     // BUAT PREVIEW BARU
+    // =======================================================
 
     const url =
       URL.createObjectURL(file);
@@ -340,7 +339,6 @@ function EditSurat() {
     setPreviewBaru(url);
 
   };
-
 
   // =========================================================
   // HANDLE PILIH FILE
@@ -358,7 +356,6 @@ function EditSurat() {
 
   };
 
-
   // =========================================================
   // HANDLE FOTO DARI KAMERA
   // =========================================================
@@ -374,7 +371,6 @@ function EditSurat() {
     );
 
   };
-
 
   // =========================================================
   // CEK JENIS FILE
@@ -415,7 +411,6 @@ function EditSurat() {
 
   };
 
-
   // =========================================================
   // SIMPAN PERUBAHAN
   // =========================================================
@@ -452,8 +447,9 @@ function EditSurat() {
 
     }
 
-
+    // =======================================================
     // CEK FILE BARU JIKA ADA
+    // =======================================================
 
     if (arsipFile) {
 
@@ -481,7 +477,6 @@ function EditSurat() {
       }
 
     }
-
 
     try {
 
@@ -553,8 +548,9 @@ function EditSurat() {
         form.catatan || ""
       );
 
-
+      // =====================================================
       // FILE BARU
+      // =====================================================
 
       if (arsipFile) {
 
@@ -623,7 +619,6 @@ function EditSurat() {
 
   };
 
-
   // =========================================================
   // LOADING
   // =========================================================
@@ -659,7 +654,6 @@ function EditSurat() {
 
   }
 
-
   // =========================================================
   // TAMPILAN
   // =========================================================
@@ -668,7 +662,9 @@ function EditSurat() {
 
     <div className="tambah-page">
 
-      {/* SIDEBAR */}
+      {/* =====================================================
+          SIDEBAR
+      ===================================================== */}
 
       <aside className="tambah-sidebar">
 
@@ -732,7 +728,9 @@ function EditSurat() {
       </aside>
 
 
-      {/* MAIN */}
+      {/* =====================================================
+          MAIN
+      ===================================================== */}
 
       <main className="tambah-main">
 
@@ -794,7 +792,9 @@ function EditSurat() {
           )}
 
 
-          {/* FORM */}
+          {/* =================================================
+              FORM
+          ================================================= */}
 
           <form
             className="tambah-form-card"
@@ -818,10 +818,14 @@ function EditSurat() {
             </div>
 
 
-            {/* FORM GRID */}
+            {/* =================================================
+                FORM GRID
+            ================================================= */}
 
             <div className="tambah-form-grid">
 
+
+              {/* SURAT DARI */}
 
               <div className="tambah-form-group">
 
@@ -841,6 +845,8 @@ function EditSurat() {
               </div>
 
 
+              {/* TANGGAL DITERIMA */}
+
               <div className="tambah-form-group">
 
                 <label>
@@ -856,6 +862,8 @@ function EditSurat() {
 
               </div>
 
+
+              {/* NOMOR SURAT */}
 
               <div className="tambah-form-group">
 
@@ -875,6 +883,8 @@ function EditSurat() {
               </div>
 
 
+              {/* NOMOR AGENDA */}
+
               <div className="tambah-form-group">
 
                 <label>
@@ -892,6 +902,8 @@ function EditSurat() {
 
               </div>
 
+
+              {/* TANGGAL SURAT */}
 
               <div className="tambah-form-group">
 
@@ -913,6 +925,8 @@ function EditSurat() {
               </div>
 
 
+              {/* JAM DITERIMA */}
+
               <div className="tambah-form-group">
 
                 <label>
@@ -931,7 +945,9 @@ function EditSurat() {
             </div>
 
 
-            {/* PERIHAL */}
+            {/* =================================================
+                PERIHAL
+            ================================================= */}
 
             <div className="tambah-form-group tambah-full">
 
@@ -983,7 +999,9 @@ function EditSurat() {
               />
 
 
-              {/* KAMERA */}
+              {/* =================================================
+                  KAMERA
+              ================================================= */}
 
               <div
                 style={{
@@ -1024,7 +1042,9 @@ function EditSurat() {
               </small>
 
 
-              {/* FILE BARU */}
+              {/* =================================================
+                  FILE BARU
+              ================================================= */}
 
               {arsipFile && (
 
@@ -1233,15 +1253,12 @@ function EditSurat() {
                   </div>
 
 
-                  {/* CEK PDF ATAU GAMBAR */}
+                  {/* =================================================
+                      PDF LAMA
+                  ================================================= */}
 
-                  {(arsipLama.tipe_file ===
-                    "application/pdf" ||
-                    arsipLama.nama_file
-                      ?.toLowerCase()
-                      .endsWith(".pdf")) ? (
-
-                    /* PDF LAMA */
+                  {arsipLama.tipe_file ===
+                  "application/pdf" ? (
 
                     <iframe
                       src={
@@ -1258,32 +1275,19 @@ function EditSurat() {
                       }}
                     />
 
-                  ) : (
-
-                    arsipLama.tipe_file?.startsWith(
+                  ) : arsipLama.tipe_file?.startsWith(
                       "image/"
-                    ) ||
-                    /\.(jpg|jpeg|png|webp)$/i.test(
-                      arsipLama.nama_file || ""
-                    )
-
-                  ) ? (
-
-                    /* GAMBAR LAMA */
+                    ) ? (
 
                     <div
                       style={{
                         padding: "20px",
                         textAlign: "center",
-                        background: "#ffffff",
                       }}
                     >
 
                       <img
-                        src={
-                          "http://localhost:5000/api/surat/preview/" +
-                          id
-                        }
+                        src={arsipLama.url_file}
                         alt="Arsip Surat"
                         style={{
                           maxWidth: "100%",
@@ -1295,8 +1299,6 @@ function EditSurat() {
                     </div>
 
                   ) : (
-
-                    /* FILE LAIN */
 
                     <div
                       style={{
@@ -1328,10 +1330,7 @@ function EditSurat() {
                   >
 
                     <a
-                      href={
-                        "http://localhost:5000/api/surat/preview/" +
-                        id
-                      }
+                      href={arsipLama.url_file}
                       target="_blank"
                       rel="noopener noreferrer"
                       style={{
@@ -1367,7 +1366,9 @@ function EditSurat() {
               )}
 
 
-              {/* BELUM ADA ARSIP */}
+              {/* =================================================
+                  BELUM ADA ARSIP
+              ================================================= */}
 
               {!arsipFile &&
                 !arsipLama && (
@@ -1391,7 +1392,9 @@ function EditSurat() {
             </div>
 
 
-            {/* BUTTON */}
+            {/* =================================================
+                BUTTON
+            ================================================= */}
 
             <div className="tambah-form-actions">
 

@@ -398,11 +398,7 @@ function RiwayatSurat() {
 
       {/* SIDEBAR */}
 
-      <aside
-  className={`riwayat-sidebar ${
-    menuOpen ? "menu-open" : ""
-  }`}
->
+      <aside className="riwayat-sidebar">
 
         <div className="riwayat-brand">
 
