@@ -8,7 +8,6 @@ const suratRoutes = require("./routes/suratRoutes");
 
 const app = express();
 
-
 // =========================================================
 // MIDDLEWARE
 // =========================================================
@@ -17,163 +16,98 @@ app.use(cors());
 
 app.use(express.json());
 
-
-// =========================================================
-// KONEKSI MONGODB
-// =========================================================
-
-let connectionPromise = null;
-
-
-async function connectMongoDB() {
-
-  // Kalau sudah terhubung
-  if (mongoose.connection.readyState === 1) {
-
-    return mongoose.connection;
-
-  }
-
-
-  // Kalau sedang proses koneksi
-  if (connectionPromise) {
-
-    return connectionPromise;
-
-  }
-
-
-  // Cek MONGODB_URI
-  if (!process.env.MONGODB_URI) {
-
-    throw new Error(
-      "MONGODB_URI belum ditemukan di Environment Variables Vercel."
-    );
-
-  }
-
-
-  console.log("Menghubungkan ke MongoDB Atlas...");
-
-
-  connectionPromise =
-    mongoose.connect(
-      process.env.MONGODB_URI,
-      {
-        serverSelectionTimeoutMS: 10000,
-      }
-    )
-    .then(function () {
-
-      console.log(
-        "Berhasil terhubung ke MongoDB Atlas"
-      );
-
-      return mongoose.connection;
-
-    })
-    .catch(function (error) {
-
-      connectionPromise = null;
-
-      console.error(
-        "Gagal terhubung ke MongoDB Atlas:",
-        error.message
-      );
-
-      throw error;
-
-    });
-
-
-  return connectionPromise;
-
-}
-
-
-// =========================================================
-// MIDDLEWARE PASTIKAN DATABASE TERHUBUNG
-// =========================================================
-
-app.use(
-  async function (req, res, next) {
-
-    try {
-
-      await connectMongoDB();
-
-      next();
-
-    } catch (error) {
-
-      console.error(
-        "DATABASE ERROR:",
-        error.message
-      );
-
-      return res.status(500).json({
-
-        success: false,
-
-        message:
-          "Gagal terhubung ke database.",
-
-      });
-
-    }
-
-  }
-);
-
-
 // =========================================================
 // ROUTE UTAMA
 // =========================================================
 
-app.get(
-  "/",
+app.get("/", (req, res) => {
+  res.json({
+    success: true,
+    message: "Backend Disposisi Surat berhasil berjalan",
+  });
+});
 
-  function (req, res) {
+// =========================================================
+// TEST MONGODB
+// =========================================================
 
-    res.json({
+app.get("/test-mongodb", async (req, res) => {
+  try {
+    if (!process.env.MONGODB_URI) {
+      return res.status(500).json({
+        success: false,
+        message: "MONGODB_URI TIDAK ADA di Environment Variables Vercel",
+      });
+    }
 
-      success: true,
-
-      message:
-        "Backend Disposisi Surat berhasil berjalan",
-
+    await mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 10000,
     });
 
-  }
-);
+    return res.json({
+      success: true,
+      message: "BERHASIL TERHUBUNG KE MONGODB ATLAS",
+      database: mongoose.connection.name,
+      status: mongoose.connection.readyState,
+    });
 
+  } catch (error) {
+
+    console.error("ERROR MONGODB:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "GAGAL TERHUBUNG KE MONGODB",
+      error: error.message,
+    });
+  }
+});
 
 // =========================================================
-// TEST PREVIEW
+// KONEKSI MONGODB SEBELUM API DIGUNAKAN
 // =========================================================
 
-app.get(
-  "/test-preview",
+app.use(async (req, res, next) => {
 
-  function (req, res) {
+  try {
 
-    res.send(
-      "TEST PREVIEW ROUTE BERHASIL"
-    );
+    if (!process.env.MONGODB_URI) {
+      return res.status(500).json({
+        success: false,
+        message: "MONGODB_URI belum ditemukan di Vercel",
+      });
+    }
 
+    if (mongoose.connection.readyState !== 1) {
+
+      await mongoose.connect(process.env.MONGODB_URI, {
+        serverSelectionTimeoutMS: 10000,
+      });
+
+      console.log("MongoDB Atlas berhasil terhubung");
+    }
+
+    next();
+
+  } catch (error) {
+
+    console.error("GAGAL KONEK MONGODB:");
+    console.error(error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Gagal terhubung ke database.",
+      error: error.message,
+    });
   }
-);
 
+});
 
 // =========================================================
 // ROUTE SURAT
 // =========================================================
 
-app.use(
-  "/api/surat",
-  suratRoutes
-);
-
+app.use("/api/surat", suratRoutes);
 
 // =========================================================
 // EXPORT UNTUK VERCEL
