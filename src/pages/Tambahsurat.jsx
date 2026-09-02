@@ -4,6 +4,12 @@ import logoSulut from "../assets/images/logo-sulut.png";
 import "../assets/css/TambahSurat.css";
 import CameraCapture from "../components/CameraCapture";
 
+// =========================================================
+// URL BACKEND ONLINE
+// =========================================================
+
+const API_URL = "https://disposisi-react-8vdu.vercel.app";
+
 function TambahSurat() {
   const navigate = useNavigate();
 
@@ -45,17 +51,12 @@ function TambahSurat() {
     const updateWaktuIndonesia = () => {
       const sekarang = new Date();
 
-      /* TANGGAL FORMAT YYYY-MM-DD */
-
-      const parts = new Intl.DateTimeFormat(
-        "en-CA",
-        {
-          timeZone: "Asia/Makassar",
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-        }
-      )
+      const parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Makassar",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      })
         .formatToParts(sekarang)
         .reduce((acc, part) => {
           if (part.type !== "literal") {
@@ -65,23 +66,16 @@ function TambahSurat() {
           return acc;
         }, {});
 
-      const tanggalIndonesia =
-        `${parts.year}-${parts.month}-${parts.day}`;
+      const tanggalIndonesia = `${parts.year}-${parts.month}-${parts.day}`;
 
-      /* JAM WITA */
+      const formatterJam = new Intl.DateTimeFormat("en-GB", {
+        timeZone: "Asia/Makassar",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      });
 
-      const formatterJam = new Intl.DateTimeFormat(
-        "en-GB",
-        {
-          timeZone: "Asia/Makassar",
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
-        }
-      );
-
-      const jamIndonesia =
-        formatterJam.format(sekarang);
+      const jamIndonesia = formatterJam.format(sekarang);
 
       setFormData((prev) => ({
         ...prev,
@@ -92,10 +86,7 @@ function TambahSurat() {
 
     updateWaktuIndonesia();
 
-    const interval = setInterval(
-      updateWaktuIndonesia,
-      60000
-    );
+    const interval = setInterval(updateWaktuIndonesia, 60000);
 
     return () => clearInterval(interval);
   }, []);
@@ -125,17 +116,11 @@ function TambahSurat() {
     }
 
     if (value.length > 2) {
-      value =
-        value.slice(0, 2) +
-        "-" +
-        value.slice(2);
+      value = value.slice(0, 2) + "-" + value.slice(2);
     }
 
     if (value.length > 5) {
-      value =
-        value.slice(0, 5) +
-        "-" +
-        value.slice(5);
+      value = value.slice(0, 5) + "-" + value.slice(5);
     }
 
     setFormData((prev) => ({
@@ -172,9 +157,7 @@ function TambahSurat() {
     }
 
     if (file.size > 20 * 1024 * 1024) {
-      setError(
-        "Ukuran scan surat maksimal 20 MB."
-      );
+      setError("Ukuran scan surat maksimal 20 MB.");
 
       return false;
     }
@@ -217,7 +200,6 @@ function TambahSurat() {
     }
 
     setScanSurat(file);
-
     setShowCamera(false);
   };
 
@@ -241,20 +223,14 @@ function TambahSurat() {
       !formData.jam_diterima ||
       !formData.perihal.trim()
     ) {
-      setError(
-        "Semua field bertanda * wajib diisi."
-      );
-
+      setError("Semua field bertanda * wajib diisi.");
       return;
     }
 
     /* VALIDASI SCAN */
 
     if (!scanSurat) {
-      setError(
-        "Scan surat wajib dipilih atau difoto."
-      );
-
+      setError("Scan surat wajib dipilih atau difoto.");
       return;
     }
 
@@ -306,10 +282,7 @@ function TambahSurat() {
 
       /* DATA TAMBAHAN */
 
-      data.append(
-        "sifat_surat",
-        ""
-      );
+      data.append("sifat_surat", "");
 
       data.append(
         "diteruskan_kepada",
@@ -321,10 +294,7 @@ function TambahSurat() {
         JSON.stringify([])
       );
 
-      data.append(
-        "catatan",
-        ""
-      );
+      data.append("catatan", "");
 
       /* FILE */
 
@@ -334,36 +304,26 @@ function TambahSurat() {
       );
 
       /* =====================================================
-         KIRIM KE BACKEND
-         
-         DIUBAH DARI:
-         https://disposisi-react-8vdu.vercel.app/api/surat
-
-         MENJADI:
-         /api/surat
+         KIRIM KE BACKEND ONLINE
       ===================================================== */
 
       const response = await fetch(
-        "/api/surat",
+        `${API_URL}/api/surat`,
         {
           method: "POST",
           body: data,
         }
       );
 
-      const result =
-        await response.json();
+      const result = await response.json();
 
       if (!response.ok) {
         throw new Error(
-          result.message ||
-          "Gagal menyimpan surat."
+          result.message || "Gagal menyimpan surat."
         );
       }
 
-      alert(
-        "✓ Surat berhasil disimpan."
-      );
+      alert("✓ Surat berhasil disimpan.");
 
       navigate("/surat");
 
@@ -398,14 +358,11 @@ function TambahSurat() {
       <button
         type="button"
         className="tambah-mobile-menu-btn"
-        onClick={() =>
-          setMenuOpen(!menuOpen)
-        }
+        onClick={() => setMenuOpen(!menuOpen)}
         aria-label="Buka menu"
       >
         ☰
       </button>
-
 
       {/* SIDEBAR */}
 
@@ -420,28 +377,21 @@ function TambahSurat() {
         <div className="tambah-brand">
 
           <div className="tambah-brand-logo">
-
             <img
               src={logoSulut}
               alt="Logo Sulawesi Utara"
             />
-
           </div>
 
           <div className="tambah-brand-text">
 
-            <h2>
-              DISNAKERTRANS
-            </h2>
+            <h2>DISNAKERTRANS</h2>
 
-            <span>
-              Sulawesi Utara
-            </span>
+            <span>Sulawesi Utara</span>
 
           </div>
 
         </div>
-
 
         {/* MENU */}
 
@@ -451,37 +401,28 @@ function TambahSurat() {
             MENU UTAMA
           </p>
 
-
           <Link
             to="/"
             className="tambah-menu-item"
-            onClick={() =>
-              setMenuOpen(false)
-            }
+            onClick={() => setMenuOpen(false)}
           >
             <span>⌂</span>
             Dashboard
           </Link>
 
-
           <Link
             to="/surat"
             className="tambah-menu-item active"
-            onClick={() =>
-              setMenuOpen(false)
-            }
+            onClick={() => setMenuOpen(false)}
           >
             <span>▣</span>
             Surat Masuk
           </Link>
 
-
           <Link
             to="/riwayat"
             className="tambah-menu-item"
-            onClick={() =>
-              setMenuOpen(false)
-            }
+            onClick={() => setMenuOpen(false)}
           >
             <span>↶</span>
             Riwayat Surat
@@ -490,7 +431,6 @@ function TambahSurat() {
         </nav>
 
       </aside>
-
 
       {/* MAIN */}
 
@@ -502,9 +442,7 @@ function TambahSurat() {
 
           <div className="tambah-topbar-left">
 
-            <h1>
-              Tambah Surat
-            </h1>
+            <h1>Tambah Surat</h1>
 
             <p>
               Sistem Informasi Disposisi Surat
@@ -514,31 +452,23 @@ function TambahSurat() {
 
         </header>
 
-
         {/* CONTENT */}
 
         <section className="tambah-content">
-
-          {/* PAGE HEADER */}
 
           <div className="tambah-page-header">
 
             <div className="tambah-page-title">
 
-              <span>
-                DATA ADMINISTRASI
-              </span>
+              <span>DATA ADMINISTRASI</span>
 
-              <h2>
-                Tambah Surat Masuk
-              </h2>
+              <h2>Tambah Surat Masuk</h2>
 
               <p>
                 Masukkan data surat masuk ke dalam sistem.
               </p>
 
             </div>
-
 
             <Link
               to="/surat"
@@ -549,17 +479,13 @@ function TambahSurat() {
 
           </div>
 
-
           {/* ERROR */}
 
           {error && (
-
             <div className="tambah-error">
               {error}
             </div>
-
           )}
-
 
           {/* FORM */}
 
@@ -568,15 +494,11 @@ function TambahSurat() {
             onSubmit={handleSubmit}
           >
 
-            {/* FORM TOP */}
-
             <div className="tambah-form-top">
 
               <div>
 
-                <h3>
-                  Informasi Surat
-                </h3>
+                <h3>Informasi Surat</h3>
 
                 <p>
                   Lengkapi informasi surat dengan benar.
@@ -586,11 +508,7 @@ function TambahSurat() {
 
             </div>
 
-
-            {/* FORM GRID */}
-
             <div className="tambah-form-grid">
-
 
               {/* SURAT DARI */}
 
@@ -610,7 +528,6 @@ function TambahSurat() {
                 />
 
               </div>
-
 
               {/* TANGGAL DITERIMA */}
 
@@ -632,7 +549,6 @@ function TambahSurat() {
 
               </div>
 
-
               {/* NOMOR SURAT */}
 
               <div className="tambah-form-group">
@@ -652,7 +568,6 @@ function TambahSurat() {
 
               </div>
 
-
               {/* NOMOR AGENDA */}
 
               <div className="tambah-form-group">
@@ -671,7 +586,6 @@ function TambahSurat() {
                 />
 
               </div>
-
 
               {/* TANGGAL SURAT */}
 
@@ -698,7 +612,6 @@ function TambahSurat() {
 
               </div>
 
-
               {/* JAM */}
 
               <div className="tambah-form-group">
@@ -721,7 +634,6 @@ function TambahSurat() {
 
             </div>
 
-
             {/* PERIHAL */}
 
             <div className="tambah-form-group tambah-full">
@@ -740,7 +652,6 @@ function TambahSurat() {
 
             </div>
 
-
             {/* SCAN SURAT */}
 
             <div className="tambah-form-group tambah-full">
@@ -757,14 +668,11 @@ function TambahSurat() {
                 onChange={handleScanChange}
               />
 
-
               {/* CAMERA */}
 
               <button
                 type="button"
-                onClick={() =>
-                  setShowCamera(true)
-                }
+                onClick={() => setShowCamera(true)}
                 className="tambah-btn-camera"
                 style={{
                   marginTop: "10px",
@@ -775,29 +683,20 @@ function TambahSurat() {
                 📷 Ambil Foto dengan Kamera
               </button>
 
-
               {/* FILE TERPILIH */}
 
               {scanSurat && (
-
                 <div className="tambah-scan-selected">
-
                   ✓ {scanSurat.name}
-
                 </div>
-
               )}
 
-
               <small className="tambah-scan-info">
-
                 Upload PDF, JPG, JPEG, atau PNG.
                 Maksimal 20 MB.
-
               </small>
 
             </div>
-
 
             {/* BUTTON */}
 
@@ -810,17 +709,14 @@ function TambahSurat() {
                 Batal
               </Link>
 
-
               <button
                 type="submit"
                 className="tambah-btn-save"
                 disabled={loading}
               >
-
                 {loading
                   ? "Menyimpan..."
                   : "✓ Simpan Surat"}
-
               </button>
 
             </div>
@@ -831,18 +727,13 @@ function TambahSurat() {
 
       </main>
 
-
       {/* MODAL KAMERA */}
 
       {showCamera && (
-
         <CameraCapture
           onCapture={handleCameraCapture}
-          onClose={() =>
-            setShowCamera(false)
-          }
+          onClose={() => setShowCamera(false)}
         />
-
       )}
 
     </div>
