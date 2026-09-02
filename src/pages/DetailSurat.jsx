@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import logoSulut from "../assets/images/logo-sulut.png";
 
 /* =========================================================
-   PARSE TANGGAL LOCAL
+   PARSE TANGGAL
 ========================================================= */
 
 function parseDateLocal(value) {
@@ -11,15 +11,33 @@ function parseDateLocal(value) {
 
   const text = String(value).trim();
 
-  /* Format YYYY-MM-DD */
+  // FORMAT DD-MM-YYYY
+  const matchDDMMYYYY = text.match(
+    /^(\d{2})-(\d{2})-(\d{4})$/
+  );
 
-  const match = text.match(/^(\d{4})-(\d{2})-(\d{2})/);
-
-  if (match) {
+  if (matchDDMMYYYY) {
     const date = new Date(
-      Number(match[1]),
-      Number(match[2]) - 1,
-      Number(match[3])
+      Number(matchDDMMYYYY[3]),
+      Number(matchDDMMYYYY[2]) - 1,
+      Number(matchDDMMYYYY[1])
+    );
+
+    if (!Number.isNaN(date.getTime())) {
+      return date;
+    }
+  }
+
+  // FORMAT YYYY-MM-DD
+  const matchYYYYMMDD = text.match(
+    /^(\d{4})-(\d{2})-(\d{2})/
+  );
+
+  if (matchYYYYMMDD) {
+    const date = new Date(
+      Number(matchYYYYMMDD[1]),
+      Number(matchYYYYMMDD[2]) - 1,
+      Number(matchYYYYMMDD[3])
     );
 
     if (!Number.isNaN(date.getTime())) {
@@ -29,8 +47,11 @@ function parseDateLocal(value) {
 
   const date = new Date(value);
 
-  return Number.isNaN(date.getTime()) ? null : date;
+  return Number.isNaN(date.getTime())
+    ? null
+    : date;
 }
+
 
 /* =========================================================
    FORMAT TANGGAL
@@ -41,7 +62,9 @@ function formatTanggal(value) {
 
   if (!date) return "-";
 
-  const hari = String(date.getDate()).padStart(2, "0");
+  const hari = String(
+    date.getDate()
+  ).padStart(2, "0");
 
   const bulan = String(
     date.getMonth() + 1
@@ -51,6 +74,7 @@ function formatTanggal(value) {
 
   return `${hari}/${bulan}/${tahun}`;
 }
+
 
 /* =========================================================
    FORMAT JAM
@@ -69,37 +93,33 @@ function formatJam(value) {
     return `${text} WITA`;
   }
 
-  return `${String(match[1]).padStart(
-    2,
-    "0"
-  )}:${match[2]} WITA`;
+  return `${String(
+    match[1]
+  ).padStart(2, "0")}:${match[2]} WITA`;
 }
 
+
 /* =========================================================
-   KOMPONEN SIDEBAR
+   SIDEBAR
 ========================================================= */
 
 function Sidebar() {
   return (
     <aside className="sidebar">
 
-      {/* BRAND */}
-
       <div className="brand">
 
         <div className="brand-logo">
-
           <img
             src={logoSulut}
             alt="Logo Sulawesi Utara"
           />
-
         </div>
 
         <div className="brand-text">
 
           <h2>
-            DISNAKERTRANSDA
+            DISNAKERTRANS
           </h2>
 
           <span>
@@ -110,7 +130,6 @@ function Sidebar() {
 
       </div>
 
-      {/* MENU */}
 
       <nav className="menu">
 
@@ -118,22 +137,26 @@ function Sidebar() {
           to="/"
           className="menu-item"
         >
-          <span>
-            ⌂
-          </span>
-
+          <span>⌂</span>
           Dashboard
         </Link>
+
 
         <Link
           to="/surat"
           className="menu-item active"
         >
-          <span>
-            ▣
-          </span>
-
+          <span>▣</span>
           Surat Masuk
+        </Link>
+
+
+        <Link
+          to="/riwayat"
+          className="menu-item"
+        >
+          <span>↶</span>
+          Riwayat Surat
         </Link>
 
       </nav>
@@ -142,8 +165,9 @@ function Sidebar() {
   );
 }
 
+
 /* =========================================================
-   KOMPONEN TOPBAR
+   TOPBAR
 ========================================================= */
 
 function Topbar() {
@@ -162,92 +186,95 @@ function Topbar() {
 
       </div>
 
-      <div className="user-info">
-        Administrator
-      </div>
-
     </header>
   );
 }
 
+
 /* =========================================================
-   COMPONENT DETAIL SURAT
+   DETAIL SURAT
 ========================================================= */
 
 function DetailSurat() {
 
   const { id } = useParams();
 
-  const [surat, setSurat] = useState(null);
+  const [surat, setSurat] =
+    useState(null);
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] =
+    useState(true);
 
-  const [error, setError] = useState("");
-
-  /* =======================================================
-     STATE UNTUK TAMPILAN ARSIP LAYAR PENUH
-  ======================================================= */
+  const [error, setError] =
+    useState("");
 
   const [lihatArsip, setLihatArsip] =
     useState(false);
 
+
   /* =======================================================
-     AMBIL DATA DARI BACKEND
+     AMBIL DATA
   ======================================================= */
 
   useEffect(() => {
 
-    const fetchDetailSurat = async () => {
+    const fetchDetailSurat =
+      async () => {
 
-      try {
+        try {
 
-        setLoading(true);
-        setError("");
+          setLoading(true);
+          setError("");
 
-        const response = await fetch(
-          `http://localhost:5000/api/surat/${id}`
-        );
+          const response =
+            await fetch(
+              `http://localhost:5000/api/surat/${id}`
+            );
 
-        const result = await response.json();
+          const result =
+            await response.json();
 
-        if (!response.ok) {
+          if (!response.ok) {
 
-          throw new Error(
-            result.message ||
-            "Data surat tidak ditemukan."
+            throw new Error(
+              result.message ||
+              "Data surat tidak ditemukan."
+            );
+
+          }
+
+          /* PERBAIKAN:
+             Bisa menerima result.data atau result langsung
+          */
+
+          setSurat(
+            result.data || result
           );
+
+        } catch (error) {
+
+          console.error(error);
+
+          setError(
+            error.message ||
+            "Gagal mengambil data surat."
+          );
+
+        } finally {
+
+          setLoading(false);
 
         }
 
-        setSurat(
-          result.data || result
-        );
+      };
 
-      } catch (error) {
-
-        console.error(
-          "Gagal mengambil detail surat:",
-          error
-        );
-
-        setError(
-          error.message ||
-          "Data surat tidak tersedia atau gagal mengambil data dari server."
-        );
-
-      } finally {
-
-        setLoading(false);
-
-      }
-
-    };
 
     if (id) {
       fetchDetailSurat();
     }
 
   }, [id]);
+
 
   /* =======================================================
      LOADING
@@ -267,17 +294,7 @@ function DetailSurat() {
           <section className="page-content">
 
             <div className="form-card">
-
-              <p
-                style={{
-                  margin: 0,
-                  color: "#6b7280",
-                  fontSize: "13px",
-                }}
-              >
-                Memuat data surat...
-              </p>
-
+              Memuat data surat...
             </div>
 
           </section>
@@ -289,8 +306,9 @@ function DetailSurat() {
 
   }
 
+
   /* =======================================================
-     DATA TIDAK DITEMUKAN
+     ERROR
   ======================================================= */
 
   if (!surat || error) {
@@ -308,21 +326,11 @@ function DetailSurat() {
 
             <div className="form-card">
 
-              <h2
-                style={{
-                  marginTop: 0,
-                  marginBottom: "10px",
-                }}
-              >
+              <h2>
                 Surat Tidak Ditemukan
               </h2>
 
-              <p
-                style={{
-                  color: "#6b7280",
-                  marginBottom: "20px",
-                }}
-              >
+              <p>
                 {error ||
                   "Data surat tidak tersedia."}
               </p>
@@ -345,38 +353,67 @@ function DetailSurat() {
 
   }
 
+
   /* =======================================================
-     RENDER
+     DATA ARSIP
+  ======================================================= */
+
+  const arsip =
+    surat?.arsip_surat || {};
+
+  const urlFile =
+    arsip?.url_file || "";
+
+  const tipeFile =
+    arsip?.tipe_file || "";
+
+  const namaFile =
+    arsip?.nama_file || "";
+
+
+  /* =======================================================
+     URL KHUSUS PREVIEW DAN DOWNLOAD
+  ======================================================= */
+
+  const urlPreview =
+    `http://localhost:5000/api/surat/preview/${surat._id}`;
+
+  const urlDownload =
+    `http://localhost:5000/api/surat/download/${surat._id}`;
+
+
+  /* =======================================================
+     CEK JENIS FILE
+  ======================================================= */
+
+  const adalahPDF =
+    tipeFile === "application/pdf" ||
+    namaFile.toLowerCase().endsWith(".pdf");
+
+  const adalahGambar =
+    tipeFile.startsWith("image/") ||
+    /\.(jpg|jpeg|png|webp)$/i.test(namaFile);
+
+
+  /* =======================================================
+     TAMPILAN
   ======================================================= */
 
   return (
     <div className="app">
 
-      {/* =================================================
-          SIDEBAR
-      ================================================= */}
-
       <Sidebar />
 
-      {/* =================================================
-          MAIN
-      ================================================= */}
 
       <main className="main-content">
 
-        {/* TOPBAR */}
-
         <Topbar />
 
-        {/* =================================================
-            CONTENT
-        ================================================= */}
 
         <section className="page-content">
 
-          {/* =================================================
-              PAGE HEADER
-          ================================================= */}
+
+          {/* HEADER */}
 
           <div className="page-header">
 
@@ -392,6 +429,7 @@ function DetailSurat() {
 
             </div>
 
+
             <Link
               to="/surat"
               className="btn-secondary"
@@ -401,15 +439,13 @@ function DetailSurat() {
 
           </div>
 
-          {/* =================================================
-              FORM CARD
-          ================================================= */}
+
+          {/* CARD */}
 
           <div className="form-card">
 
-            {/* =================================================
-                INFORMASI SURAT
-            ================================================= */}
+
+            {/* INFORMASI SURAT */}
 
             <div className="form-section">
 
@@ -417,9 +453,9 @@ function DetailSurat() {
                 Informasi Surat
               </h3>
 
+
               <div className="form-grid">
 
-                {/* NOMOR SURAT */}
 
                 <div className="form-group">
 
@@ -428,7 +464,6 @@ function DetailSurat() {
                   </label>
 
                   <input
-                    type="text"
                     value={
                       surat.nomor_surat || ""
                     }
@@ -437,7 +472,6 @@ function DetailSurat() {
 
                 </div>
 
-                {/* NOMOR AGENDA */}
 
                 <div className="form-group">
 
@@ -446,7 +480,6 @@ function DetailSurat() {
                   </label>
 
                   <input
-                    type="text"
                     value={
                       surat.nomor_agenda || ""
                     }
@@ -455,7 +488,6 @@ function DetailSurat() {
 
                 </div>
 
-                {/* SURAT DARI */}
 
                 <div className="form-group">
 
@@ -464,7 +496,6 @@ function DetailSurat() {
                   </label>
 
                   <input
-                    type="text"
                     value={
                       surat.asal_surat || ""
                     }
@@ -473,7 +504,6 @@ function DetailSurat() {
 
                 </div>
 
-                {/* SIFAT SURAT */}
 
                 <div className="form-group">
 
@@ -482,16 +512,14 @@ function DetailSurat() {
                   </label>
 
                   <input
-                    type="text"
                     value={
-                      surat.sifat_surat || ""
+                      surat.sifat_surat || "-"
                     }
                     readOnly
                   />
 
                 </div>
 
-                {/* TANGGAL SURAT */}
 
                 <div className="form-group">
 
@@ -500,7 +528,6 @@ function DetailSurat() {
                   </label>
 
                   <input
-                    type="text"
                     value={
                       formatTanggal(
                         surat.tanggal_surat
@@ -511,7 +538,6 @@ function DetailSurat() {
 
                 </div>
 
-                {/* TANGGAL DITERIMA */}
 
                 <div className="form-group">
 
@@ -520,7 +546,6 @@ function DetailSurat() {
                   </label>
 
                   <input
-                    type="text"
                     value={
                       formatTanggal(
                         surat.tanggal_diterima
@@ -531,7 +556,6 @@ function DetailSurat() {
 
                 </div>
 
-                {/* JAM DITERIMA */}
 
                 <div className="form-group">
 
@@ -540,7 +564,6 @@ function DetailSurat() {
                   </label>
 
                   <input
-                    type="text"
                     value={
                       formatJam(
                         surat.jam_diterima
@@ -555,9 +578,8 @@ function DetailSurat() {
 
             </div>
 
-            {/* =================================================
-                PERIHAL
-            ================================================= */}
+
+            {/* PERIHAL */}
 
             <div className="form-section">
 
@@ -566,10 +588,6 @@ function DetailSurat() {
               </h3>
 
               <div className="form-group">
-
-                <label>
-                  Perihal Surat
-                </label>
 
                 <textarea
                   value={
@@ -583,9 +601,8 @@ function DetailSurat() {
 
             </div>
 
-            {/* =================================================
-                SCAN SURAT
-            ================================================= */}
+
+            {/* SCAN SURAT */}
 
             <div className="form-section">
 
@@ -593,73 +610,133 @@ function DetailSurat() {
                 Scan Surat
               </h3>
 
-              {surat.arsip_surat?.url_file ? (
 
-                <div>
+              {!urlFile ? (
+
+                <div
+                  style={{
+                    padding: "20px",
+                    background: "#f8fafc",
+                    borderRadius: "10px",
+                  }}
+                >
+                  Scan surat belum tersedia.
+                </div>
+
+              ) : (
+
+                <>
 
                   <p
                     style={{
-                      marginTop: 0,
-                      marginBottom: "12px",
-                      color: "#6b7280",
-                      fontSize: "12px",
+                      marginBottom: "15px",
+                      color: "#64748b",
                     }}
                   >
-                    {surat.arsip_surat.nama_file ||
-                      "Arsip surat"}
+                    📎 {namaFile}
                   </p>
 
-                  {/* PREVIEW DI HALAMAN DETAIL */}
 
-                  <iframe
-                    title="Preview Scan Surat"
-                    src={
-                      `http://localhost:5000/api/surat/preview/${surat._id}`
-                    }
-                    style={{
-                      width: "100%",
-                      height: "700px",
-                      border: "1px solid #d6e2ea",
-                      borderRadius: "10px",
-                      background: "#f8fafc",
-                    }}
-                  />
+                  {/* PDF */}
 
-                  {/* =================================================
-                      BUTTON
-                  ================================================= */}
+                  {adalahPDF && (
+
+                    <iframe
+                      title="Preview PDF Surat"
+                      src={urlPreview}
+                      style={{
+                        width: "100%",
+                        height: "750px",
+                        border: "1px solid #d6e2ea",
+                        borderRadius: "10px",
+                        background: "#ffffff",
+                      }}
+                    />
+
+                  )}
+
+
+                  {/* GAMBAR */}
+
+                  {adalahGambar && (
+
+                    <div
+                      style={{
+                        width: "100%",
+                        minHeight: "400px",
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        background: "#ffffff",
+                        padding: "15px",
+                        borderRadius: "10px",
+                        border:
+                          "1px solid #d6e2ea",
+                        overflow: "hidden",
+                      }}
+                    >
+
+                      <img
+                        src={urlPreview}
+                        alt="Scan Surat"
+                        style={{
+                          maxWidth: "100%",
+                          maxHeight: "700px",
+                          objectFit: "contain",
+                          display: "block",
+                        }}
+                      />
+
+                    </div>
+
+                  )}
+
+
+                  {/* FILE TIDAK DIKENAL */}
+
+                  {!adalahPDF &&
+                    !adalahGambar && (
+
+                    <div
+                      style={{
+                        padding: "20px",
+                        background: "#f8fafc",
+                      }}
+                    >
+                      File tidak dapat dipreview.
+                    </div>
+
+                  )}
+
+
+                  {/* BUTTON */}
 
                   <div
                     style={{
-                      marginTop: "12px",
+                      marginTop: "15px",
                       display: "flex",
                       gap: "10px",
                       flexWrap: "wrap",
                     }}
                   >
 
-                    {/* LIHAT ARSIP LAYAR PENUH */}
-
                     <button
                       type="button"
+                      className="btn-primary"
                       onClick={() =>
                         setLihatArsip(true)
                       }
-                      className="btn-primary"
                       style={{
                         border: "none",
                         cursor: "pointer",
                       }}
                     >
-                      ⛶ Lihat Arsip Layar Penuh
+                      ⛶ Lihat Layar Penuh
                     </button>
 
-                    {/* DOWNLOAD ARSIP */}
 
                     <a
-                      href={
-                        `http://localhost:5000/api/surat/download/${surat._id}`
-                      }
+                      href={urlDownload}
                       className="btn-primary"
                       style={{
                         textDecoration: "none",
@@ -670,30 +747,14 @@ function DetailSurat() {
 
                   </div>
 
-                </div>
-
-              ) : (
-
-                <div
-                  style={{
-                    padding: "14px",
-                    borderRadius: "8px",
-                    background: "#f8fafc",
-                    border: "1px solid #e5e7eb",
-                    color: "#6b7280",
-                    fontSize: "12px",
-                  }}
-                >
-                  Scan surat belum tersedia.
-                </div>
+                </>
 
               )}
 
             </div>
 
-            {/* =================================================
-                BUTTON BAWAH
-            ================================================= */}
+
+            {/* BUTTON BAWAH */}
 
             <div className="form-actions">
 
@@ -703,6 +764,7 @@ function DetailSurat() {
               >
                 ← Kembali
               </Link>
+
 
               <Link
                 to={`/surat/edit/${surat._id}`}
@@ -719,98 +781,79 @@ function DetailSurat() {
 
       </main>
 
-      {/* =====================================================
-          MODAL ARSIP LAYAR PENUH
-      ====================================================== */}
 
-      {lihatArsip &&
-        surat.arsip_surat?.url_file && (
+      {/* ===================================================
+          LAYAR PENUH
+      =================================================== */}
+
+      {lihatArsip && urlFile && (
+
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "#ffffff",
+            zIndex: 9999,
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+
+          {/* HEADER */}
 
           <div
             style={{
-              position: "fixed",
-              top: 0,
-              left: 0,
-              width: "100%",
-              height: "100%",
-              background: "#ffffff",
-              zIndex: 9999,
+              padding: "15px 25px",
               display: "flex",
-              flexDirection: "column",
+              justifyContent:
+                "space-between",
+              alignItems: "center",
+              borderBottom:
+                "1px solid #d6e2ea",
+              background: "#ffffff",
             }}
           >
 
-            {/* =================================================
-                HEADER MODAL
-            ================================================= */}
+            <div>
 
-            <div
-              style={{
-                padding: "15px 25px",
-                borderBottom:
-                  "1px solid #d6e2ea",
-                display: "flex",
-                justifyContent:
-                  "space-between",
-                alignItems: "center",
-                gap: "15px",
-                flexWrap: "wrap",
-                background: "#ffffff",
-              }}
-            >
-
-              <div>
-
-                <h3
-                  style={{
-                    margin: 0,
-                  }}
-                >
-                  Scan Surat
-                </h3>
-
-                <p
-                  style={{
-                    margin:
-                      "4px 0 0 0",
-                    color: "#6b7280",
-                    fontSize: "12px",
-                  }}
-                >
-                  {surat.arsip_surat.nama_file ||
-                    "Arsip surat"}
-                </p>
-
-              </div>
-
-              {/* =================================================
-                  TOMBOL KEMBALI
-              ================================================= */}
-
-              <button
-                type="button"
-                onClick={() =>
-                  setLihatArsip(false)
-                }
-                className="btn-secondary"
+              <h3
                 style={{
-                  cursor: "pointer",
+                  margin: 0,
                 }}
               >
-                ← Kembali ke Detail Surat
-              </button>
+                Scan Surat
+              </h3>
+
+              <small>
+                {namaFile}
+              </small>
 
             </div>
 
-            {/* =================================================
-                ARSIP LAYAR PENUH
-            ================================================= */}
+
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() =>
+                setLihatArsip(false)
+              }
+              style={{
+                cursor: "pointer",
+              }}
+            >
+              ✕ Tutup
+            </button>
+
+          </div>
+
+
+          {/* PDF FULLSCREEN */}
+
+          {adalahPDF && (
 
             <iframe
-              title="Arsip Surat Layar Penuh"
-              src={
-                `http://localhost:5000/api/surat/preview/${surat._id}`
-              }
+              title="PDF Fullscreen"
+              src={urlPreview}
               style={{
                 width: "100%",
                 flex: 1,
@@ -819,9 +862,41 @@ function DetailSurat() {
               }}
             />
 
-          </div>
+          )}
 
-        )}
+
+          {/* IMAGE FULLSCREEN */}
+
+          {adalahGambar && (
+
+            <div
+              style={{
+                flex: 1,
+                overflow: "auto",
+                padding: "20px",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "flex-start",
+                background: "#f8fafc",
+              }}
+            >
+
+              <img
+                src={urlPreview}
+                alt="Scan Surat"
+                style={{
+                  maxWidth: "100%",
+                  height: "auto",
+                }}
+              />
+
+            </div>
+
+          )}
+
+        </div>
+
+      )}
 
     </div>
   );

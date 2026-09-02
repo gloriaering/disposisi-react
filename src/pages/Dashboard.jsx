@@ -4,6 +4,8 @@ import logoSulut from "../assets/images/logo-sulut.png";
 import "../assets/css/Dashboard.css";
 
 function Dashboard() {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   const [totalSurat, setTotalSurat] = useState(0);
   const [suratHariIni, setSuratHariIni] = useState(0);
 
@@ -127,7 +129,11 @@ function Dashboard() {
           SIDEBAR
       ===================================================== */}
 
-      <aside className="sidebar">
+      <aside
+  className={`sidebar ${
+    menuOpen ? "sidebar-open" : ""
+  }`}
+>
 
         {/* BRAND */}
 
@@ -205,19 +211,26 @@ function Dashboard() {
 
         <header className="topbar">
 
-          <div className="topbar-left">
+  <button
+    className="hamburger-btn"
+    onClick={() => setMenuOpen(!menuOpen)}
+  >
+    ☰
+  </button>
 
-            <h1>
-              Dashboard
-            </h1>
+  <div className="topbar-left">
 
-            <p>
-              Sistem Informasi Disposisi Surat
-            </p>
+    <h1>
+      Dashboard
+    </h1>
 
-          </div>
+    <p>
+      Sistem Informasi Disposisi Surat
+    </p>
 
-        </header>
+  </div>
+
+</header>
 
 
         {/* ===================================================

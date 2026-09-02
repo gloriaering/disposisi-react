@@ -9,6 +9,9 @@ function SuratMasuk() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // SIDEBAR MOBILE
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   /* =========================================================
      AMBIL DATA SURAT DARI BACKEND
   ========================================================= */
@@ -50,7 +53,7 @@ function SuratMasuk() {
   };
 
   /* =========================================================
-     LOAD DATA SAAT HALAMAN DIBUKA
+     LOAD DATA
   ========================================================= */
 
   useEffect(() => {
@@ -87,7 +90,6 @@ function SuratMasuk() {
       return "-";
     }
 
-    // Jika tanggal sudah dalam format DD-MM-YYYY
     if (
       typeof tanggal === "string" &&
       /^\d{2}-\d{2}-\d{4}$/.test(tanggal)
@@ -109,8 +111,7 @@ function SuratMasuk() {
       date.getMonth() + 1
     ).padStart(2, "0");
 
-    const tahun =
-      date.getFullYear();
+    const tahun = date.getFullYear();
 
     return `${hari}-${bulan}-${tahun}`;
   };
@@ -131,7 +132,7 @@ function SuratMasuk() {
   };
 
   /* =========================================================
-     HAPUS SURAT → MASUK RIWAYAT
+     HAPUS SURAT
   ========================================================= */
 
   const handleDelete = async (id) => {
@@ -156,7 +157,7 @@ function SuratMasuk() {
       if (!response.ok) {
         throw new Error(
           result.message ||
-            "Gagal menghapus surat."
+          "Gagal menghapus surat."
         );
       }
 
@@ -171,6 +172,7 @@ function SuratMasuk() {
       alert(
         "Surat berhasil dipindahkan ke Riwayat Surat."
       );
+
     } catch (error) {
       console.error(
         "Gagal menghapus surat:",
@@ -191,10 +193,28 @@ function SuratMasuk() {
     <div className="surat-page">
 
       {/* =====================================================
+          SIDEBAR OVERLAY MOBILE
+      ===================================================== */}
+
+      {sidebarOpen && (
+        <div
+          className="sidebar-overlay"
+          onClick={() =>
+            setSidebarOpen(false)
+          }
+        />
+      )}
+
+
+      {/* =====================================================
           SIDEBAR
       ===================================================== */}
 
-      <aside className="surat-sidebar">
+      <aside
+        className={`surat-sidebar ${
+          sidebarOpen ? "sidebar-open" : ""
+        }`}
+      >
 
         {/* BRAND */}
 
@@ -238,6 +258,9 @@ function SuratMasuk() {
           <Link
             to="/"
             className="surat-menu-item"
+            onClick={() =>
+              setSidebarOpen(false)
+            }
           >
             <span>⌂</span>
             Dashboard
@@ -249,17 +272,23 @@ function SuratMasuk() {
           <Link
             to="/surat"
             className="surat-menu-item active"
+            onClick={() =>
+              setSidebarOpen(false)
+            }
           >
             <span>▣</span>
             Surat Masuk
           </Link>
 
 
-          {/* RIWAYAT SURAT */}
+          {/* RIWAYAT */}
 
           <Link
             to="/riwayat"
             className="surat-menu-item"
+            onClick={() =>
+              setSidebarOpen(false)
+            }
           >
             <span>↶</span>
             Riwayat Surat
@@ -276,9 +305,31 @@ function SuratMasuk() {
 
       <main className="surat-main">
 
-        {/* TOPBAR */}
+
+        {/* =====================================================
+            TOPBAR
+        ===================================================== */}
 
         <header className="surat-topbar">
+
+
+          {/* HAMBURGER */}
+
+          <button
+            type="button"
+            className="surat-hamburger-btn"
+            onClick={() =>
+              setSidebarOpen(
+                !sidebarOpen
+              )
+            }
+            aria-label="Buka menu"
+          >
+            ☰
+          </button>
+
+
+          {/* TITLE */}
 
           <div className="surat-topbar-left">
 
@@ -295,11 +346,14 @@ function SuratMasuk() {
         </header>
 
 
-        {/* CONTENT */}
+        {/* =====================================================
+            CONTENT
+        ===================================================== */}
 
         <section className="surat-content">
 
-          {/* PAGE INTRO */}
+
+          {/* PAGE HEADER */}
 
           <div className="surat-page-header">
 
@@ -315,6 +369,8 @@ function SuratMasuk() {
 
             </div>
 
+
+            {/* BUTTON TAMBAH */}
 
             <Link
               to="/surat/tambah"
@@ -335,19 +391,27 @@ function SuratMasuk() {
           {/* ERROR */}
 
           {error && (
+
             <div className="surat-error">
               {error}
             </div>
+
           )}
 
 
-          {/* TABLE CARD */}
+          {/* =====================================================
+              TABLE CARD
+          ===================================================== */}
 
           <div className="surat-table-card">
+
 
             {/* TABLE HEADER */}
 
             <div className="surat-table-top">
+
+
+              {/* SEARCH */}
 
               <div className="surat-search">
 
@@ -361,11 +425,12 @@ function SuratMasuk() {
                   autoComplete="off"
                   value={search}
                   onChange={(e) =>
-                    setSearch(
-                      e.target.value
-                    )
+                    setSearch(e.target.value)
                   }
                 />
+
+
+                {/* CLEAR SEARCH */}
 
                 {search && (
 
@@ -385,6 +450,8 @@ function SuratMasuk() {
               </div>
 
 
+              {/* COUNT */}
+
               <div className="surat-count">
 
                 {keyword
@@ -396,7 +463,9 @@ function SuratMasuk() {
             </div>
 
 
-            {/* LOADING */}
+            {/* =====================================================
+                LOADING
+            ===================================================== */}
 
             {loading ? (
 
@@ -428,7 +497,10 @@ function SuratMasuk() {
 
             ) : (
 
-              /* TABLE */
+
+              /* =====================================================
+                  TABLE
+              ===================================================== */
 
               <div className="surat-table-wrapper">
 
@@ -482,37 +554,56 @@ function SuratMasuk() {
                             key={row._id}
                           >
 
+
+                            {/* NOMOR */}
+
                             <td className="row-number">
+
                               {index + 1}
+
                             </td>
 
+
+                            {/* NOMOR SURAT */}
 
                             <td>
 
                               <div className="nomor-surat">
+
                                 {row.nomor_surat || "-"}
+
                               </div>
 
                             </td>
 
+
+                            {/* ASAL SURAT */}
 
                             <td>
 
                               <div className="asal-surat">
+
                                 {row.asal_surat || "-"}
+
                               </div>
 
                             </td>
 
+
+                            {/* PERIHAL */}
 
                             <td>
 
                               <div className="perihal">
+
                                 {row.perihal || "-"}
+
                               </div>
 
                             </td>
 
+
+                            {/* TANGGAL */}
 
                             <td>
 
@@ -526,6 +617,8 @@ function SuratMasuk() {
 
                             </td>
 
+
+                            {/* DITERIMA */}
 
                             <td>
 
@@ -552,9 +645,12 @@ function SuratMasuk() {
                             </td>
 
 
+                            {/* AKSI */}
+
                             <td>
 
                               <div className="action-group">
+
 
                                 {/* DETAIL */}
 
@@ -594,9 +690,7 @@ function SuratMasuk() {
                                   type="button"
                                   className="action-btn btn-delete"
                                   onClick={() =>
-                                    handleDelete(
-                                      row._id
-                                    )
+                                    handleDelete(row._id)
                                   }
                                 >
                                   Hapus
@@ -619,8 +713,10 @@ function SuratMasuk() {
                           colSpan="7"
                           className="surat-empty-table"
                         >
+
                           Tidak ada surat yang sesuai
                           dengan pencarian.
+
                         </td>
 
                       </tr>
@@ -633,7 +729,9 @@ function SuratMasuk() {
                           colSpan="7"
                           className="surat-empty-table"
                         >
+
                           Belum ada data surat masuk.
+
                         </td>
 
                       </tr>

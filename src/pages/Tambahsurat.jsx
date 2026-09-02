@@ -7,6 +7,10 @@ import CameraCapture from "../components/CameraCapture";
 function TambahSurat() {
   const navigate = useNavigate();
 
+  /* =========================================================
+     FORM DATA
+  ========================================================= */
+
   const [formData, setFormData] = useState({
     nomor_surat: "",
     asal_surat: "",
@@ -21,34 +25,50 @@ function TambahSurat() {
   const [error, setError] = useState("");
   const [scanSurat, setScanSurat] = useState(null);
 
-  // =========================================================
-  // STATE KAMERA
-  // =========================================================
+  /* =========================================================
+     HAMBURGER MENU
+  ========================================================= */
+
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  /* =========================================================
+     KAMERA
+  ========================================================= */
 
   const [showCamera, setShowCamera] = useState(false);
 
-  // =========================================================
-  // TANGGAL & JAM DITERIMA OTOMATIS - WITA
-  // =========================================================
+  /* =========================================================
+     TANGGAL & JAM OTOMATIS WITA
+  ========================================================= */
 
   useEffect(() => {
     const updateWaktuIndonesia = () => {
       const sekarang = new Date();
 
-      const formatterTanggal = new Intl.DateTimeFormat(
-        "en-GB",
+      /* TANGGAL FORMAT YYYY-MM-DD */
+
+      const parts = new Intl.DateTimeFormat(
+        "en-CA",
         {
           timeZone: "Asia/Makassar",
-          day: "2-digit",
-          month: "2-digit",
           year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
         }
-      );
+      )
+        .formatToParts(sekarang)
+        .reduce((acc, part) => {
+          if (part.type !== "literal") {
+            acc[part.type] = part.value;
+          }
+
+          return acc;
+        }, {});
 
       const tanggalIndonesia =
-        formatterTanggal
-          .format(sekarang)
-          .replace(/\//g, "-");
+        `${parts.year}-${parts.month}-${parts.day}`;
+
+      /* JAM WITA */
 
       const formatterJam = new Intl.DateTimeFormat(
         "en-GB",
@@ -56,15 +76,12 @@ function TambahSurat() {
           timeZone: "Asia/Makassar",
           hour: "2-digit",
           minute: "2-digit",
-          second: "2-digit",
           hour12: false,
         }
       );
 
       const jamIndonesia =
-        formatterJam
-          .format(sekarang)
-          .substring(0, 5);
+        formatterJam.format(sekarang);
 
       setFormData((prev) => ({
         ...prev,
@@ -83,9 +100,9 @@ function TambahSurat() {
     return () => clearInterval(interval);
   }, []);
 
-  // =========================================================
-  // HANDLE INPUT
-  // =========================================================
+  /* =========================================================
+     HANDLE INPUT
+  ========================================================= */
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -96,9 +113,9 @@ function TambahSurat() {
     }));
   };
 
-  // =========================================================
-  // HANDLE TANGGAL SURAT
-  // =========================================================
+  /* =========================================================
+     HANDLE TANGGAL SURAT
+  ========================================================= */
 
   const handleTanggalSuratChange = (e) => {
     let value = e.target.value.replace(/\D/g, "");
@@ -127,16 +144,19 @@ function TambahSurat() {
     }));
   };
 
-  // =========================================================
-  // CEK FILE
-  // =========================================================
+  /* =========================================================
+     FILE YANG DIIZINKAN
+  ========================================================= */
 
   const validFileTypes = [
     "application/pdf",
     "image/jpeg",
-    "image/jpg",
     "image/png",
   ];
+
+  /* =========================================================
+     VALIDASI FILE
+  ========================================================= */
 
   const validateFile = (file) => {
     if (!file) {
@@ -162,9 +182,9 @@ function TambahSurat() {
     return true;
   };
 
-  // =========================================================
-  // HANDLE SCAN SURAT DARI FILE
-  // =========================================================
+  /* =========================================================
+     PILIH FILE SCAN
+  ========================================================= */
 
   const handleScanChange = (e) => {
     const file = e.target.files?.[0] || null;
@@ -185,9 +205,9 @@ function TambahSurat() {
     setScanSurat(file);
   };
 
-  // =========================================================
-  // HASIL FOTO DARI KAMERA
-  // =========================================================
+  /* =========================================================
+     HASIL FOTO KAMERA
+  ========================================================= */
 
   const handleCameraCapture = (file) => {
     setError("");
@@ -197,17 +217,20 @@ function TambahSurat() {
     }
 
     setScanSurat(file);
+
     setShowCamera(false);
   };
 
-  // =========================================================
-  // SIMPAN SURAT
-  // =========================================================
+  /* =========================================================
+     SIMPAN SURAT
+  ========================================================= */
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     setError("");
+
+    /* VALIDASI FORM */
 
     if (
       !formData.nomor_surat.trim() ||
@@ -218,14 +241,20 @@ function TambahSurat() {
       !formData.jam_diterima ||
       !formData.perihal.trim()
     ) {
-      setError("Semua field bertanda * wajib diisi.");
+      setError(
+        "Semua field bertanda * wajib diisi."
+      );
+
       return;
     }
+
+    /* VALIDASI SCAN */
 
     if (!scanSurat) {
       setError(
         "Scan surat wajib dipilih atau difoto."
       );
+
       return;
     }
 
@@ -237,6 +266,8 @@ function TambahSurat() {
       setLoading(true);
 
       const data = new FormData();
+
+      /* DATA SURAT */
 
       data.append(
         "nomor_surat",
@@ -273,6 +304,8 @@ function TambahSurat() {
         formData.perihal.trim()
       );
 
+      /* DATA TAMBAHAN */
+
       data.append(
         "sifat_surat",
         ""
@@ -293,10 +326,14 @@ function TambahSurat() {
         ""
       );
 
+      /* FILE */
+
       data.append(
         "arsip_surat",
         scanSurat
       );
+
+      /* KIRIM KE BACKEND */
 
       const response = await fetch(
         "http://localhost:5000/api/surat",
@@ -306,16 +343,19 @@ function TambahSurat() {
         }
       );
 
-      const result = await response.json();
+      const result =
+        await response.json();
 
       if (!response.ok) {
         throw new Error(
           result.message ||
-            "Gagal menyimpan surat."
+          "Gagal menyimpan surat."
         );
       }
 
-      alert("✓ Surat berhasil disimpan.");
+      alert(
+        "✓ Surat berhasil disimpan."
+      );
 
       navigate("/surat");
 
@@ -328,7 +368,7 @@ function TambahSurat() {
 
       setError(
         error.message ||
-          "Gagal menyimpan surat. Pastikan backend sedang berjalan."
+        "Gagal menyimpan surat. Pastikan backend sedang berjalan."
       );
 
     } finally {
@@ -338,14 +378,36 @@ function TambahSurat() {
     }
   };
 
-  // =========================================================
-  // TAMPILAN
-  // =========================================================
+  /* =========================================================
+     TAMPILAN
+  ========================================================= */
 
   return (
     <div className="tambah-page">
 
-      <aside className="tambah-sidebar">
+      {/* HAMBURGER HP */}
+
+      <button
+        type="button"
+        className="tambah-mobile-menu-btn"
+        onClick={() =>
+          setMenuOpen(!menuOpen)
+        }
+        aria-label="Buka menu"
+      >
+        ☰
+      </button>
+
+
+      {/* SIDEBAR */}
+
+      <aside
+        className={`tambah-sidebar ${
+          menuOpen ? "menu-open" : ""
+        }`}
+      >
+
+        {/* BRAND */}
 
         <div className="tambah-brand">
 
@@ -372,31 +434,46 @@ function TambahSurat() {
 
         </div>
 
+
+        {/* MENU */}
+
         <nav className="tambah-menu">
 
           <p className="tambah-menu-title">
             MENU UTAMA
           </p>
 
+
           <Link
             to="/"
             className="tambah-menu-item"
+            onClick={() =>
+              setMenuOpen(false)
+            }
           >
             <span>⌂</span>
             Dashboard
           </Link>
 
+
           <Link
             to="/surat"
             className="tambah-menu-item active"
+            onClick={() =>
+              setMenuOpen(false)
+            }
           >
             <span>▣</span>
             Surat Masuk
           </Link>
 
+
           <Link
             to="/riwayat"
             className="tambah-menu-item"
+            onClick={() =>
+              setMenuOpen(false)
+            }
           >
             <span>↶</span>
             Riwayat Surat
@@ -406,7 +483,12 @@ function TambahSurat() {
 
       </aside>
 
+
+      {/* MAIN */}
+
       <main className="tambah-main">
+
+        {/* TOPBAR */}
 
         <header className="tambah-topbar">
 
@@ -424,7 +506,12 @@ function TambahSurat() {
 
         </header>
 
+
+        {/* CONTENT */}
+
         <section className="tambah-content">
+
+          {/* PAGE HEADER */}
 
           <div className="tambah-page-header">
 
@@ -444,6 +531,7 @@ function TambahSurat() {
 
             </div>
 
+
             <Link
               to="/surat"
               className="tambah-btn-back"
@@ -453,16 +541,26 @@ function TambahSurat() {
 
           </div>
 
+
+          {/* ERROR */}
+
           {error && (
+
             <div className="tambah-error">
               {error}
             </div>
+
           )}
+
+
+          {/* FORM */}
 
           <form
             className="tambah-form-card"
             onSubmit={handleSubmit}
           >
+
+            {/* FORM TOP */}
 
             <div className="tambah-form-top">
 
@@ -480,7 +578,13 @@ function TambahSurat() {
 
             </div>
 
+
+            {/* FORM GRID */}
+
             <div className="tambah-form-grid">
+
+
+              {/* SURAT DARI */}
 
               <div className="tambah-form-group">
 
@@ -499,6 +603,9 @@ function TambahSurat() {
 
               </div>
 
+
+              {/* TANGGAL DITERIMA */}
+
               <div className="tambah-form-group">
 
                 <label>
@@ -507,17 +614,18 @@ function TambahSurat() {
 
                 <input
                   type="text"
-                  name="tanggal_diterima"
                   value={formData.tanggal_diterima}
                   readOnly
                 />
 
                 <small>
-                  Otomatis mengikuti tanggal Indonesia
-                  (WITA).
+                  Otomatis mengikuti tanggal Indonesia (WITA).
                 </small>
 
               </div>
+
+
+              {/* NOMOR SURAT */}
 
               <div className="tambah-form-group">
 
@@ -536,6 +644,9 @@ function TambahSurat() {
 
               </div>
 
+
+              {/* NOMOR AGENDA */}
+
               <div className="tambah-form-group">
 
                 <label>
@@ -552,6 +663,9 @@ function TambahSurat() {
                 />
 
               </div>
+
+
+              {/* TANGGAL SURAT */}
 
               <div className="tambah-form-group">
 
@@ -571,11 +685,13 @@ function TambahSurat() {
                 />
 
                 <small>
-                  Ketik sesuai tanggal yang tercantum
-                  pada surat.
+                  Ketik sesuai tanggal yang tercantum pada surat.
                 </small>
 
               </div>
+
+
+              {/* JAM */}
 
               <div className="tambah-form-group">
 
@@ -585,19 +701,20 @@ function TambahSurat() {
 
                 <input
                   type="time"
-                  name="jam_diterima"
                   value={formData.jam_diterima}
                   readOnly
                 />
 
                 <small>
-                  Otomatis mengikuti waktu Indonesia
-                  (WITA).
+                  Otomatis mengikuti waktu Indonesia (WITA).
                 </small>
 
               </div>
 
             </div>
+
+
+            {/* PERIHAL */}
 
             <div className="tambah-form-group tambah-full">
 
@@ -615,9 +732,8 @@ function TambahSurat() {
 
             </div>
 
-            {/* =================================================
-                SCAN SURAT
-            ================================================= */}
+
+            {/* SCAN SURAT */}
 
             <div className="tambah-form-group tambah-full">
 
@@ -627,16 +743,20 @@ function TambahSurat() {
 
               <input
                 id="arsip_surat"
-                name="arsip_surat"
                 type="file"
                 accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
                 className="tambah-scan-input"
                 onChange={handleScanChange}
               />
 
+
+              {/* CAMERA */}
+
               <button
                 type="button"
-                onClick={() => setShowCamera(true)}
+                onClick={() =>
+                  setShowCamera(true)
+                }
                 className="tambah-btn-camera"
                 style={{
                   marginTop: "10px",
@@ -646,6 +766,9 @@ function TambahSurat() {
               >
                 📷 Ambil Foto dengan Kamera
               </button>
+
+
+              {/* FILE TERPILIH */}
 
               {scanSurat && (
 
@@ -657,6 +780,7 @@ function TambahSurat() {
 
               )}
 
+
               <small className="tambah-scan-info">
 
                 Upload PDF, JPG, JPEG, atau PNG.
@@ -665,6 +789,9 @@ function TambahSurat() {
               </small>
 
             </div>
+
+
+            {/* BUTTON */}
 
             <div className="tambah-form-actions">
 
@@ -675,14 +802,17 @@ function TambahSurat() {
                 Batal
               </Link>
 
+
               <button
                 type="submit"
                 className="tambah-btn-save"
                 disabled={loading}
               >
+
                 {loading
                   ? "Menyimpan..."
                   : "✓ Simpan Surat"}
+
               </button>
 
             </div>
@@ -693,15 +823,16 @@ function TambahSurat() {
 
       </main>
 
-      {/* =====================================================
-          MODAL KAMERA
-      ===================================================== */}
+
+      {/* MODAL KAMERA */}
 
       {showCamera && (
 
         <CameraCapture
           onCapture={handleCameraCapture}
-          onClose={() => setShowCamera(false)}
+          onClose={() =>
+            setShowCamera(false)
+          }
         />
 
       )}

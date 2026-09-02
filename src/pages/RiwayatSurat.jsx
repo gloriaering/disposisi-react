@@ -8,6 +8,8 @@ function RiwayatSurat() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const [menuOpen, setMenuOpen] = useState(false);
+  
   /* =========================================================
      STATE SURAT YANG DIPILIH
   ========================================================= */
@@ -386,10 +388,21 @@ function RiwayatSurat() {
   return (
 
     <div className="riwayat-page">
+      
+      <button
+  className="riwayat-mobile-menu-btn"
+  onClick={() => setMenuOpen(!menuOpen)}
+>
+  ☰
+</button>
 
       {/* SIDEBAR */}
 
-      <aside className="riwayat-sidebar">
+      <aside
+  className={`riwayat-sidebar ${
+    menuOpen ? "menu-open" : ""
+  }`}
+>
 
         <div className="riwayat-brand">
 

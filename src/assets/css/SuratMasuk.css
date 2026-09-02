@@ -6,11 +6,21 @@
   box-sizing: border-box;
 }
 
-.surat-page {
-  min-height: 100vh;
+html,
+body {
+  margin: 0;
+  padding: 0;
+
+  font-family: Arial, Helvetica, sans-serif;
+
   background: #edf3f8;
   color: #17344e;
-  font-family: Arial, Helvetica, sans-serif;
+}
+
+.surat-page {
+  min-height: 100vh;
+
+  background: #edf3f8;
 }
 
 
@@ -20,6 +30,7 @@
 
 .surat-sidebar {
   position: fixed;
+
   left: 0;
   top: 0;
 
@@ -45,7 +56,8 @@
 
   z-index: 100;
 
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
 
   box-shadow:
     8px 0 35px rgba(4, 25, 48, 0.16);
@@ -64,7 +76,8 @@
 
   border-radius: 50%;
 
-  border: 1px solid rgba(111, 190, 255, 0.13);
+  border:
+    1px solid rgba(111, 190, 255, 0.13);
 
   box-shadow:
     0 0 80px rgba(58, 157, 255, 0.08);
@@ -85,7 +98,8 @@
 
   border-radius: 50%;
 
-  background: rgba(75, 165, 255, 0.045);
+  background:
+    rgba(75, 165, 255, 0.045);
 
   pointer-events: none;
 }
@@ -101,6 +115,7 @@
   z-index: 2;
 
   display: flex;
+
   align-items: center;
 
   gap: 13px;
@@ -117,6 +132,7 @@
   flex-shrink: 0;
 
   display: flex;
+
   align-items: center;
   justify-content: center;
 }
@@ -139,6 +155,7 @@
   color: #ffffff;
 
   font-size: 14px;
+
   line-height: 1.25;
 
   font-weight: 700;
@@ -151,9 +168,11 @@
 
   margin-top: 5px;
 
-  color: rgba(220, 238, 255, 0.62);
+  color:
+    rgba(220, 238, 255, 0.62);
 
   font-size: 10px;
+
   line-height: 1.35;
 }
 
@@ -168,6 +187,7 @@
   z-index: 2;
 
   display: flex;
+
   flex-direction: column;
 
   gap: 8px;
@@ -176,7 +196,8 @@
 .surat-menu-title {
   margin: 0 0 9px 21px;
 
-  color: rgba(197, 224, 248, 0.48);
+  color:
+    rgba(197, 224, 248, 0.48);
 
   font-size: 9px;
 
@@ -189,6 +210,7 @@
   position: relative;
 
   display: flex;
+
   align-items: center;
 
   gap: 14px;
@@ -199,9 +221,11 @@
 
   margin-right: 15px;
 
-  border-radius: 0 13px 13px 0;
+  border-radius:
+    0 13px 13px 0;
 
-  color: rgba(226, 240, 252, 0.72);
+  color:
+    rgba(226, 240, 252, 0.72);
 
   text-decoration: none;
 
@@ -224,15 +248,18 @@
 
   font-size: 17px;
 
-  color: rgba(203, 228, 249, 0.65);
+  color:
+    rgba(203, 228, 249, 0.65);
 }
 
 .surat-menu-item:hover {
-  background: rgba(91, 176, 255, 0.09);
+  background:
+    rgba(91, 176, 255, 0.09);
 
   color: #ffffff;
 
-  transform: translateX(3px);
+  transform:
+    translateX(3px);
 }
 
 .surat-menu-item.active {
@@ -267,12 +294,14 @@
   width: 4px;
   height: 32px;
 
-  border-radius: 0 5px 5px 0;
+  border-radius:
+    0 5px 5px 0;
 
   background: #58baff;
 
   box-shadow:
-    0 0 12px rgba(88, 186, 255, 0.55);
+    0 0 12px
+    rgba(88, 186, 255, 0.55);
 }
 
 
@@ -321,7 +350,8 @@
 
   border-radius: 50%;
 
-  border: 1px solid rgba(45, 127, 191, 0.07);
+  border:
+    1px solid rgba(45, 127, 191, 0.07);
 
   pointer-events: none;
 }
@@ -339,7 +369,8 @@
 
   border-radius: 50%;
 
-  background: rgba(54, 144, 205, 0.035);
+  background:
+    rgba(54, 144, 205, 0.035);
 
   pointer-events: none;
 }
@@ -357,19 +388,31 @@
   height: 82px;
 
   display: flex;
+
   align-items: center;
+
+  gap: 15px;
 
   padding: 0 34px;
 
-  background: rgba(255, 255, 255, 0.88);
+  background:
+    rgba(255, 255, 255, 0.88);
 
-  backdrop-filter: blur(14px);
+  backdrop-filter:
+    blur(14px);
 
   border-bottom:
     1px solid rgba(207, 220, 232, 0.75);
 
   box-shadow:
-    0 5px 25px rgba(15, 48, 77, 0.045);
+    0 5px 25px
+    rgba(15, 48, 77, 0.045);
+}
+
+.surat-topbar-left {
+  display: flex;
+
+  flex-direction: column;
 }
 
 .surat-topbar-left h1 {
@@ -392,6 +435,29 @@
   color: #8292a1;
 
   font-size: 12px;
+}
+
+
+/* =========================================================
+   HAMBURGER BUTTON
+========================================================= */
+
+.surat-hamburger-btn {
+  display: none;
+
+  border: none;
+
+  background: transparent;
+
+  font-size: 27px;
+
+  color: #123b5b;
+
+  cursor: pointer;
+
+  padding: 5px 10px;
+
+  flex-shrink: 0;
 }
 
 
@@ -474,6 +540,7 @@
   gap: 8px;
 
   min-width: 150px;
+
   height: 44px;
 
   padding: 0 20px;
@@ -495,6 +562,8 @@
 
   font-weight: 600;
 
+  white-space: nowrap;
+
   box-shadow:
     0 8px 18px
     rgba(29, 130, 170, 0.24);
@@ -505,7 +574,8 @@
 }
 
 .surat-btn-add:hover {
-  transform: translateY(-3px);
+  transform:
+    translateY(-3px);
 
   box-shadow:
     0 12px 24px
@@ -596,15 +666,17 @@
 
   width: 390px;
 
+  max-width: 100%;
+
   height: 42px;
 }
 
 .surat-search input {
   width: 100%;
+
   height: 100%;
 
   padding:
-    0 42px
     0 42px;
 
   border:
@@ -645,7 +717,8 @@
   left: 15px;
   top: 50%;
 
-  transform: translateY(-50%);
+  transform:
+    translateY(-50%);
 
   color: #7d98aa;
 
@@ -663,7 +736,8 @@
   width: 25px;
   height: 25px;
 
-  transform: translateY(-50%);
+  transform:
+    translateY(-50%);
 
   border: none;
 
@@ -678,13 +752,6 @@
   font-size: 17px;
 
   line-height: 1;
-
-  transition:
-    background 0.2s ease;
-}
-
-.surat-search-clear:hover {
-  background: #dce9f0;
 }
 
 
@@ -706,6 +773,8 @@
   font-size: 11px;
 
   font-weight: 600;
+
+  white-space: nowrap;
 }
 
 
@@ -717,6 +786,8 @@
   width: 100%;
 
   overflow-x: auto;
+
+  -webkit-overflow-scrolling: touch;
 }
 
 
@@ -907,57 +978,6 @@
 
 
 /* =========================================================
-   BADGE SIFAT
-========================================================= */
-
-.badge {
-  display: inline-flex;
-
-  align-items: center;
-  justify-content: center;
-
-  min-width: 70px;
-
-  padding: 6px 9px;
-
-  border-radius: 7px;
-
-  font-size: 9px;
-
-  font-weight: 700;
-
-  white-space: nowrap;
-}
-
-.badge-sangat {
-  background: #fff0e4;
-
-  color: #c46622;
-
-  border:
-    1px solid #f6d2b6;
-}
-
-.badge-rahasia {
-  background: #fcebed;
-
-  color: #b33b54;
-
-  border:
-    1px solid #f2c7d0;
-}
-
-.badge-segera {
-  background: #e8f4f9;
-
-  color: #23769b;
-
-  border:
-    1px solid #c8e2ed;
-}
-
-
-/* =========================================================
    ACTION
 ========================================================= */
 
@@ -978,13 +998,15 @@
   justify-content: center;
 
   min-width: 48px;
+
   height: 29px;
 
   padding: 0 8px;
 
   border-radius: 7px;
 
-  border: 1px solid transparent;
+  border:
+    1px solid transparent;
 
   text-decoration: none;
 
@@ -996,6 +1018,8 @@
 
   cursor: pointer;
 
+  white-space: nowrap;
+
   transition:
     transform 0.18s ease,
     background 0.18s ease,
@@ -1003,7 +1027,8 @@
 }
 
 .action-btn:hover {
-  transform: translateY(-1px);
+  transform:
+    translateY(-1px);
 }
 
 
@@ -1019,14 +1044,6 @@
   color: #277896;
 }
 
-.btn-detail:hover {
-  background: #dceef5;
-
-  box-shadow:
-    0 4px 9px
-    rgba(39, 120, 150, 0.10);
-}
-
 
 /* =========================================================
    EDIT
@@ -1038,14 +1055,6 @@
   border-color: #d4e0f5;
 
   color: #466fa5;
-}
-
-.btn-edit:hover {
-  background: #e2ebfa;
-
-  box-shadow:
-    0 4px 9px
-    rgba(70, 111, 165, 0.10);
 }
 
 
@@ -1061,14 +1070,6 @@
   color: #3b8052;
 }
 
-.btn-print:hover {
-  background: #e2f2e6;
-
-  box-shadow:
-    0 4px 9px
-    rgba(59, 128, 82, 0.10);
-}
-
 
 /* =========================================================
    DELETE
@@ -1080,14 +1081,6 @@
   border-color: #f3d0d5;
 
   color: #b4495a;
-}
-
-.btn-delete:hover {
-  background: #fde4e7;
-
-  box-shadow:
-    0 4px 9px
-    rgba(180, 73, 90, 0.10);
 }
 
 
@@ -1103,7 +1096,6 @@
   flex-direction: column;
 
   align-items: center;
-
   justify-content: center;
 
   gap: 10px;
@@ -1169,6 +1161,7 @@
 ========================================================= */
 
 @media (max-width: 1000px) {
+
   .surat-sidebar {
     width: 215px;
   }
@@ -1190,6 +1183,7 @@
   .surat-btn-add {
     align-self: flex-end;
   }
+
 }
 
 
@@ -1198,89 +1192,172 @@
 ========================================================= */
 
 @media (max-width: 650px) {
+
+  /* SIDEBAR */
+
   .surat-sidebar {
-    position: relative;
+    position: fixed;
 
-    width: 100%;
-    height: auto;
+    top: 0;
+    left: 0;
 
-    min-height: auto;
+    width: 245px;
+    height: 100vh;
 
-    padding: 20px 0;
+    padding: 30px 0;
+
+    transform:
+      translateX(-100%);
+
+    transition:
+      transform 0.3s ease;
+
+    z-index: 999;
   }
 
-  .surat-brand {
-    margin-bottom: 25px;
+
+  /* SIDEBAR TERBUKA */
+
+  .surat-sidebar.sidebar-open {
+    transform:
+      translateX(0);
   }
 
-  .surat-menu-item {
-    margin-left: 12px;
-    margin-right: 12px;
 
-    border-radius: 9px;
-  }
-
-  .surat-menu-item.active::before {
-    display: none;
-  }
+  /* MAIN */
 
   .surat-main {
     margin-left: 0;
+
+    width: 100%;
   }
+
+
+  /* TOPBAR */
 
   .surat-topbar {
+    min-height: 70px;
+
     height: auto;
 
-    min-height: 75px;
+    padding: 14px 16px;
 
-    padding: 16px 20px;
+    gap: 10px;
   }
+
+
+  /* HAMBURGER */
+
+  .surat-hamburger-btn {
+    display: block;
+
+    flex-shrink: 0;
+  }
+
 
   .surat-topbar-left h1 {
     font-size: 19px;
   }
 
   .surat-topbar-left p {
-    font-size: 11px;
+    font-size: 10px;
   }
+
+
+  /* CONTENT */
 
   .surat-content {
-    padding: 20px;
+    padding: 16px;
   }
+
+
+  /* PAGE HEADER */
+
+  .surat-page-header {
+    flex-direction: column;
+
+    align-items: stretch;
+
+    gap: 16px;
+
+    margin-bottom: 18px;
+  }
+
+
+  .surat-page-title > span {
+    font-size: 8px;
+
+    margin-bottom: 6px;
+  }
+
 
   .surat-page-title h2 {
-    font-size: 23px;
+    font-size: 21px;
   }
 
+
   .surat-page-title p {
-    font-size: 11px;
+    font-size: 10px;
   }
+
+
+  /* BUTTON */
 
   .surat-btn-add {
     width: 100%;
 
+    min-width: 0;
+
+    height: 42px;
+
     align-self: stretch;
   }
 
-  .surat-table-top {
-    align-items: stretch;
 
+  /* TABLE CARD */
+
+  .surat-table-card {
+    border-radius: 15px;
+  }
+
+
+  /* TABLE TOP */
+
+  .surat-table-top {
     flex-direction: column;
 
+    align-items: stretch;
+
     gap: 12px;
+
+    padding: 15px;
   }
+
+
+  /* SEARCH */
 
   .surat-search {
     width: 100%;
   }
 
+
+  /* COUNT */
+
   .surat-count {
     align-self: flex-start;
+
+    font-size: 10px;
   }
 
-  .surat-table-card {
-    border-radius: 15px;
+
+  /* EMPTY */
+
+  .surat-empty {
+    min-height: 200px;
+
+    padding: 20px;
   }
+
 }
 
 
@@ -1289,23 +1366,53 @@
 ========================================================= */
 
 @media (max-width: 400px) {
+
   .surat-content {
     padding: 15px;
   }
+
 
   .surat-topbar {
     padding: 14px 15px;
   }
 
-  .surat-topbar-left h1 {
-    font-size: 17px;
+
+  .surat-hamburger-btn {
+    font-size: 24px;
+
+    padding: 4px 7px;
   }
+
+
+  .surat-topbar-left h1 {
+    font-size: 16px;
+  }
+
+
+  .surat-topbar-left p {
+    font-size: 9px;
+  }
+
 
   .surat-page-title h2 {
-    font-size: 21px;
+    font-size: 19px;
   }
 
+
   .surat-table-top {
-    padding: 15px;
+    padding: 13px;
   }
+
+
+  .surat-search {
+    height: 40px;
+  }
+
+
+  .surat-btn-add {
+    height: 40px;
+
+    font-size: 11px;
+  }
+
 }

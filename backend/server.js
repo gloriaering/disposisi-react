@@ -12,6 +12,7 @@ const app = express();
 // =========================================================
 
 app.use(cors());
+
 app.use(express.json());
 
 // =========================================================
@@ -19,53 +20,77 @@ app.use(express.json());
 // =========================================================
 
 app.get("/", (req, res) => {
+
   res.json({
+
     success: true,
+
     message: "Backend Disposisi Surat berhasil berjalan",
+
   });
+
 });
 
+
+// =========================================================
+// TEST PREVIEW
+// =========================================================
 
 app.get("/test-preview", (req, res) => {
+
   res.send("TEST PREVIEW ROUTE BERHASIL");
+
 });
+
 
 // =========================================================
 // ROUTE SURAT
 // =========================================================
 
-app.use("/api/surat", suratRoutes);
+app.use(
+  "/api/surat",
+  suratRoutes
+);
 
-// =========================================================
-// CEK MONGODB URI
-// =========================================================
-
-if (!process.env.MONGODB_URI) {
-  console.error("MONGODB_URI belum ditemukan di file .env");
-  process.exit(1);
-}
 
 // =========================================================
 // KONEKSI MONGODB
 // =========================================================
 
-mongoose
-  .connect(process.env.MONGODB_URI)
-  .then(() => {
-    console.log("Berhasil terhubung ke MongoDB Atlas");
+if (!process.env.MONGODB_URI) {
 
-    // =======================================================
-    // JALANKAN SERVER
-    // =======================================================
+  console.error(
+    "MONGODB_URI belum ditemukan"
+  );
 
-    const PORT = process.env.PORT || 5000;
+} else {
 
-    app.listen(PORT, () => {
-      console.log(`Server berjalan di http://localhost:${PORT}`);
+  mongoose
+    .connect(process.env.MONGODB_URI)
+    .then(() => {
+
+      console.log(
+        "Berhasil terhubung ke MongoDB Atlas"
+      );
+
+    })
+    .catch((error) => {
+
+      console.error(
+        "Gagal terhubung ke MongoDB Atlas"
+      );
+
+      console.error(
+        error.message
+      );
+
     });
-  })
-  .catch((error) => {
-    console.error("Gagal terhubung ke MongoDB Atlas");
-    console.error(error.message);
-    process.exit(1);
-  });
+
+}
+
+
+// =========================================================
+// EXPORT UNTUK VERCEL
+// =========================================================
+
+module.exports = app;

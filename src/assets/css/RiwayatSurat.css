@@ -22,8 +22,10 @@
   position: fixed;
   left: 0;
   top: 0;
+
   width: 245px;
   height: 100vh;
+
   padding: 30px 0;
 
   background:
@@ -40,8 +42,11 @@
     );
 
   color: #ffffff;
+
   z-index: 100;
-  overflow: hidden;
+
+  overflow-y: auto;
+  overflow-x: hidden;
 
   box-shadow:
     8px 0 35px rgba(4, 25, 48, 0.16);
@@ -58,6 +63,7 @@
   bottom: -100px;
 
   border-radius: 50%;
+
   border: 1px solid rgba(111, 190, 255, 0.13);
 
   box-shadow:
@@ -77,6 +83,7 @@
   bottom: 90px;
 
   border-radius: 50%;
+
   background: rgba(75, 165, 255, 0.045);
 
   pointer-events: none;
@@ -93,9 +100,11 @@
 
   display: flex;
   align-items: center;
+
   gap: 13px;
 
   padding: 0 20px;
+
   margin-bottom: 58px;
 }
 
@@ -131,6 +140,7 @@
   line-height: 1.25;
 
   font-weight: 700;
+
   letter-spacing: 0.3px;
 }
 
@@ -142,7 +152,6 @@
   color: rgba(220, 238, 255, 0.62);
 
   font-size: 10px;
-  line-height: 1.35;
 }
 
 
@@ -284,54 +293,6 @@
       #edf3f8 55%,
       #e8f1f7 100%
     );
-
-  overflow: hidden;
-}
-
-
-/* =========================================================
-   TOPBAR
-========================================================= */
-
-.riwayat-topbar {
-  position: relative;
-  z-index: 5;
-
-  height: 82px;
-
-  display: flex;
-  align-items: center;
-
-  padding: 0 34px;
-
-  background: rgba(255, 255, 255, 0.88);
-
-  backdrop-filter: blur(14px);
-
-  border-bottom:
-    1px solid rgba(207, 220, 232, 0.75);
-
-  box-shadow:
-    0 5px 25px rgba(15, 48, 77, 0.045);
-}
-
-.riwayat-topbar-left h1 {
-  margin: 0;
-
-  color: #102f4d;
-
-  font-size: 23px;
-  line-height: 1.2;
-
-  font-weight: 700;
-}
-
-.riwayat-topbar-left p {
-  margin: 6px 0 0;
-
-  color: #8292a1;
-
-  font-size: 12px;
 }
 
 
@@ -355,7 +316,6 @@
   display: flex;
 
   align-items: flex-end;
-
   justify-content: space-between;
 
   gap: 25px;
@@ -423,6 +383,8 @@
   font-size: 12px;
   font-weight: 600;
 
+  white-space: nowrap;
+
   box-shadow:
     0 6px 16px rgba(24, 66, 96, 0.06);
 
@@ -488,8 +450,9 @@
   display: flex;
 
   align-items: center;
-
   justify-content: space-between;
+
+  gap: 15px;
 
   padding: 18px 20px;
 
@@ -508,6 +471,14 @@
   font-size: 13px;
 }
 
+.riwayat-top-actions {
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+}
+
 .riwayat-count {
   padding: 8px 11px;
 
@@ -520,6 +491,61 @@
   font-size: 11px;
 
   font-weight: 600;
+
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   SURAT DIPILIH
+========================================================= */
+
+.riwayat-selected-info {
+  display: block;
+
+  margin-top: 5px;
+
+  font-size: 12px;
+
+  color: #2563eb;
+}
+
+.riwayat-row-selected {
+  background: #f0f7ff !important;
+}
+
+
+/* =========================================================
+   DELETE SELECTED
+========================================================= */
+
+.riwayat-delete-selected {
+  border: none;
+
+  padding: 9px 14px;
+
+  border-radius: 7px;
+
+  cursor: pointer;
+
+  background: #dc2626;
+
+  color: white;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  white-space: nowrap;
+
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.riwayat-delete-selected:hover {
+  opacity: 0.9;
+
+  transform: translateY(-1px);
 }
 
 
@@ -531,12 +557,13 @@
   width: 100%;
 
   overflow-x: auto;
+
+  -webkit-overflow-scrolling: touch;
 }
 
 
 /* =========================================================
    TABLE
-   TANPA KOLOM SIFAT
 ========================================================= */
 
 .riwayat-table {
@@ -609,6 +636,24 @@
 
 
 /* =========================================================
+   CHECKBOX
+========================================================= */
+
+.riwayat-checkbox-column {
+  width: 45px;
+
+  text-align: center !important;
+}
+
+.riwayat-checkbox-column input {
+  width: 16px;
+  height: 16px;
+
+  cursor: pointer;
+}
+
+
+/* =========================================================
    NUMBER
 ========================================================= */
 
@@ -671,7 +716,6 @@
 
 /* =========================================================
    ACTION
-   HANYA PULIHKAN & HAPUS PERMANEN
 ========================================================= */
 
 .riwayat-action {
@@ -688,7 +732,6 @@
   display: inline-flex;
 
   align-items: center;
-
   justify-content: center;
 
   min-height: 30px;
@@ -706,6 +749,8 @@
   font-size: 9px;
 
   font-weight: 600;
+
+  white-space: nowrap;
 
   transition:
     transform 0.18s ease,
@@ -770,7 +815,6 @@
   flex-direction: column;
 
   align-items: center;
-
   justify-content: center;
 
   gap: 10px;
@@ -811,6 +855,7 @@
 }
 
 @keyframes riwayatSpin {
+
   from {
     transform: rotate(0deg);
   }
@@ -818,6 +863,7 @@
   to {
     transform: rotate(360deg);
   }
+
 }
 
 
@@ -851,6 +897,15 @@
   color: #94a3ad;
 
   font-size: 10px;
+}
+
+
+/* =========================================================
+   MOBILE MENU BUTTON
+========================================================= */
+
+.riwayat-mobile-menu-btn {
+  display: none;
 }
 
 
@@ -891,56 +946,88 @@
 
 @media (max-width: 650px) {
 
+  /* HAMBURGER */
+
+  .riwayat-mobile-menu-btn {
+    display: flex;
+
+    position: fixed;
+
+    top: 15px;
+    left: 15px;
+
+    width: 45px;
+    height: 45px;
+
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+
+    border-radius: 10px;
+
+    background: #0b2d52;
+
+    color: white;
+
+    font-size: 24px;
+
+    cursor: pointer;
+
+    z-index: 1000;
+
+    box-shadow:
+      0 5px 15px rgba(0, 0, 0, 0.18);
+  }
+
+
+  /* SIDEBAR */
+
   .riwayat-sidebar {
-    position: relative;
+    position: fixed;
 
-    width: 100%;
+    top: 0;
+    left: -245px;
 
-    height: auto;
+    width: 245px;
+    height: 100vh;
 
-    min-height: auto;
+    padding: 30px 0;
 
-    padding: 20px 0;
+    transition: left 0.3s ease;
+
+    z-index: 999;
   }
 
-  .riwayat-brand {
-    margin-bottom: 25px;
+  .riwayat-sidebar.menu-open {
+    left: 0;
   }
 
-  .riwayat-menu-item {
-    margin-left: 12px;
 
-    margin-right: 12px;
-
-    border-radius: 9px;
-  }
-
-  .riwayat-menu-item.active::before {
-    display: none;
-  }
+  /* MAIN */
 
   .riwayat-main {
     margin-left: 0;
+
+    min-height: 100vh;
   }
 
-  .riwayat-topbar {
-    height: auto;
 
-    min-height: 75px;
-
-    padding: 16px 20px;
-  }
-
-  .riwayat-topbar-left h1 {
-    font-size: 19px;
-  }
-
-  .riwayat-topbar-left p {
-    font-size: 11px;
-  }
+  /* CONTENT */
 
   .riwayat-content {
-    padding: 20px;
+    padding: 80px 20px 20px;
+  }
+
+
+  /* HEADER */
+
+  .riwayat-page-header {
+    align-items: flex-start;
+
+    flex-direction: column;
+
+    gap: 18px;
   }
 
   .riwayat-page-title h2 {
@@ -951,106 +1038,88 @@
     font-size: 11px;
   }
 
+
+  /* BACK BUTTON */
+
   .riwayat-btn-back {
     width: 100%;
 
     align-self: stretch;
   }
 
+
+  /* TABLE TOP */
+
+  .riwayat-table-top {
+    flex-direction: column;
+
+    align-items: flex-start;
+  }
+
+  .riwayat-top-actions {
+    width: 100%;
+
+    flex-wrap: wrap;
+
+    align-items: flex-start;
+  }
+
+
+  /* CARD */
+
   .riwayat-table-card {
     border-radius: 15px;
+  }
+
+
+  /* MENU */
+
+  .riwayat-brand {
+    margin-bottom: 35px;
+  }
+
+  .riwayat-menu-item {
+    margin-left: 12px;
+    margin-right: 12px;
+
+    border-radius: 9px;
+  }
+
+  .riwayat-menu-item.active::before {
+    display: none;
   }
 
 }
 
 
 /* =========================================================
-   VERY SMALL
+   VERY SMALL PHONE
 ========================================================= */
 
 @media (max-width: 400px) {
 
   .riwayat-content {
-    padding: 15px;
+    padding: 75px 15px 15px;
   }
 
-  .riwayat-topbar {
-    padding: 14px 15px;
-  }
+  .riwayat-mobile-menu-btn {
+    top: 12px;
+    left: 12px;
 
-  .riwayat-topbar-left h1 {
-    font-size: 17px;
+    width: 42px;
+    height: 42px;
   }
 
   .riwayat-page-title h2 {
     font-size: 21px;
   }
 
-}
+  .riwayat-delete-selected {
+    width: 100%;
+  }
 
-/* =========================================================
-   CHECKBOX PILIH SURAT
-========================================================= */
+  .riwayat-top-actions {
+    flex-direction: column;
+  }
 
-.riwayat-checkbox-column {
-  width: 45px;
-  text-align: center;
-}
-
-.riwayat-checkbox-column input {
-  width: 16px;
-  height: 16px;
-  cursor: pointer;
-}
-
-
-/* =========================================================
-   SURAT TERPILIH
-========================================================= */
-
-.riwayat-row-selected {
-  background: #f0f7ff !important;
-}
-
-
-/* =========================================================
-   INFO SURAT DIPILIH
-========================================================= */
-
-.riwayat-selected-info {
-  display: block;
-  margin-top: 5px;
-  font-size: 12px;
-  color: #2563eb;
-}
-
-
-/* =========================================================
-   BAGIAN KANAN HEADER
-========================================================= */
-
-.riwayat-top-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-
-/* =========================================================
-   BUTTON HAPUS TERPILIH
-========================================================= */
-
-.riwayat-delete-selected {
-  border: none;
-  padding: 9px 14px;
-  border-radius: 7px;
-  cursor: pointer;
-  background: #dc2626;
-  color: white;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.riwayat-delete-selected:hover {
-  opacity: 0.9;
 }

@@ -15,6 +15,15 @@
 
 
 /* =========================================================
+   TOMBOL HAMBURGER HP
+========================================================= */
+
+.tambah-mobile-menu-btn {
+  display: none;
+}
+
+
+/* =========================================================
    SIDEBAR
 ========================================================= */
 
@@ -22,8 +31,10 @@
   position: fixed;
   left: 0;
   top: 0;
+
   width: 245px;
   height: 100vh;
+
   padding: 30px 0;
 
   background:
@@ -40,15 +51,21 @@
     );
 
   color: #ffffff;
+
   z-index: 100;
-  overflow: hidden;
+
+  overflow-y: auto;
+  overflow-x: hidden;
 
   box-shadow:
     8px 0 35px rgba(4, 25, 48, 0.16);
+
+  transition: left 0.3s ease;
 }
 
 .tambah-sidebar::before {
   content: "";
+
   position: absolute;
 
   width: 380px;
@@ -58,6 +75,7 @@
   bottom: -100px;
 
   border-radius: 50%;
+
   border: 1px solid rgba(111, 190, 255, 0.13);
 
   box-shadow:
@@ -68,6 +86,7 @@
 
 .tambah-sidebar::after {
   content: "";
+
   position: absolute;
 
   width: 250px;
@@ -77,6 +96,7 @@
   bottom: 90px;
 
   border-radius: 50%;
+
   background: rgba(75, 165, 255, 0.045);
 
   pointer-events: none;
@@ -97,6 +117,7 @@
   gap: 13px;
 
   padding: 0 20px;
+
   margin-bottom: 58px;
 }
 
@@ -129,7 +150,9 @@
   color: #ffffff;
 
   font-size: 14px;
+
   line-height: 1.25;
+
   font-weight: 700;
 
   letter-spacing: 0.3px;
@@ -143,6 +166,7 @@
   color: rgba(220, 238, 255, 0.62);
 
   font-size: 10px;
+
   line-height: 1.35;
 }
 
@@ -167,6 +191,7 @@
   color: rgba(197, 224, 248, 0.48);
 
   font-size: 9px;
+
   font-weight: 700;
 
   letter-spacing: 1.5px;
@@ -183,6 +208,7 @@
   height: 48px;
 
   padding: 0 19px;
+
   margin-right: 15px;
 
   border-radius: 0 13px 13px 0;
@@ -192,6 +218,7 @@
   text-decoration: none;
 
   font-size: 13px;
+
   font-weight: 500;
 
   transition:
@@ -322,7 +349,9 @@
   color: #102f4d;
 
   font-size: 23px;
+
   line-height: 1.2;
+
   font-weight: 700;
 }
 
@@ -353,7 +382,9 @@
 
 .tambah-page-header {
   display: flex;
+
   align-items: flex-end;
+
   justify-content: space-between;
 
   gap: 25px;
@@ -369,6 +400,7 @@
   color: #6e8ba1;
 
   font-size: 10px;
+
   font-weight: 700;
 
   letter-spacing: 1.5px;
@@ -380,7 +412,9 @@
   color: #123b5b;
 
   font-size: 27px;
+
   line-height: 1.2;
+
   font-weight: 700;
 }
 
@@ -418,6 +452,7 @@
   text-decoration: none;
 
   font-size: 12px;
+
   font-weight: 600;
 
   box-shadow:
@@ -474,8 +509,7 @@
     rgba(255, 255, 255, 0.95);
 
   box-shadow:
-    0 10px 30px
-    rgba(24, 66, 96, 0.06);
+    0 10px 30px rgba(24, 66, 96, 0.06);
 }
 
 
@@ -487,6 +521,7 @@
   display: flex;
 
   align-items: center;
+
   justify-content: space-between;
 
   padding: 19px 22px;
@@ -504,6 +539,7 @@
   color: #294c63;
 
   font-size: 14px;
+
   font-weight: 700;
 }
 
@@ -550,6 +586,7 @@
   color: #38566a;
 
   font-size: 11px;
+
   font-weight: 700;
 }
 
@@ -636,14 +673,61 @@
 
 
 /* =========================================================
-   DATE / TIME
+   SCAN SURAT
 ========================================================= */
 
-.tambah-form-group input[type="date"],
-.tambah-form-group input[type="time"] {
-  color: #405d70;
+.tambah-scan-input {
+  padding: 10px !important;
 
-  cursor: pointer;
+  height: auto !important;
+
+  background: #ffffff;
+}
+
+.tambah-btn-camera {
+  width: fit-content;
+
+  border: none;
+
+  border-radius: 9px;
+
+  background: #0b5d87;
+
+  color: #ffffff;
+
+  font-size: 11px;
+
+  font-weight: 600;
+
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.tambah-btn-camera:hover {
+  transform: translateY(-2px);
+
+  opacity: 0.9;
+}
+
+.tambah-scan-selected {
+  margin-top: 10px;
+
+  padding: 10px 12px;
+
+  border-radius: 8px;
+
+  background: #edf8f2;
+
+  color: #27734d;
+
+  font-size: 11px;
+
+  font-weight: 600;
+}
+
+.tambah-scan-info {
+  display: block;
 }
 
 
@@ -655,6 +739,7 @@
   display: flex;
 
   align-items: center;
+
   justify-content: flex-end;
 
   gap: 10px;
@@ -697,6 +782,7 @@
   text-decoration: none;
 
   font-size: 11px;
+
   font-weight: 600;
 
   transition:
@@ -743,6 +829,7 @@
   font-family: Arial, Helvetica, sans-serif;
 
   font-size: 11px;
+
   font-weight: 700;
 
   cursor: pointer;
@@ -801,6 +888,7 @@
   .tambah-btn-back {
     align-self: flex-end;
   }
+
 }
 
 
@@ -810,20 +898,73 @@
 
 @media (max-width: 650px) {
 
-  .tambah-sidebar {
-    position: relative;
+  /* TOMBOL HAMBURGER */
 
-    width: 100%;
-    height: auto;
+  .tambah-mobile-menu-btn {
+    display: flex;
 
-    min-height: auto;
+    position: fixed;
 
-    padding: 20px 0;
+    top: 15px;
+    left: 15px;
+
+    width: 45px;
+    height: 45px;
+
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+
+    border-radius: 10px;
+
+    background: #0b2d52;
+
+    color: #ffffff;
+
+    font-size: 24px;
+
+    cursor: pointer;
+
+    z-index: 1000;
+
+    box-shadow:
+      0 5px 15px rgba(0, 0, 0, 0.2);
   }
+
+
+  /* SIDEBAR DISEMBUNYIKAN */
+
+  .tambah-sidebar {
+    position: fixed;
+
+    left: -245px;
+    top: 0;
+
+    width: 245px;
+    height: 100vh;
+
+    padding: 30px 0;
+
+    z-index: 999;
+  }
+
+
+  /* SIDEBAR MUNCUL */
+
+  .tambah-sidebar.menu-open {
+    left: 0;
+  }
+
+
+  /* BRAND */
 
   .tambah-brand {
     margin-bottom: 25px;
   }
+
+
+  /* MENU */
 
   .tambah-menu-item {
     margin-left: 12px;
@@ -836,16 +977,22 @@
     display: none;
   }
 
+
+  /* MAIN */
+
   .tambah-main {
     margin-left: 0;
   }
 
-  .tambah-topbar {
-    height: auto;
 
+  /* TOPBAR */
+
+  .tambah-topbar {
     min-height: 75px;
 
-    padding: 16px 20px;
+    height: auto;
+
+    padding: 16px 20px 16px 75px;
   }
 
   .tambah-topbar-left h1 {
@@ -856,8 +1003,20 @@
     font-size: 11px;
   }
 
+
+  /* CONTENT */
+
   .tambah-content {
     padding: 20px;
+  }
+
+
+  /* HEADER */
+
+  .tambah-page-header {
+    flex-direction: column;
+
+    align-items: stretch;
   }
 
   .tambah-page-title h2 {
@@ -868,11 +1027,17 @@
     font-size: 11px;
   }
 
+
+  /* BACK BUTTON */
+
   .tambah-btn-back {
     width: 100%;
 
     align-self: stretch;
   }
+
+
+  /* FORM */
 
   .tambah-form-card {
     border-radius: 15px;
@@ -892,6 +1057,16 @@
     padding-top: 15px;
   }
 
+
+  /* CAMERA BUTTON */
+
+  .tambah-btn-camera {
+    width: 100%;
+  }
+
+
+  /* BUTTONS */
+
   .tambah-form-actions {
     padding: 18px;
 
@@ -904,6 +1079,7 @@
   .tambah-btn-save {
     width: 100%;
   }
+
 }
 
 
@@ -918,7 +1094,7 @@
   }
 
   .tambah-topbar {
-    padding: 14px 15px;
+    padding: 14px 15px 14px 70px;
   }
 
   .tambah-topbar-left h1 {
@@ -935,16 +1111,20 @@
 
   .tambah-form-grid {
     padding-left: 15px;
+
     padding-right: 15px;
   }
 
   .tambah-full {
     margin-left: 15px;
+
     margin-right: 15px;
   }
 
   .tambah-form-actions {
     padding-left: 15px;
+
     padding-right: 15px;
   }
+
 }
