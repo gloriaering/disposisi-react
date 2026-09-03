@@ -3,6 +3,13 @@ import { Link, useParams } from "react-router-dom";
 import logoSulut from "../assets/images/logo-sulut.png";
 
 /* =========================================================
+   API URL
+========================================================= */
+
+const API_URL = "https://disposisi-react-8vdu.vercel.app";
+
+
+/* =========================================================
    PARSE TANGGAL
 ========================================================= */
 
@@ -208,12 +215,13 @@ function DetailSurat() {
   const [error, setError] =
     useState("");
 
-  const [lihatArsip, setLihatArsip] =
-    useState(false);
+  // FILE YANG SEDANG DILIHAT FULLSCREEN
+  const [arsipAktif, setArsipAktif] =
+    useState(null);
 
 
   /* =======================================================
-     AMBIL DATA
+     AMBIL DATA SURAT
   ======================================================= */
 
   useEffect(() => {
@@ -228,7 +236,7 @@ function DetailSurat() {
 
           const response =
             await fetch(
-              `https://disposisi-react-8vdu.vercel.app/api/surat/${id}`
+              `${API_URL}/api/surat/${id}`
             );
 
           const result =
@@ -243,17 +251,16 @@ function DetailSurat() {
 
           }
 
-          /* PERBAIKAN:
-             Bisa menerima result.data atau result langsung
-          */
-
           setSurat(
             result.data || result
           );
 
         } catch (error) {
 
-          console.error(error);
+          console.error(
+            "Gagal mengambil detail surat:",
+            error
+          );
 
           setError(
             error.message ||
@@ -283,6 +290,7 @@ function DetailSurat() {
   if (loading) {
 
     return (
+
       <div className="app">
 
         <Sidebar />
@@ -294,7 +302,9 @@ function DetailSurat() {
           <section className="page-content">
 
             <div className="form-card">
+
               Memuat data surat...
+
             </div>
 
           </section>
@@ -302,6 +312,7 @@ function DetailSurat() {
         </main>
 
       </div>
+
     );
 
   }
@@ -314,6 +325,7 @@ function DetailSurat() {
   if (!surat || error) {
 
     return (
+
       <div className="app">
 
         <Sidebar />
@@ -349,6 +361,7 @@ function DetailSurat() {
         </main>
 
       </div>
+
     );
 
   }
@@ -356,43 +369,69 @@ function DetailSurat() {
 
   /* =======================================================
      DATA ARSIP
+
+     PERBAIKAN UTAMA:
+     arsip_surat SEKARANG BERUPA ARRAY
   ======================================================= */
 
-  const arsip =
-    surat?.arsip_surat || {};
+  let daftarArsip = [];
 
-  const urlFile =
-    arsip?.url_file || "";
+  if (Array.isArray(surat.arsip_surat)) {
 
-  const tipeFile =
-    arsip?.tipe_file || "";
+    daftarArsip =
+      surat.arsip_surat;
 
-  const namaFile =
-    arsip?.nama_file || "";
+  } else if (
+    surat.arsip_surat &&
+    typeof surat.arsip_surat === "object"
+  ) {
 
+    // UNTUK DATA LAMA YANG MASIH SATU FILE
+    daftarArsip = [
+      surat.arsip_surat
+    ];
 
-  /* =======================================================
-     URL KHUSUS PREVIEW DAN DOWNLOAD
-  ======================================================= */
-
-  const urlPreview =
-    `https://disposisi-react-8vdu.vercel.app/api/surat/preview/${surat._id}`;
-
-  const urlDownload =
-    `https://disposisi-react-8vdu.vercel.app/api/surat/download/${surat._id}`;
+  }
 
 
   /* =======================================================
      CEK JENIS FILE
   ======================================================= */
 
-  const adalahPDF =
-    tipeFile === "application/pdf" ||
-    namaFile.toLowerCase().endsWith(".pdf");
+  const adalahPDF = (arsip) => {
 
-  const adalahGambar =
-    tipeFile.startsWith("image/") ||
-    /\.(jpg|jpeg|png|webp)$/i.test(namaFile);
+    if (!arsip) return false;
+
+    return (
+
+      arsip.tipe_file ===
+        "application/pdf" ||
+
+      arsip.nama_file
+        ?.toLowerCase()
+        .endsWith(".pdf")
+
+    );
+
+  };
+
+
+  const adalahGambar = (arsip) => {
+
+    if (!arsip) return false;
+
+    return (
+
+      arsip.tipe_file
+        ?.startsWith("image/") ||
+
+      /\.(jpg|jpeg|png|webp)$/i.test(
+        arsip.nama_file || ""
+      )
+
+    );
+
+  };
 
 
   /* =======================================================
@@ -400,6 +439,7 @@ function DetailSurat() {
   ======================================================= */
 
   return (
+
     <div className="app">
 
       <Sidebar />
@@ -413,7 +453,9 @@ function DetailSurat() {
         <section className="page-content">
 
 
-          {/* HEADER */}
+          {/* =================================================
+              HEADER
+          ================================================= */}
 
           <div className="page-header">
 
@@ -440,12 +482,16 @@ function DetailSurat() {
           </div>
 
 
-          {/* CARD */}
+          {/* =================================================
+              CARD
+          ================================================= */}
 
           <div className="form-card">
 
 
-            {/* INFORMASI SURAT */}
+            {/* =============================================
+                INFORMASI SURAT
+            ============================================= */}
 
             <div className="form-section">
 
@@ -574,18 +620,22 @@ function DetailSurat() {
 
                 </div>
 
+
               </div>
 
             </div>
 
 
-            {/* PERIHAL */}
+            {/* =============================================
+                PERIHAL
+            ============================================= */}
 
             <div className="form-section">
 
               <h3>
                 Perihal
               </h3>
+
 
               <div className="form-group">
 
@@ -602,7 +652,9 @@ function DetailSurat() {
             </div>
 
 
-            {/* SCAN SURAT */}
+            {/* =============================================
+                SCAN SURAT
+            ============================================= */}
 
             <div className="form-section">
 
@@ -611,7 +663,9 @@ function DetailSurat() {
               </h3>
 
 
-              {!urlFile ? (
+              {/* JIKA BELUM ADA FILE */}
+
+              {daftarArsip.length === 0 && (
 
                 <div
                   style={{
@@ -623,140 +677,247 @@ function DetailSurat() {
                   Scan surat belum tersedia.
                 </div>
 
-              ) : (
+              )}
 
-                <>
 
-                  <p
+              {/* ===========================================
+                  TAMPILKAN SEMUA FILE
+              =========================================== */}
+
+              {daftarArsip.map(
+                (arsip, index) => (
+
+                  <div
+                    key={
+                      arsip.public_id ||
+                      `${arsip.nama_file}-${index}`
+                    }
                     style={{
-                      marginBottom: "15px",
-                      color: "#64748b",
+                      marginTop: "25px",
+                      border:
+                        "1px solid #d6e2ea",
+                      borderRadius: "12px",
+                      overflow: "hidden",
+                      background: "#ffffff",
                     }}
                   >
-                    📎 {namaFile}
-                  </p>
 
 
-                  {/* PDF */}
-
-                  {adalahPDF && (
-
-                    <iframe
-                      title="Preview PDF Surat"
-                      src={urlPreview}
-                      style={{
-                        width: "100%",
-                        height: "750px",
-                        border: "1px solid #d6e2ea",
-                        borderRadius: "10px",
-                        background: "#ffffff",
-                      }}
-                    />
-
-                  )}
-
-
-                  {/* GAMBAR */}
-
-                  {adalahGambar && (
+                    {/* HEADER FILE */}
 
                     <div
                       style={{
-                        width: "100%",
-                        minHeight: "400px",
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        background: "#ffffff",
-                        padding: "15px",
-                        borderRadius: "10px",
-                        border:
+                        padding: "15px 20px",
+                        background: "#f8fafc",
+                        borderBottom:
                           "1px solid #d6e2ea",
-                        overflow: "hidden",
+                        display: "flex",
+                        justifyContent:
+                          "space-between",
+                        alignItems: "center",
+                        gap: "10px",
+                        flexWrap: "wrap",
                       }}
                     >
 
-                      <img
-                        src={urlPreview}
-                        alt="Scan Surat"
+                      <div>
+
+                        <strong>
+
+                          {adalahPDF(arsip)
+                            ? "📄"
+                            : adalahGambar(arsip)
+                            ? "🖼️"
+                            : "📁"}
+
+                          {" "}File {index + 1}
+
+                        </strong>
+
+                        <div
+                          style={{
+                            marginTop: "5px",
+                            color: "#64748b",
+                            fontSize: "14px",
+                          }}
+                        >
+                          {arsip.nama_file ||
+                            "Arsip Surat"}
+                        </div>
+
+                      </div>
+
+
+                      <span
                         style={{
-                          maxWidth: "100%",
-                          maxHeight: "700px",
-                          objectFit: "contain",
+                          fontSize: "13px",
+                          color: "#64748b",
+                        }}
+                      >
+                        {arsip.tipe_file ||
+                          "File"}
+                      </span>
+
+                    </div>
+
+
+                    {/* =====================================
+                        PREVIEW PDF
+                    ===================================== */}
+
+                    {adalahPDF(arsip) && (
+
+                      <iframe
+                        title={`Preview PDF ${index + 1}`}
+                        src={arsip.url_file}
+                        style={{
+                          width: "100%",
+                          height: "700px",
+                          border: "none",
                           display: "block",
+                          background: "#ffffff",
                         }}
                       />
 
-                    </div>
-
-                  )}
+                    )}
 
 
-                  {/* FILE TIDAK DIKENAL */}
+                    {/* =====================================
+                        PREVIEW GAMBAR
+                    ===================================== */}
 
-                  {!adalahPDF &&
-                    !adalahGambar && (
+                    {adalahGambar(arsip) && (
+
+                      <div
+                        style={{
+                          width: "100%",
+                          minHeight: "400px",
+                          display: "flex",
+                          justifyContent:
+                            "center",
+                          alignItems:
+                            "center",
+                          background:
+                            "#ffffff",
+                          padding: "20px",
+                          boxSizing:
+                            "border-box",
+                        }}
+                      >
+
+                        <img
+                          src={arsip.url_file}
+                          alt={
+                            arsip.nama_file ||
+                            `Scan Surat ${index + 1}`
+                          }
+                          style={{
+                            maxWidth: "100%",
+                            maxHeight: "700px",
+                            objectFit: "contain",
+                            display: "block",
+                          }}
+                        />
+
+                      </div>
+
+                    )}
+
+
+                    {/* =====================================
+                        FILE LAIN
+                    ===================================== */}
+
+                    {!adalahPDF(arsip) &&
+                      !adalahGambar(arsip) && (
+
+                      <div
+                        style={{
+                          padding: "40px",
+                          textAlign: "center",
+                          color: "#64748b",
+                        }}
+                      >
+
+                        📁 File tidak dapat dipreview.
+
+                      </div>
+
+                    )}
+
+
+                    {/* =====================================
+                        BUTTON FILE
+                    ===================================== */}
 
                     <div
                       style={{
-                        padding: "20px",
-                        background: "#f8fafc",
+                        padding: "15px 20px",
+                        borderTop:
+                          "1px solid #d6e2ea",
+                        display: "flex",
+                        gap: "10px",
+                        flexWrap: "wrap",
                       }}
                     >
-                      File tidak dapat dipreview.
+
+                      <button
+                        type="button"
+                        className="btn-primary"
+                        onClick={() =>
+                          setArsipAktif(arsip)
+                        }
+                        style={{
+                          border: "none",
+                          cursor: "pointer",
+                        }}
+                      >
+                        ⛶ Lihat Layar Penuh
+                      </button>
+
+
+                      <a
+                        href={arsip.url_file}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-primary"
+                        style={{
+                          textDecoration: "none",
+                        }}
+                      >
+                        📂 Buka File
+                      </a>
+
+
+                      <a
+                        href={arsip.url_file}
+                        download
+                        className="btn-secondary"
+                        style={{
+                          textDecoration: "none",
+                        }}
+                      >
+                        ↓ Download
+                      </a>
+
                     </div>
 
-                  )}
-
-
-                  {/* BUTTON */}
-
-                  <div
-                    style={{
-                      marginTop: "15px",
-                      display: "flex",
-                      gap: "10px",
-                      flexWrap: "wrap",
-                    }}
-                  >
-
-                    <button
-                      type="button"
-                      className="btn-primary"
-                      onClick={() =>
-                        setLihatArsip(true)
-                      }
-                      style={{
-                        border: "none",
-                        cursor: "pointer",
-                      }}
-                    >
-                      ⛶ Lihat Layar Penuh
-                    </button>
-
-
-                    <a
-                      href={urlDownload}
-                      className="btn-primary"
-                      style={{
-                        textDecoration: "none",
-                      }}
-                    >
-                      ↓ Download Arsip
-                    </a>
 
                   </div>
 
-                </>
+                )
 
               )}
 
             </div>
 
 
-            {/* BUTTON BAWAH */}
+            {/* =============================================
+                BUTTON BAWAH
+            ============================================= */}
 
             <div className="form-actions">
+
 
               <Link
                 to="/surat"
@@ -773,7 +934,9 @@ function DetailSurat() {
                 Edit Surat
               </Link>
 
+
             </div>
+
 
           </div>
 
@@ -783,10 +946,10 @@ function DetailSurat() {
 
 
       {/* ===================================================
-          LAYAR PENUH
+          MODAL LAYAR PENUH
       =================================================== */}
 
-      {lihatArsip && urlFile && (
+      {arsipAktif && (
 
         <div
           style={{
@@ -799,7 +962,8 @@ function DetailSurat() {
           }}
         >
 
-          {/* HEADER */}
+
+          {/* HEADER MODAL */}
 
           <div
             style={{
@@ -811,21 +975,37 @@ function DetailSurat() {
               borderBottom:
                 "1px solid #d6e2ea",
               background: "#ffffff",
+              gap: "15px",
             }}
           >
 
-            <div>
+            <div
+              style={{
+                overflow: "hidden",
+              }}
+            >
 
               <h3
                 style={{
                   margin: 0,
                 }}
               >
-                Scan Surat
+                {adalahPDF(arsipAktif)
+                  ? "📄 Scan Surat PDF"
+                  : adalahGambar(arsipAktif)
+                  ? "🖼️ Scan Surat"
+                  : "📁 Arsip Surat"}
+
               </h3>
 
-              <small>
-                {namaFile}
+
+              <small
+                style={{
+                  wordBreak: "break-word",
+                }}
+              >
+                {arsipAktif.nama_file ||
+                  "Arsip Surat"}
               </small>
 
             </div>
@@ -835,10 +1015,11 @@ function DetailSurat() {
               type="button"
               className="btn-secondary"
               onClick={() =>
-                setLihatArsip(false)
+                setArsipAktif(null)
               }
               style={{
                 cursor: "pointer",
+                flexShrink: 0,
               }}
             >
               ✕ Tutup
@@ -847,13 +1028,15 @@ function DetailSurat() {
           </div>
 
 
-          {/* PDF FULLSCREEN */}
+          {/* ===============================================
+              PDF FULLSCREEN
+          =============================================== */}
 
-          {adalahPDF && (
+          {adalahPDF(arsipAktif) && (
 
             <iframe
               title="PDF Fullscreen"
-              src={urlPreview}
+              src={arsipAktif.url_file}
               style={{
                 width: "100%",
                 flex: 1,
@@ -865,28 +1048,36 @@ function DetailSurat() {
           )}
 
 
-          {/* IMAGE FULLSCREEN */}
+          {/* ===============================================
+              GAMBAR FULLSCREEN
+          =============================================== */}
 
-          {adalahGambar && (
+          {adalahGambar(arsipAktif) && (
 
             <div
               style={{
                 flex: 1,
                 overflow: "auto",
-                padding: "20px",
+                padding: "25px",
                 display: "flex",
-                justifyContent: "center",
-                alignItems: "flex-start",
+                justifyContent:
+                  "center",
+                alignItems:
+                  "flex-start",
                 background: "#f8fafc",
               }}
             >
 
               <img
-                src={urlPreview}
-                alt="Scan Surat"
+                src={arsipAktif.url_file}
+                alt={
+                  arsipAktif.nama_file ||
+                  "Scan Surat"
+                }
                 style={{
                   maxWidth: "100%",
                   height: "auto",
+                  display: "block",
                 }}
               />
 
@@ -894,12 +1085,59 @@ function DetailSurat() {
 
           )}
 
+
+          {/* ===============================================
+              FILE LAIN
+          =============================================== */}
+
+          {!adalahPDF(arsipAktif) &&
+            !adalahGambar(arsipAktif) && (
+
+            <div
+              style={{
+                flex: 1,
+                display: "flex",
+                justifyContent:
+                  "center",
+                alignItems:
+                  "center",
+                flexDirection:
+                  "column",
+                gap: "15px",
+              }}
+            >
+
+              <h2>
+                📁 File tidak dapat dipreview
+              </h2>
+
+
+              <a
+                href={arsipAktif.url_file}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-primary"
+                style={{
+                  textDecoration: "none",
+                }}
+              >
+                📂 Buka File
+              </a>
+
+            </div>
+
+          )}
+
+
         </div>
 
       )}
 
+
     </div>
+
   );
+
 }
 
 export default DetailSurat;

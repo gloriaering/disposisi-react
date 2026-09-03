@@ -3,9 +3,15 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import logoSulut from "../assets/images/logo-sulut.png";
 import "../assets/css/TambahSurat.css";
 
+const API_URL = "https://disposisi-react-8vdu.vercel.app";
+
 function EditSurat() {
   const { id } = useParams();
   const navigate = useNavigate();
+
+  // =========================================================
+  // FORM DATA
+  // =========================================================
 
   const [form, setForm] = useState({
     nomor_surat: "",
@@ -21,9 +27,16 @@ function EditSurat() {
     catatan: "",
   });
 
-  const [arsipFile, setArsipFile] = useState(null);
-  const [arsipLama, setArsipLama] = useState(null);
-  const [previewBaru, setPreviewBaru] = useState("");
+  // =========================================================
+  // ARSIP
+  // =========================================================
+
+  const [arsipLama, setArsipLama] = useState([]);
+  const [arsipBaru, setArsipBaru] = useState([]);
+
+  // =========================================================
+  // STATUS
+  // =========================================================
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -40,7 +53,7 @@ function EditSurat() {
         setError("");
 
         const response = await fetch(
-          "https://disposisi-react-8vdu.vercel.app/api/surat/" + id
+          `${API_URL}/api/surat/${id}`
         );
 
         const result = await response.json();
@@ -48,11 +61,15 @@ function EditSurat() {
         if (!response.ok) {
           throw new Error(
             result.message ||
-              "Gagal mengambil data surat."
+            "Gagal mengambil data surat."
           );
         }
 
         const surat = result.data || result;
+
+        // =====================================================
+        // FORM
+        // =====================================================
 
         setForm({
           nomor_surat:
@@ -80,16 +97,12 @@ function EditSurat() {
             surat.sifat_surat || "",
 
           diteruskan_kepada:
-            Array.isArray(
-              surat.diteruskan_kepada
-            )
+            Array.isArray(surat.diteruskan_kepada)
               ? surat.diteruskan_kepada
               : [],
 
           dengan_hormat_harap:
-            Array.isArray(
-              surat.dengan_hormat_harap
-            )
+            Array.isArray(surat.dengan_hormat_harap)
               ? surat.dengan_hormat_harap
               : [],
 
@@ -101,28 +114,25 @@ function EditSurat() {
         // ARSIP LAMA
         // =====================================================
 
-        if (
-          surat.arsip_surat &&
-          typeof surat.arsip_surat === "object" &&
-          surat.arsip_surat.url_file
-        ) {
-          setArsipLama(
-            surat.arsip_surat
-          );
+        if (Array.isArray(surat.arsip_surat)) {
+          setArsipLama(surat.arsip_surat);
+        } else if (surat.arsip_surat) {
+          // Untuk jaga-jaga kalau data lama masih object
+          setArsipLama([surat.arsip_surat]);
         } else {
-          setArsipLama(null);
+          setArsipLama([]);
         }
 
       } catch (err) {
 
         console.error(
-          "Gagal mengambil data surat:",
+          "Gagal mengambil surat:",
           err
         );
 
         setError(
           err.message ||
-            "Gagal mengambil data surat. Pastikan backend sedang berjalan."
+          "Gagal mengambil data surat."
         );
 
       } finally {
@@ -139,33 +149,12 @@ function EditSurat() {
   }, [id]);
 
   // =========================================================
-  // BERSIHKAN PREVIEW FILE BARU
-  // =========================================================
-
-  useEffect(() => {
-
-    return () => {
-
-      if (previewBaru) {
-        URL.revokeObjectURL(
-          previewBaru
-        );
-      }
-
-    };
-
-  }, [previewBaru]);
-
-  // =========================================================
   // HANDLE INPUT
   // =========================================================
 
   const handleChange = (e) => {
 
-    const {
-      name,
-      value
-    } = e.target;
+    const { name, value } = e.target;
 
     setForm((prev) => ({
       ...prev,
@@ -175,7 +164,7 @@ function EditSurat() {
   };
 
   // =========================================================
-  // HANDLE TANGGAL SURAT
+  // FORMAT TANGGAL SURAT
   // =========================================================
 
   const handleTanggalSuratChange = (e) => {
@@ -188,21 +177,17 @@ function EditSurat() {
     }
 
     if (value.length > 2) {
-
       value =
         value.slice(0, 2) +
         "-" +
         value.slice(2);
-
     }
 
     if (value.length > 5) {
-
       value =
         value.slice(0, 5) +
         "-" +
         value.slice(5);
-
     }
 
     setForm((prev) => ({
@@ -213,161 +198,101 @@ function EditSurat() {
   };
 
   // =========================================================
-  // CEK FILE YANG DIIZINKAN
+  // VALIDASI FILE
   // =========================================================
 
-  const fileDiizinkan = (file) => {
+  const validFileTypes = [
+    "application/pdf",
+    "image/jpeg",
+    "image/jpg",
+    "image/png",
+    "image/webp",
+  ];
 
-    const tipeDiizinkan = [
+  const validateFile = (file) => {
 
-      "application/pdf",
+    if (!file) {
+      return false;
+    }
 
-      "image/jpeg",
+    if (!validFileTypes.includes(file.type)) {
 
-      "image/jpg",
+      setError(
+        `${file.name} tidak didukung. Gunakan PDF, JPG, JPEG, PNG, atau WEBP.`
+      );
 
-      "image/png",
+      return false;
 
-      "image/webp",
+    }
 
-      "application/zip",
+    if (file.size > 20 * 1024 * 1024) {
 
-      "application/x-zip-compressed",
+      setError(
+        `${file.name} terlalu besar. Maksimal 20 MB.`
+      );
 
-    ];
+      return false;
 
-    return tipeDiizinkan.includes(
-      file.type
-    );
+    }
+
+    return true;
 
   };
 
   // =========================================================
-  // PROSES FILE BARU
+  // TAMBAH FILE BARU
   // =========================================================
 
-  const prosesArsip = (file, inputElement = null) => {
+  const handleFileChange = (e) => {
+
+    const files =
+      Array.from(e.target.files || []);
 
     setError("");
 
-    if (!file) {
+    const fileValid = [];
 
-      setArsipFile(null);
+    files.forEach((file) => {
 
-      if (previewBaru) {
+      if (validateFile(file)) {
+        fileValid.push(file);
+      }
 
-        URL.revokeObjectURL(
-          previewBaru
+    });
+
+    setArsipBaru((prev) => {
+
+      const gabungan = [
+        ...prev,
+        ...fileValid,
+      ];
+
+      if (gabungan.length > 20) {
+
+        setError(
+          "Maksimal 20 file baru."
         );
 
+        return gabungan.slice(0, 20);
+
       }
 
-      setPreviewBaru("");
+      return gabungan;
 
-      return;
+    });
 
-    }
-
-    // =======================================================
-    // CEK TIPE FILE
-    // =======================================================
-
-    if (!fileDiizinkan(file)) {
-
-      setError(
-        "Format file tidak didukung. Gunakan PDF, JPG, JPEG, PNG, WEBP, atau ZIP."
-      );
-
-      if (inputElement) {
-        inputElement.value = "";
-      }
-
-      setArsipFile(null);
-
-      setPreviewBaru("");
-
-      return;
-
-    }
-
-    // =======================================================
-    // CEK UKURAN FILE
-    // =======================================================
-
-    if (
-      file.size >
-      20 * 1024 * 1024
-    ) {
-
-      setError(
-        "Ukuran file maksimal 20 MB."
-      );
-
-      if (inputElement) {
-        inputElement.value = "";
-      }
-
-      setArsipFile(null);
-
-      setPreviewBaru("");
-
-      return;
-
-    }
-
-    // =======================================================
-    // HAPUS PREVIEW LAMA
-    // =======================================================
-
-    if (previewBaru) {
-
-      URL.revokeObjectURL(
-        previewBaru
-      );
-
-    }
-
-    // =======================================================
-    // BUAT PREVIEW BARU
-    // =======================================================
-
-    const url =
-      URL.createObjectURL(file);
-
-    setArsipFile(file);
-
-    setPreviewBaru(url);
+    e.target.value = "";
 
   };
 
   // =========================================================
-  // HANDLE PILIH FILE
+  // HAPUS FILE BARU
   // =========================================================
 
-  const handleArsipChange = (e) => {
+  const handleRemoveFileBaru = (index) => {
 
-    const file =
-      e.target.files?.[0] || null;
-
-    prosesArsip(
-      file,
-      e.target
-    );
-
-  };
-
-  // =========================================================
-  // HANDLE FOTO DARI KAMERA
-  // =========================================================
-
-  const handleCameraChange = (e) => {
-
-    const file =
-      e.target.files?.[0] || null;
-
-    prosesArsip(
-      file,
-      e.target
+    setArsipBaru((prev) =>
+      prev.filter((_, i) => i !== index)
     );
 
   };
@@ -376,37 +301,20 @@ function EditSurat() {
   // CEK JENIS FILE
   // =========================================================
 
-  const adalahGambar = (file) => {
+  const isImage = (file) => {
 
-    if (!file) return false;
-
-    return file.type.startsWith(
-      "image/"
+    return (
+      file?.tipe_file?.startsWith("image/") ||
+      file?.type?.startsWith("image/")
     );
 
   };
 
-  const adalahPDF = (file) => {
-
-    if (!file) return false;
-
-    return file.type ===
-      "application/pdf";
-
-  };
-
-  const adalahZIP = (file) => {
-
-    if (!file) return false;
+  const isPDF = (file) => {
 
     return (
-
-      file.type ===
-        "application/zip" ||
-
-      file.type ===
-        "application/x-zip-compressed"
-
+      file?.tipe_file === "application/pdf" ||
+      file?.type === "application/pdf"
     );
 
   };
@@ -421,22 +329,18 @@ function EditSurat() {
 
     setError("");
 
+    // =======================================================
+    // VALIDASI
+    // =======================================================
+
     if (
-
       !form.nomor_surat.trim() ||
-
       !form.asal_surat.trim() ||
-
       !form.tanggal_surat.trim() ||
-
       !form.nomor_agenda.trim() ||
-
-      !form.tanggal_diterima.trim() ||
-
-      !form.jam_diterima.trim() ||
-
+      !form.tanggal_diterima ||
+      !form.jam_diterima ||
       !form.perihal.trim()
-
     ) {
 
       setError(
@@ -447,43 +351,15 @@ function EditSurat() {
 
     }
 
-    // =======================================================
-    // CEK FILE BARU JIKA ADA
-    // =======================================================
-
-    if (arsipFile) {
-
-      if (!fileDiizinkan(arsipFile)) {
-
-        setError(
-          "Format file tidak didukung."
-        );
-
-        return;
-
-      }
-
-      if (
-        arsipFile.size >
-        20 * 1024 * 1024
-      ) {
-
-        setError(
-          "Ukuran file maksimal 20 MB."
-        );
-
-        return;
-
-      }
-
-    }
-
     try {
 
       setSaving(true);
 
-      const data =
-        new FormData();
+      const data = new FormData();
+
+      // =====================================================
+      // DATA FORM
+      // =====================================================
 
       data.append(
         "nomor_surat",
@@ -527,20 +403,16 @@ function EditSurat() {
 
       data.append(
         "diteruskan_kepada",
-
         JSON.stringify(
           form.diteruskan_kepada || []
         )
-
       );
 
       data.append(
         "dengan_hormat_harap",
-
         JSON.stringify(
           form.dengan_hormat_harap || []
         )
-
       );
 
       data.append(
@@ -549,33 +421,29 @@ function EditSurat() {
       );
 
       // =====================================================
-      // FILE BARU
+      // MASUKKAN FILE BARU
       // =====================================================
 
-      if (arsipFile) {
+      arsipBaru.forEach((file) => {
 
         data.append(
           "arsip_surat",
-          arsipFile
+          file
         );
 
-      }
+      });
 
-      const response =
-        await fetch(
+      // =====================================================
+      // KIRIM KE BACKEND
+      // =====================================================
 
-          "https://disposisi-react-8vdu.vercel.app/api/surat/" +
-            id,
-
-          {
-
-            method: "PUT",
-
-            body: data,
-
-          }
-
-        );
+      const response = await fetch(
+        `${API_URL}/api/surat/${id}`,
+        {
+          method: "PUT",
+          body: data,
+        }
+      );
 
       const result =
         await response.json();
@@ -583,10 +451,8 @@ function EditSurat() {
       if (!response.ok) {
 
         throw new Error(
-
           result.message ||
-            "Gagal memperbarui surat."
-
+          "Gagal memperbarui surat."
         );
 
       }
@@ -605,10 +471,8 @@ function EditSurat() {
       );
 
       setError(
-
         err.message ||
-          "Gagal memperbarui surat."
-
+        "Gagal memperbarui surat."
       );
 
     } finally {
@@ -627,27 +491,13 @@ function EditSurat() {
 
     return (
 
-      <div className="tambah-page">
-
-        <main
-          className="tambah-main"
-          style={{
-            marginLeft: 0,
-            width: "100%",
-          }}
-        >
-
-          <div
-            style={{
-              padding: "60px",
-              textAlign: "center",
-            }}
-          >
-            Memuat data surat...
-          </div>
-
-        </main>
-
+      <div
+        style={{
+          padding: "50px",
+          textAlign: "center",
+        }}
+      >
+        Memuat data surat...
       </div>
 
     );
@@ -693,6 +543,7 @@ function EditSurat() {
 
         </div>
 
+
         <nav className="tambah-menu">
 
           <p className="tambah-menu-title">
@@ -707,6 +558,7 @@ function EditSurat() {
             Dashboard
           </Link>
 
+
           <Link
             to="/surat"
             className="tambah-menu-item active"
@@ -714,6 +566,7 @@ function EditSurat() {
             <span>▣</span>
             Surat Masuk
           </Link>
+
 
           <Link
             to="/riwayat"
@@ -734,6 +587,9 @@ function EditSurat() {
 
       <main className="tambah-main">
 
+
+        {/* TOPBAR */}
+
         <header className="tambah-topbar">
 
           <div className="tambah-topbar-left">
@@ -751,7 +607,12 @@ function EditSurat() {
         </header>
 
 
+        {/* CONTENT */}
+
         <section className="tambah-content">
+
+
+          {/* HEADER */}
 
           <div className="tambah-page-header">
 
@@ -770,6 +631,7 @@ function EditSurat() {
               </p>
 
             </div>
+
 
             <Link
               to="/surat"
@@ -801,6 +663,9 @@ function EditSurat() {
             onSubmit={handleSubmit}
           >
 
+
+            {/* FORM HEADER */}
+
             <div className="tambah-form-top">
 
               <div>
@@ -810,7 +675,7 @@ function EditSurat() {
                 </h3>
 
                 <p>
-                  Periksa dan perbarui informasi surat dengan benar.
+                  Periksa dan perbarui informasi surat.
                 </p>
 
               </div>
@@ -838,8 +703,6 @@ function EditSurat() {
                   name="asal_surat"
                   value={form.asal_surat}
                   onChange={handleChange}
-                  placeholder="Contoh: Dinas Pendidikan"
-                  autoComplete="off"
                 />
 
               </div>
@@ -855,7 +718,6 @@ function EditSurat() {
 
                 <input
                   type="text"
-                  name="tanggal_diterima"
                   value={form.tanggal_diterima}
                   readOnly
                 />
@@ -876,8 +738,6 @@ function EditSurat() {
                   name="nomor_surat"
                   value={form.nomor_surat}
                   onChange={handleChange}
-                  placeholder="Contoh: 005/123/DISNAKERTRANS"
-                  autoComplete="off"
                 />
 
               </div>
@@ -896,8 +756,6 @@ function EditSurat() {
                   name="nomor_agenda"
                   value={form.nomor_agenda}
                   onChange={handleChange}
-                  placeholder="Contoh: 001"
-                  autoComplete="off"
                 />
 
               </div>
@@ -916,10 +774,9 @@ function EditSurat() {
                   name="tanggal_surat"
                   value={form.tanggal_surat}
                   onChange={handleTanggalSuratChange}
-                  placeholder="Contoh: 28-08-2026"
+                  placeholder="28-08-2026"
                   maxLength={10}
                   inputMode="numeric"
-                  autoComplete="off"
                 />
 
               </div>
@@ -935,7 +792,6 @@ function EditSurat() {
 
                 <input
                   type="time"
-                  name="jam_diterima"
                   value={form.jam_diterima}
                   readOnly
                 />
@@ -959,7 +815,6 @@ function EditSurat() {
                 name="perihal"
                 value={form.perihal}
                 onChange={handleChange}
-                placeholder="Masukkan perihal surat"
                 rows="4"
               />
 
@@ -967,426 +822,310 @@ function EditSurat() {
 
 
             {/* =================================================
-                ARSIP SURAT
+                FILE BARU
             ================================================= */}
 
             <div className="tambah-form-group tambah-full">
 
               <label>
-                Arsip Surat
+                Tambah Scan Surat
               </label>
-
-
-              {/* PILIH FILE */}
 
               <input
                 type="file"
-                accept="
-                  application/pdf,
-                  image/jpeg,
-                  image/png,
-                  image/webp,
-                  application/zip,
-                  application/x-zip-compressed,
-                  .pdf,
-                  .jpg,
-                  .jpeg,
-                  .png,
-                  .webp,
-                  .zip
-                "
-                onChange={handleArsipChange}
+                multiple
+                accept=".pdf,.jpg,.jpeg,.png,.webp"
+                onChange={handleFileChange}
               />
 
+              <small>
+                Kamu dapat menambahkan PDF, JPG, JPEG,
+                PNG, atau WEBP. Maksimal 20 MB setiap file.
+              </small>
 
-              {/* =================================================
-                  KAMERA
-              ================================================= */}
+            </div>
+
+
+            {/* =================================================
+                FILE BARU DIPILIH
+            ================================================= */}
+
+            {arsipBaru.length > 0 && (
 
               <div
-                style={{
-                  marginTop: "12px",
-                }}
+                className="tambah-form-group tambah-full"
               >
 
-                <label
-                  style={{
-                    display: "inline-block",
-                    marginBottom: "8px",
-                    fontWeight: "600",
-                  }}
-                >
-                  📷 Ambil Foto Langsung
-                </label>
+                <h3>
+                  File Baru yang Akan Ditambahkan
+                </h3>
 
-                <input
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  onChange={handleCameraChange}
-                />
+
+                {arsipBaru.map(
+                  (file, index) => (
+
+                    <div
+                      key={index}
+                      style={{
+                        marginTop: "12px",
+                        padding: "15px",
+                        border:
+                          "1px solid #ddd",
+                        borderRadius: "10px",
+                      }}
+                    >
+
+                      <strong>
+                        {isPDF(file)
+                          ? "📄 PDF"
+                          : "🖼️ Gambar"}{" "}
+
+                        {file.name}
+                      </strong>
+
+
+                      {/* PREVIEW GAMBAR BARU */}
+
+                      {isImage(file) && (
+
+                        <div
+                          style={{
+                            marginTop: "15px",
+                          }}
+                        >
+
+                          <img
+                            src={
+                              URL.createObjectURL(file)
+                            }
+                            alt={file.name}
+                            style={{
+                              maxWidth: "100%",
+                              maxHeight: "400px",
+                              borderRadius: "8px",
+                            }}
+                          />
+
+                        </div>
+
+                      )}
+
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleRemoveFileBaru(index)
+                        }
+                        style={{
+                          marginTop: "10px",
+                          padding: "8px 12px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        🗑️ Hapus
+                      </button>
+
+                    </div>
+
+                  )
+                )}
 
               </div>
 
-
-              <small>
-
-                Kamu dapat memilih PDF, JPG, JPEG,
-                PNG, WEBP, ZIP atau langsung mengambil
-                foto menggunakan kamera.
-
-                <br />
-
-                Maksimal ukuran file 20 MB.
-
-              </small>
+            )}
 
 
-              {/* =================================================
-                  FILE BARU
-              ================================================= */}
+            {/* =================================================
+                ARSIP LAMA
+            ================================================= */}
 
-              {arsipFile && (
+            <div
+              className="tambah-form-group tambah-full"
+            >
+
+              <h3>
+                Arsip Surat yang Sudah Tersimpan
+              </h3>
+
+
+              {arsipLama.length === 0 && (
 
                 <div
                   style={{
-                    marginTop: "18px",
+                    padding: "20px",
                     border:
-                      "1px solid #d9dee5",
-                    borderRadius:
-                      "12px",
-                    overflow:
-                      "hidden",
-                    background:
-                      "#f7f8fa",
+                      "1px dashed #ccc",
+                    borderRadius: "10px",
+                    textAlign: "center",
                   }}
                 >
+                  Belum ada arsip surat.
+                </div>
+
+              )}
+
+
+              {/* =================================================
+                  TAMPILKAN SEMUA FILE LAMA
+              ================================================= */}
+
+              {arsipLama.map(
+                (arsip, index) => (
 
                   <div
+                    key={
+                      arsip.public_id ||
+                      index
+                    }
                     style={{
-                      padding:
-                        "12px 16px",
-
-                      background:
-                        "#eef1f5",
-
-                      borderBottom:
-                        "1px solid #d9dee5",
-
-                      display:
-                        "flex",
-
-                      justifyContent:
-                        "space-between",
-
-                      alignItems:
-                        "center",
-
-                      gap:
-                        "10px",
-
-                      flexWrap:
-                        "wrap",
+                      marginTop: "20px",
+                      border:
+                        "1px solid #ddd",
+                      borderRadius:
+                        "12px",
+                      overflow:
+                        "hidden",
                     }}
                   >
 
-                    <strong>
 
-                      {adalahPDF(arsipFile)
-                        ? "📄 Preview PDF Baru"
-                        : adalahGambar(arsipFile)
-                        ? "🖼️ Preview Gambar Baru"
-                        : adalahZIP(arsipFile)
-                        ? "📦 File ZIP Baru"
-                        : "📁 File Baru"}
-
-                    </strong>
-
-                    <span>
-                      {arsipFile.name}
-                    </span>
-
-                  </div>
-
-
-                  {/* PREVIEW PDF */}
-
-                  {adalahPDF(arsipFile) && (
-
-                    <iframe
-                      src={previewBaru}
-                      title="Preview PDF Baru"
-                      style={{
-                        width: "100%",
-                        height: "650px",
-                        border: "none",
-                        display: "block",
-                      }}
-                    />
-
-                  )}
-
-
-                  {/* PREVIEW GAMBAR */}
-
-                  {adalahGambar(arsipFile) && (
+                    {/* HEADER FILE */}
 
                     <div
                       style={{
-                        padding: "20px",
-                        textAlign: "center",
+                        padding: "15px",
+                        background:
+                          "#f5f5f5",
+                        display:
+                          "flex",
+                        justifyContent:
+                          "space-between",
+                        gap: "10px",
+                        flexWrap:
+                          "wrap",
                       }}
                     >
 
-                      <img
-                        src={previewBaru}
-                        alt="Preview Arsip Baru"
-                        style={{
-                          maxWidth: "100%",
-                          maxHeight: "650px",
-                          borderRadius: "8px",
-                        }}
-                      />
+                      <strong>
+
+                        {isPDF(arsip)
+                          ? "📄 PDF"
+                          : isImage(arsip)
+                          ? "🖼️ Gambar"
+                          : "📁 File"}{" "}
+
+                        {index + 1}
+
+                      </strong>
+
+
+                      <span>
+                        {arsip.nama_file ||
+                          "Arsip Surat"}
+                      </span>
 
                     </div>
 
-                  )}
 
+                    {/* =================================================
+                        GAMBAR
+                    ================================================= */}
 
-                  {/* ZIP */}
-
-                  {adalahZIP(arsipFile) && (
-
-                    <div
-                      style={{
-                        padding: "25px",
-                        textAlign: "center",
-                        color: "#555",
-                      }}
-                    >
+                    {isImage(arsip) && (
 
                       <div
                         style={{
-                          fontSize: "40px",
-                          marginBottom: "10px",
+                          padding: "20px",
+                          textAlign:
+                            "center",
                         }}
                       >
-                        📦
+
+                        <img
+                          src={arsip.url_file}
+                          alt={
+                            arsip.nama_file ||
+                            "Arsip Surat"
+                          }
+                          style={{
+                            maxWidth: "100%",
+                            maxHeight: "650px",
+                            borderRadius:
+                              "8px",
+                          }}
+                        />
+
                       </div>
 
-                      <strong>
-                        File ZIP siap diupload
-                      </strong>
-
-                      <p>
-                        File ZIP tidak memiliki preview langsung.
-                      </p>
-
-                    </div>
-
-                  )}
-
-                </div>
-
-              )}
+                    )}
 
 
-              {/* =================================================
-                  ARSIP LAMA
-              ================================================= */}
+                    {/* =================================================
+                        PDF
+                    ================================================= */}
 
-              {!arsipFile &&
-                arsipLama &&
-                arsipLama.url_file && (
+                    {isPDF(arsip) && (
 
-                <div
-                  style={{
-                    marginTop: "18px",
-                    border:
-                      "1px solid #d9dee5",
-                    borderRadius:
-                      "12px",
-                    overflow:
-                      "hidden",
-                    background:
-                      "#f7f8fa",
-                  }}
-                >
-
-                  <div
-                    style={{
-                      padding:
-                        "12px 16px",
-
-                      background:
-                        "#eef1f5",
-
-                      borderBottom:
-                        "1px solid #d9dee5",
-
-                      display:
-                        "flex",
-
-                      justifyContent:
-                        "space-between",
-
-                      alignItems:
-                        "center",
-
-                      gap:
-                        "10px",
-
-                      flexWrap:
-                        "wrap",
-                    }}
-                  >
-
-                    <strong>
-                      📁 Arsip Surat Saat Ini
-                    </strong>
-
-                    <span>
-                      {arsipLama.nama_file ||
-                        "Arsip Surat"}
-                    </span>
-
-                  </div>
-
-
-                  {/* =================================================
-                      PDF LAMA
-                  ================================================= */}
-
-                  {arsipLama.tipe_file ===
-                  "application/pdf" ? (
-
-                    <iframe
-                      src={
-                        "https://disposisi-react-8vdu.vercel.app/api/surat/preview/" +
-                        id
-                      }
-                      title="Preview Arsip Surat"
-                      style={{
-                        width: "100%",
-                        height: "650px",
-                        border: "none",
-                        display: "block",
-                        background: "#fff",
-                      }}
-                    />
-
-                  ) : arsipLama.tipe_file?.startsWith(
-                      "image/"
-                    ) ? (
-
-                    <div
-                      style={{
-                        padding: "20px",
-                        textAlign: "center",
-                      }}
-                    >
-
-                      <img
-                        src={arsipLama.url_file}
-                        alt="Arsip Surat"
+                      <iframe
+                        src={arsip.url_file}
+                        title={
+                          arsip.nama_file ||
+                          `PDF ${index + 1}`
+                        }
                         style={{
-                          maxWidth: "100%",
-                          maxHeight: "650px",
-                          borderRadius: "8px",
+                          width: "100%",
+                          height: "650px",
+                          border: "none",
                         }}
                       />
 
-                    </div>
+                    )}
 
-                  ) : (
+
+                    {/* =================================================
+                        BUTTON BUKA
+                    ================================================= */}
 
                     <div
                       style={{
-                        padding: "25px",
-                        textAlign: "center",
+                        padding: "15px",
+                        borderTop:
+                          "1px solid #ddd",
                       }}
                     >
 
-                      📦 File arsip tersimpan.
+                      <a
+                        href={arsip.url_file}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          display:
+                            "inline-block",
+
+                          padding:
+                            "10px 15px",
+
+                          background:
+                            "#173f5f",
+
+                          color:
+                            "#fff",
+
+                          borderRadius:
+                            "8px",
+
+                          textDecoration:
+                            "none",
+                        }}
+                      >
+                        📂 Buka File
+                      </a>
 
                     </div>
 
-                  )}
-
-
-                  {/* BUKA FILE */}
-
-                  <div
-                    style={{
-                      padding:
-                        "12px 16px",
-
-                      borderTop:
-                        "1px solid #d9dee5",
-
-                      background:
-                        "#fff",
-                    }}
-                  >
-
-                    <a
-                      href={arsipLama.url_file}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{
-                        display:
-                          "inline-block",
-
-                        padding:
-                          "9px 15px",
-
-                        borderRadius:
-                          "8px",
-
-                        background:
-                          "#173f5f",
-
-                        color:
-                          "#fff",
-
-                        textDecoration:
-                          "none",
-
-                        fontWeight:
-                          "600",
-                      }}
-                    >
-                      📂 Buka Arsip
-                    </a>
-
                   </div>
 
-                </div>
-
-              )}
-
-
-              {/* =================================================
-                  BELUM ADA ARSIP
-              ================================================= */}
-
-              {!arsipFile &&
-                !arsipLama && (
-
-                <div
-                  style={{
-                    marginTop: "15px",
-                    padding: "20px",
-                    textAlign: "center",
-                    border:
-                      "1px dashed #cfd5dc",
-                    borderRadius: "10px",
-                    color: "#777",
-                  }}
-                >
-                  Belum ada arsip untuk surat ini.
-                </div>
-
+                )
               )}
 
             </div>
@@ -1404,6 +1143,7 @@ function EditSurat() {
               >
                 Batal
               </Link>
+
 
               <button
                 type="submit"
