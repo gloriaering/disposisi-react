@@ -8,7 +8,7 @@ import CameraCapture from "../components/CameraCapture";
 // URL BACKEND ONLINE
 // =========================================================
 
-const API_URL = "https://disposisi-react-8vdu.vercel.app";
+const API_URL = "https://disposisi-react.vercel.app";
 
 function TambahSurat() {
   const navigate = useNavigate();
@@ -199,9 +199,7 @@ function TambahSurat() {
       const gabungan = [...prev, ...fileValid];
 
       if (gabungan.length > 20) {
-        setError(
-          "Maksimal hanya dapat mengupload 20 file."
-        );
+        setError("Maksimal hanya dapat mengupload 20 file.");
 
         return gabungan.slice(0, 20);
       }
@@ -209,7 +207,6 @@ function TambahSurat() {
       return gabungan;
     });
 
-    // Supaya file yang sama bisa dipilih lagi jika diperlukan
     e.target.value = "";
   };
 
@@ -226,9 +223,7 @@ function TambahSurat() {
 
     setScanSurat((prev) => {
       if (prev.length >= 20) {
-        setError(
-          "Maksimal hanya dapat mengupload 20 file."
-        );
+        setError("Maksimal hanya dapat mengupload 20 file.");
 
         return prev;
       }
@@ -270,10 +265,6 @@ function TambahSurat() {
 
     setError("");
 
-    // =======================================================
-    // VALIDASI FORM
-    // =======================================================
-
     if (
       !formData.nomor_surat.trim() ||
       !formData.asal_surat.trim() ||
@@ -287,15 +278,10 @@ function TambahSurat() {
       return;
     }
 
-    // =======================================================
-    // VALIDASI FILE
-    // =======================================================
-
     if (scanSurat.length === 0) {
       setError(
         "Minimal satu scan surat wajib dipilih atau difoto."
       );
-
       return;
     }
 
@@ -303,7 +289,6 @@ function TambahSurat() {
       setError(
         "Maksimal hanya dapat mengupload 20 file."
       );
-
       return;
     }
 
@@ -317,10 +302,6 @@ function TambahSurat() {
       setLoading(true);
 
       const data = new FormData();
-
-      // =====================================================
-      // DATA SURAT
-      // =====================================================
 
       data.append(
         "nomor_surat",
@@ -357,10 +338,6 @@ function TambahSurat() {
         formData.perihal.trim()
       );
 
-      // =====================================================
-      // DATA TAMBAHAN
-      // =====================================================
-
       data.append("sifat_surat", "");
 
       data.append(
@@ -380,10 +357,7 @@ function TambahSurat() {
       // =====================================================
 
       scanSurat.forEach((file) => {
-        data.append(
-          "arsip_surat",
-          file
-        );
+        data.append("arsip_surat", file);
       });
 
       // =====================================================
@@ -403,7 +377,7 @@ function TambahSurat() {
       if (!response.ok) {
         throw new Error(
           result.message ||
-            "Gagal menyimpan surat."
+          "Gagal menyimpan surat."
         );
       }
 
@@ -421,7 +395,7 @@ function TambahSurat() {
 
       setError(
         error.message ||
-          "Gagal menyimpan surat. Pastikan backend sedang berjalan."
+        "Gagal menyimpan surat. Pastikan backend sedang berjalan."
       );
 
     } finally {
@@ -436,10 +410,6 @@ function TambahSurat() {
   return (
     <div className="tambah-page">
 
-      {/* =====================================================
-          HAMBURGER HP
-      ===================================================== */}
-
       <button
         type="button"
         className="tambah-mobile-menu-btn"
@@ -449,17 +419,11 @@ function TambahSurat() {
         ☰
       </button>
 
-      {/* =====================================================
-          SIDEBAR
-      ===================================================== */}
-
       <aside
         className={`tambah-sidebar ${
           menuOpen ? "menu-open" : ""
         }`}
       >
-
-        {/* BRAND */}
 
         <div className="tambah-brand">
 
@@ -476,8 +440,6 @@ function TambahSurat() {
           </div>
 
         </div>
-
-        {/* MENU */}
 
         <nav className="tambah-menu">
 
@@ -516,13 +478,7 @@ function TambahSurat() {
 
       </aside>
 
-      {/* =====================================================
-          MAIN
-      ===================================================== */}
-
       <main className="tambah-main">
-
-        {/* TOPBAR */}
 
         <header className="tambah-topbar">
 
@@ -536,11 +492,7 @@ function TambahSurat() {
 
         </header>
 
-        {/* CONTENT */}
-
         <section className="tambah-content">
-
-          {/* HEADER */}
 
           <div className="tambah-page-header">
 
@@ -565,24 +517,16 @@ function TambahSurat() {
 
           </div>
 
-          {/* ERROR */}
-
           {error && (
             <div className="tambah-error">
               {error}
             </div>
           )}
 
-          {/* =================================================
-              FORM
-          ================================================= */}
-
           <form
             className="tambah-form-card"
             onSubmit={handleSubmit}
           >
-
-            {/* FORM TOP */}
 
             <div className="tambah-form-top">
 
@@ -596,13 +540,7 @@ function TambahSurat() {
 
             </div>
 
-            {/* =================================================
-                FORM GRID
-            ================================================= */}
-
             <div className="tambah-form-grid">
-
-              {/* SURAT DARI */}
 
               <div className="tambah-form-group">
 
@@ -621,8 +559,6 @@ function TambahSurat() {
 
               </div>
 
-              {/* TANGGAL DITERIMA */}
-
               <div className="tambah-form-group">
 
                 <label>
@@ -635,13 +571,7 @@ function TambahSurat() {
                   readOnly
                 />
 
-                <small>
-                  Otomatis mengikuti tanggal Indonesia (WITA).
-                </small>
-
               </div>
-
-              {/* NOMOR SURAT */}
 
               <div className="tambah-form-group">
 
@@ -655,12 +585,9 @@ function TambahSurat() {
                   value={formData.nomor_surat}
                   onChange={handleChange}
                   placeholder="Contoh: 005/123/DISNAKERTRANS"
-                  autoComplete="off"
                 />
 
               </div>
-
-              {/* NOMOR AGENDA */}
 
               <div className="tambah-form-group">
 
@@ -674,12 +601,9 @@ function TambahSurat() {
                   value={formData.nomor_agenda}
                   onChange={handleChange}
                   placeholder="Contoh: 001"
-                  autoComplete="off"
                 />
 
               </div>
-
-              {/* TANGGAL SURAT */}
 
               <div className="tambah-form-group">
 
@@ -695,16 +619,9 @@ function TambahSurat() {
                   placeholder="Contoh: 28-08-2026"
                   maxLength={10}
                   inputMode="numeric"
-                  autoComplete="off"
                 />
 
-                <small>
-                  Ketik sesuai tanggal yang tercantum pada surat.
-                </small>
-
               </div>
-
-              {/* JAM DITERIMA */}
 
               <div className="tambah-form-group">
 
@@ -718,17 +635,9 @@ function TambahSurat() {
                   readOnly
                 />
 
-                <small>
-                  Otomatis mengikuti waktu Indonesia (WITA).
-                </small>
-
               </div>
 
             </div>
-
-            {/* =================================================
-                PERIHAL
-            ================================================= */}
 
             <div className="tambah-form-group tambah-full">
 
@@ -746,9 +655,7 @@ function TambahSurat() {
 
             </div>
 
-            {/* =================================================
-                SCAN SURAT BANYAK FILE
-            ================================================= */}
+            {/* SCAN SURAT */}
 
             <div className="tambah-form-group tambah-full">
 
@@ -760,12 +667,10 @@ function TambahSurat() {
                 id="arsip_surat"
                 type="file"
                 multiple
-                accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp"
+                accept=".pdf,.jpg,.jpeg,.png,.webp"
                 className="tambah-scan-input"
                 onChange={handleScanChange}
               />
-
-              {/* TOMBOL KAMERA */}
 
               <button
                 type="button"
@@ -780,8 +685,6 @@ function TambahSurat() {
                 📷 Ambil Foto dengan Kamera
               </button>
 
-              {/* INFO JUMLAH FILE */}
-
               <div
                 style={{
                   marginTop: "15px",
@@ -790,10 +693,6 @@ function TambahSurat() {
               >
                 File dipilih: {scanSurat.length} / 20
               </div>
-
-              {/* =================================================
-                  DAFTAR FILE
-              ================================================= */}
 
               {scanSurat.length > 0 && (
 
@@ -817,7 +716,6 @@ function TambahSurat() {
                         alignItems: "center",
                         justifyContent: "space-between",
                         gap: "10px",
-                        flexWrap: "wrap",
                       }}
                     >
 
@@ -833,12 +731,7 @@ function TambahSurat() {
                           File {index + 1}
                         </strong>
 
-                        <div
-                          style={{
-                            fontSize: "14px",
-                            marginTop: "4px",
-                          }}
-                        >
+                        <div>
                           {file.name}
                         </div>
 
@@ -858,10 +751,6 @@ function TambahSurat() {
                         onClick={() =>
                           handleRemoveFile(index)
                         }
-                        style={{
-                          padding: "8px 12px",
-                          cursor: "pointer",
-                        }}
                       >
                         🗑️ Hapus
                       </button>
@@ -886,10 +775,6 @@ function TambahSurat() {
               </small>
 
             </div>
-
-            {/* =================================================
-                BUTTON
-            ================================================= */}
 
             <div className="tambah-form-actions">
 
@@ -917,10 +802,6 @@ function TambahSurat() {
         </section>
 
       </main>
-
-      {/* =====================================================
-          MODAL KAMERA
-      ===================================================== */}
 
       {showCamera && (
 
