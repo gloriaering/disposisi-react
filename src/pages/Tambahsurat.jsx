@@ -30,11 +30,11 @@ function TambahSurat() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // FILE SURAT
-  const [scanSurat, setScanSurat] = useState(null);
+  // =========================================================
+  // BANYAK FILE
+  // =========================================================
 
-  // PREVIEW FILE
-  const [previewFile, setPreviewFile] = useState("");
+  const [scanSurat, setScanSurat] = useState([]);
 
   // =========================================================
   // HAMBURGER MENU
@@ -71,8 +71,7 @@ function TambahSurat() {
           return acc;
         }, {});
 
-      const tanggalIndonesia =
-        `${parts.year}-${parts.month}-${parts.day}`;
+      const tanggalIndonesia = `${parts.year}-${parts.month}-${parts.day}`;
 
       const formatterJam = new Intl.DateTimeFormat("en-GB", {
         timeZone: "Asia/Makassar",
@@ -81,8 +80,7 @@ function TambahSurat() {
         hour12: false,
       });
 
-      const jamIndonesia =
-        formatterJam.format(sekarang);
+      const jamIndonesia = formatterJam.format(sekarang);
 
       setFormData((prev) => ({
         ...prev,
@@ -93,25 +91,10 @@ function TambahSurat() {
 
     updateWaktuIndonesia();
 
-    const interval = setInterval(
-      updateWaktuIndonesia,
-      60000
-    );
+    const interval = setInterval(updateWaktuIndonesia, 60000);
 
     return () => clearInterval(interval);
   }, []);
-
-  // =========================================================
-  // BERSIHKAN PREVIEW
-  // =========================================================
-
-  useEffect(() => {
-    return () => {
-      if (previewFile) {
-        URL.revokeObjectURL(previewFile);
-      }
-    };
-  }, [previewFile]);
 
   // =========================================================
   // HANDLE INPUT
@@ -128,7 +111,6 @@ function TambahSurat() {
 
   // =========================================================
   // HANDLE TANGGAL SURAT
-  // FORMAT: DD-MM-YYYY
   // =========================================================
 
   const handleTanggalSuratChange = (e) => {
@@ -139,17 +121,11 @@ function TambahSurat() {
     }
 
     if (value.length > 2) {
-      value =
-        value.slice(0, 2) +
-        "-" +
-        value.slice(2);
+      value = value.slice(0, 2) + "-" + value.slice(2);
     }
 
     if (value.length > 5) {
-      value =
-        value.slice(0, 5) +
-        "-" +
-        value.slice(5);
+      value = value.slice(0, 5) + "-" + value.slice(5);
     }
 
     setFormData((prev) => ({
@@ -171,7 +147,7 @@ function TambahSurat() {
   ];
 
   // =========================================================
-  // VALIDASI FILE
+  // VALIDASI SATU FILE
   // =========================================================
 
   const validateFile = (file) => {
@@ -181,7 +157,7 @@ function TambahSurat() {
 
     if (!validFileTypes.includes(file.type)) {
       setError(
-        "File scan surat harus berupa PDF, JPG, JPEG, PNG, atau WEBP."
+        `${file.name} tidak didukung. Gunakan PDF, JPG, JPEG, PNG, atau WEBP.`
       );
 
       return false;
@@ -189,7 +165,7 @@ function TambahSurat() {
 
     if (file.size > 20 * 1024 * 1024) {
       setError(
-        "Ukuran scan surat maksimal 20 MB."
+        `${file.name} terlalu besar. Maksimal ukuran setiap file adalah 20 MB.`
       );
 
       return false;
@@ -199,108 +175,90 @@ function TambahSurat() {
   };
 
   // =========================================================
-  // SIMPAN FILE
-  // =========================================================
-
-  const prosesFile = (file) => {
-    setError("");
-
-    if (!file) {
-      setScanSurat(null);
-
-      if (previewFile) {
-        URL.revokeObjectURL(previewFile);
-      }
-
-      setPreviewFile("");
-
-      return;
-    }
-
-    if (!validateFile(file)) {
-      return;
-    }
-
-    if (previewFile) {
-      URL.revokeObjectURL(previewFile);
-    }
-
-    setScanSurat(file);
-
-    const url =
-      URL.createObjectURL(file);
-
-    setPreviewFile(url);
-  };
-
-  // =========================================================
-  // PILIH FILE
+  // PILIH BANYAK FILE
   // =========================================================
 
   const handleScanChange = (e) => {
-    const file =
-      e.target.files?.[0] || null;
+    const files = Array.from(e.target.files || []);
 
-    if (!file) {
+    setError("");
+
+    if (files.length === 0) {
       return;
     }
 
-    if (!validateFile(file)) {
-      setScanSurat(null);
-      e.target.value = "";
-      return;
+    const fileValid = [];
+
+    for (const file of files) {
+      if (validateFile(file)) {
+        fileValid.push(file);
+      }
     }
 
-    prosesFile(file);
+    setScanSurat((prev) => {
+      const gabungan = [...prev, ...fileValid];
+
+      if (gabungan.length > 20) {
+        setError(
+          "Maksimal hanya dapat mengupload 20 file."
+        );
+
+        return gabungan.slice(0, 20);
+      }
+
+      return gabungan;
+    });
+
+    // Supaya file yang sama bisa dipilih lagi jika diperlukan
+    e.target.value = "";
   };
 
   // =========================================================
-  // HASIL FOTO KAMERA
+  // HASIL FOTO DARI KAMERA
   // =========================================================
 
   const handleCameraCapture = (file) => {
     setError("");
 
-    if (!file) {
-      return;
-    }
-
     if (!validateFile(file)) {
       return;
     }
 
-    prosesFile(file);
+    setScanSurat((prev) => {
+      if (prev.length >= 20) {
+        setError(
+          "Maksimal hanya dapat mengupload 20 file."
+        );
+
+        return prev;
+      }
+
+      return [...prev, file];
+    });
 
     setShowCamera(false);
+  };
+
+  // =========================================================
+  // HAPUS SATU FILE
+  // =========================================================
+
+  const handleRemoveFile = (index) => {
+    setScanSurat((prev) =>
+      prev.filter((_, i) => i !== index)
+    );
   };
 
   // =========================================================
   // CEK JENIS FILE
   // =========================================================
 
-  const adalahGambar = () => {
-    if (!scanSurat) return false;
-
-    return scanSurat.type.startsWith("image/");
+  const isImage = (file) => {
+    return file?.type?.startsWith("image/");
   };
 
-  const adalahPDF = () => {
-    if (!scanSurat) return false;
-
-    return scanSurat.type === "application/pdf";
-  };
-
-  // =========================================================
-  // HAPUS FILE
-  // =========================================================
-
-  const hapusFile = () => {
-    if (previewFile) {
-      URL.revokeObjectURL(previewFile);
-    }
-
-    setScanSurat(null);
-    setPreviewFile("");
+  const isPDF = (file) => {
+    return file?.type === "application/pdf";
   };
 
   // =========================================================
@@ -325,10 +283,7 @@ function TambahSurat() {
       !formData.jam_diterima ||
       !formData.perihal.trim()
     ) {
-      setError(
-        "Semua field bertanda * wajib diisi."
-      );
-
+      setError("Semua field bertanda * wajib diisi.");
       return;
     }
 
@@ -336,16 +291,26 @@ function TambahSurat() {
     // VALIDASI FILE
     // =======================================================
 
-    if (!scanSurat) {
+    if (scanSurat.length === 0) {
       setError(
-        "Scan surat wajib dipilih atau difoto."
+        "Minimal satu scan surat wajib dipilih atau difoto."
       );
 
       return;
     }
 
-    if (!validateFile(scanSurat)) {
+    if (scanSurat.length > 20) {
+      setError(
+        "Maksimal hanya dapat mengupload 20 file."
+      );
+
       return;
+    }
+
+    for (const file of scanSurat) {
+      if (!validateFile(file)) {
+        return;
+      }
     }
 
     try {
@@ -408,19 +373,18 @@ function TambahSurat() {
         JSON.stringify([])
       );
 
-      data.append(
-        "catatan",
-        ""
-      );
+      data.append("catatan", "");
 
       // =====================================================
-      // FILE
+      // MASUKKAN SEMUA FILE
       // =====================================================
 
-      data.append(
-        "arsip_surat",
-        scanSurat
-      );
+      scanSurat.forEach((file) => {
+        data.append(
+          "arsip_surat",
+          file
+        );
+      });
 
       // =====================================================
       // KIRIM KE BACKEND
@@ -434,29 +398,22 @@ function TambahSurat() {
         }
       );
 
-      let result;
-
-      try {
-        result = await response.json();
-      } catch {
-        throw new Error(
-          "Server memberikan respons yang tidak valid."
-        );
-      }
+      const result = await response.json();
 
       if (!response.ok) {
         throw new Error(
           result.message ||
-          "Gagal menyimpan surat."
+            "Gagal menyimpan surat."
         );
       }
 
-      alert("✓ Surat berhasil disimpan.");
+      alert(
+        `✓ Surat berhasil disimpan dengan ${scanSurat.length} file.`
+      );
 
       navigate("/surat");
 
     } catch (error) {
-
       console.error(
         "Gagal menyimpan surat:",
         error
@@ -464,13 +421,11 @@ function TambahSurat() {
 
       setError(
         error.message ||
-        "Gagal menyimpan surat. Pastikan backend sedang berjalan."
+          "Gagal menyimpan surat. Pastikan backend sedang berjalan."
       );
 
     } finally {
-
       setLoading(false);
-
     }
   };
 
@@ -504,30 +459,25 @@ function TambahSurat() {
         }`}
       >
 
+        {/* BRAND */}
+
         <div className="tambah-brand">
 
           <div className="tambah-brand-logo">
-
             <img
               src={logoSulut}
               alt="Logo Sulawesi Utara"
             />
-
           </div>
 
           <div className="tambah-brand-text">
-
-            <h2>
-              DISNAKERTRANS
-            </h2>
-
-            <span>
-              Sulawesi Utara
-            </span>
-
+            <h2>DISNAKERTRANS</h2>
+            <span>Sulawesi Utara</span>
           </div>
 
         </div>
+
+        {/* MENU */}
 
         <nav className="tambah-menu">
 
@@ -577,15 +527,11 @@ function TambahSurat() {
         <header className="tambah-topbar">
 
           <div className="tambah-topbar-left">
-
-            <h1>
-              Tambah Surat
-            </h1>
+            <h1>Tambah Surat</h1>
 
             <p>
               Sistem Informasi Disposisi Surat
             </p>
-
           </div>
 
         </header>
@@ -594,17 +540,15 @@ function TambahSurat() {
 
         <section className="tambah-content">
 
+          {/* HEADER */}
+
           <div className="tambah-page-header">
 
             <div className="tambah-page-title">
 
-              <span>
-                DATA ADMINISTRASI
-              </span>
+              <span>DATA ADMINISTRASI</span>
 
-              <h2>
-                Tambah Surat Masuk
-              </h2>
+              <h2>Tambah Surat Masuk</h2>
 
               <p>
                 Masukkan data surat masuk ke dalam sistem.
@@ -638,23 +582,23 @@ function TambahSurat() {
             onSubmit={handleSubmit}
           >
 
+            {/* FORM TOP */}
+
             <div className="tambah-form-top">
 
               <div>
-
-                <h3>
-                  Informasi Surat
-                </h3>
+                <h3>Informasi Surat</h3>
 
                 <p>
                   Lengkapi informasi surat dengan benar.
                 </p>
-
               </div>
 
             </div>
 
-            {/* FORM GRID */}
+            {/* =================================================
+                FORM GRID
+            ================================================= */}
 
             <div className="tambah-form-grid">
 
@@ -760,7 +704,7 @@ function TambahSurat() {
 
               </div>
 
-              {/* JAM */}
+              {/* JAM DITERIMA */}
 
               <div className="tambah-form-group">
 
@@ -803,7 +747,7 @@ function TambahSurat() {
             </div>
 
             {/* =================================================
-                SCAN SURAT
+                SCAN SURAT BANYAK FILE
             ================================================= */}
 
             <div className="tambah-form-group tambah-full">
@@ -815,6 +759,7 @@ function TambahSurat() {
               <input
                 id="arsip_surat"
                 type="file"
+                multiple
                 accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp"
                 className="tambah-scan-input"
                 onChange={handleScanChange}
@@ -835,119 +780,109 @@ function TambahSurat() {
                 📷 Ambil Foto dengan Kamera
               </button>
 
-              {/* FILE TERPILIH */}
+              {/* INFO JUMLAH FILE */}
 
-              {scanSurat && (
+              <div
+                style={{
+                  marginTop: "15px",
+                  fontWeight: "600",
+                }}
+              >
+                File dipilih: {scanSurat.length} / 20
+              </div>
+
+              {/* =================================================
+                  DAFTAR FILE
+              ================================================= */}
+
+              {scanSurat.length > 0 && (
 
                 <div
                   style={{
-                    marginTop: "18px",
-                    border: "1px solid #d9dee5",
-                    borderRadius: "12px",
-                    overflow: "hidden",
-                    background: "#f7f8fa",
+                    marginTop: "15px",
+                    display: "grid",
+                    gap: "10px",
                   }}
                 >
 
-                  <div
-                    style={{
-                      padding: "12px 16px",
-                      background: "#eef1f5",
-                      borderBottom: "1px solid #d9dee5",
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      gap: "10px",
-                      flexWrap: "wrap",
-                    }}
-                  >
-
-                    <div>
-
-                      <strong>
-                        {adalahPDF()
-                          ? "📄 PDF Terpilih"
-                          : "🖼️ Foto Surat"}
-                      </strong>
-
-                      <div
-                        style={{
-                          marginTop: "5px",
-                          fontSize: "14px",
-                        }}
-                      >
-                        {scanSurat.name}
-                      </div>
-
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={hapusFile}
-                      style={{
-                        padding: "7px 12px",
-                        cursor: "pointer",
-                      }}
-                    >
-                      ✕ Hapus
-                    </button>
-
-                  </div>
-
-                  {/* PREVIEW PDF */}
-
-                  {adalahPDF() && previewFile && (
-
-                    <iframe
-                      src={previewFile}
-                      title="Preview PDF Surat"
-                      style={{
-                        width: "100%",
-                        height: "600px",
-                        border: "none",
-                        display: "block",
-                      }}
-                    />
-
-                  )}
-
-                  {/* PREVIEW GAMBAR */}
-
-                  {adalahGambar() && previewFile && (
+                  {scanSurat.map((file, index) => (
 
                     <div
+                      key={`${file.name}-${index}`}
                       style={{
-                        padding: "20px",
-                        textAlign: "center",
+                        padding: "12px",
+                        border: "1px solid #ddd",
+                        borderRadius: "8px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: "10px",
+                        flexWrap: "wrap",
                       }}
                     >
 
-                      <img
-                        src={previewFile}
-                        alt="Preview Scan Surat"
+                      <div>
+
+                        <strong>
+                          {isPDF(file)
+                            ? "📄"
+                            : isImage(file)
+                            ? "🖼️"
+                            : "📁"}{" "}
+
+                          File {index + 1}
+                        </strong>
+
+                        <div
+                          style={{
+                            fontSize: "14px",
+                            marginTop: "4px",
+                          }}
+                        >
+                          {file.name}
+                        </div>
+
+                        <div
+                          style={{
+                            fontSize: "12px",
+                            color: "#666",
+                          }}
+                        >
+                          {(file.size / 1024 / 1024).toFixed(2)} MB
+                        </div>
+
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleRemoveFile(index)
+                        }
                         style={{
-                          maxWidth: "100%",
-                          maxHeight: "650px",
-                          borderRadius: "8px",
+                          padding: "8px 12px",
+                          cursor: "pointer",
                         }}
-                      />
+                      >
+                        🗑️ Hapus
+                      </button>
 
                     </div>
 
-                  )}
+                  ))}
 
                 </div>
 
               )}
 
-              <small className="tambah-scan-info">
-
+              <small
+                className="tambah-scan-info"
+                style={{
+                  display: "block",
+                  marginTop: "12px",
+                }}
+              >
                 Upload PDF, JPG, JPEG, PNG, atau WEBP.
-
-                <br />
-
-                Maksimal 20 MB.
-
+                Maksimal 20 file dan maksimal 20 MB setiap file.
               </small>
 
             </div>
@@ -972,7 +907,7 @@ function TambahSurat() {
               >
                 {loading
                   ? "Menyimpan..."
-                  : "✓ Simpan Surat"}
+                  : `✓ Simpan Surat (${scanSurat.length} File)`}
               </button>
 
             </div>
@@ -1000,4 +935,4 @@ function TambahSurat() {
   );
 }
 
-export default TambahSurat; 
+export default TambahSurat;
