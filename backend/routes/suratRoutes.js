@@ -8,7 +8,6 @@ const router = express.Router();
 
 const multer = require("multer");
 const mongoose = require("mongoose");
-const PDFDocument = require("pdfkit");
 
 const Surat = require("../models/Surat");
 const cloudinary = require("../cloudinary");
@@ -78,238 +77,49 @@ function idValid(id) {
 
 
 /* =========================================================
-   UBAH GAMBAR MENJADI PDF
-========================================================= */
-
-function gambarKePDF(file) {
-
-  return new Promise(function (resolve, reject) {
-
-    try {
-
-      const doc = new PDFDocument({
-
-        autoFirstPage: false,
-
-      });
-
-
-      const chunks = [];
-
-
-      doc.on("data", function (chunk) {
-
-        chunks.push(chunk);
-
-      });
-
-
-      doc.on("end", function () {
-
-        const pdfBuffer = Buffer.concat(chunks);
-
-        resolve({
-
-          buffer: pdfBuffer,
-
-          nama_file:
-
-            file.originalname.replace(
-              /\.[^/.]+$/,
-              ""
-            ) + ".pdf",
-
-          mimetype:
-
-            "application/pdf",
-
-        });
-
-      });
-
-
-      doc.on("error", reject);
-
-
-      /* ===============================================
-         BUAT HALAMAN A4
-      =============================================== */
-
-      doc.addPage({
-
-        size: "A4",
-
-        margin: 30,
-
-      });
-
-
-      const pageWidth =
-
-        doc.page.width -
-
-        doc.page.margins.left -
-
-        doc.page.margins.right;
-
-
-      const pageHeight =
-
-        doc.page.height -
-
-        doc.page.margins.top -
-
-        doc.page.margins.bottom;
-
-
-      /* ===============================================
-         MASUKKAN GAMBAR
-      =============================================== */
-
-      doc.image(
-
-        file.buffer,
-
-        doc.page.margins.left,
-
-        doc.page.margins.top,
-
-        {
-
-          fit: [
-
-            pageWidth,
-
-            pageHeight,
-
-          ],
-
-          align: "center",
-
-          valign: "center",
-
-        }
-
-      );
-
-
-      doc.end();
-
-    } catch (error) {
-
-      reject(error);
-
-    }
-
-  });
-
-}
-
-
-/* =========================================================
    UPLOAD SATU FILE KE CLOUDINARY
-
-   GAMBAR → OTOMATIS PDF
-   PDF → TETAP PDF
 ========================================================= */
 
-async function uploadArsip(file) {
-
-  let fileUpload = file;
-
-
-  /* ===============================================
-     JIKA GAMBAR → UBAH KE PDF
-  =============================================== */
-
-  if (
-
-    file.mimetype.startsWith("image/")
-
-  ) {
-
-    console.log(
-      "Mengubah gambar menjadi PDF..."
-    );
-
-
-    const hasilPDF =
-
-      await gambarKePDF(file);
-
-
-    fileUpload = {
-
-      ...file,
-
-      buffer:
-        hasilPDF.buffer,
-
-      originalname:
-        hasilPDF.nama_file,
-
-      mimetype:
-        hasilPDF.mimetype,
-
-    };
-
-
-    console.log(
-      "Gambar berhasil diubah menjadi PDF."
-    );
-
-  }
-
-
-  /* ===============================================
-     NAMA FILE AMAN
-  =============================================== */
-
-  const namaAman =
-
-    fileUpload.originalname
-
-      .replace(/\.[^/.]+$/, "")
-
-      .replace(
-        /[^a-zA-Z0-9-_]/g,
-        "-"
-      );
-
-
-  const namaPublic =
-
-    Date.now() +
-
-    "-" +
-
-    Math.floor(
-      Math.random() * 100000
-    ) +
-
-    "-" +
-
-    namaAman;
-
-
-  console.log("=================================");
-  console.log("MULAI UPLOAD ARSIP");
-  console.log(
-    "Nama File:",
-    fileUpload.originalname
-  );
-  console.log(
-    "Tipe File:",
-    fileUpload.mimetype
-  );
-  console.log("=================================");
-
-
-  /* ===============================================
-     UPLOAD CLOUDINARY
-  =============================================== */
+function uploadArsip(file) {
 
   return new Promise(function (resolve, reject) {
+
+    const namaAman =
+
+      file.originalname
+        .replace(/\.[^/.]+$/, "")
+        .replace(/[^a-zA-Z0-9-_]/g, "-");
+
+
+    const namaPublic =
+
+      Date.now() +
+      "-" +
+      Math.floor(Math.random() * 100000) +
+      "-" +
+      namaAman;
+
+
+    /* =====================================================
+       PDF = RAW
+       GAMBAR = IMAGE
+    ===================================================== */
+
+    const resourceType =
+
+      file.mimetype === "application/pdf"
+
+        ? "raw"
+
+        : "image";
+
+
+    console.log("=================================");
+    console.log("MULAI UPLOAD ARSIP");
+    console.log("Nama File:", file.originalname);
+    console.log("Tipe File:", file.mimetype);
+    console.log("=================================");
+
 
     const uploadStream =
 
@@ -317,14 +127,11 @@ async function uploadArsip(file) {
 
         {
 
-          folder:
-            "disposisi-surat/arsip",
+          folder: "disposisi-surat/arsip",
 
-          resource_type:
-            "raw",
+          resource_type: resourceType,
 
-          public_id:
-            namaPublic,
+          public_id: namaPublic,
 
         },
 
@@ -346,40 +153,19 @@ async function uploadArsip(file) {
 
           console.log("=================================");
           console.log("UPLOAD BERHASIL");
-          console.log(
-            "URL:",
-            result.secure_url
-          );
-          console.log(
-            "PUBLIC ID:",
-            result.public_id
-          );
+          console.log("URL:", result.secure_url);
+          console.log("PUBLIC ID:", result.public_id);
           console.log("=================================");
 
 
-          resolve({
-
-            ...result,
-
-            nama_file:
-              fileUpload.originalname,
-
-            tipe_file:
-              fileUpload.mimetype,
-
-            resource_type:
-              "raw",
-
-          });
+          resolve(result);
 
         }
 
       );
 
 
-    uploadStream.end(
-      fileUpload.buffer
-    );
+    uploadStream.end(file.buffer);
 
   });
 
@@ -402,37 +188,21 @@ async function uploadBanyakArsip(files) {
       await uploadArsip(file);
 
 
-    /* ===============================================
-       SIMPAN HASIL SEBENARNYA
-
-       PENTING:
-       Kalau gambar sudah menjadi PDF,
-       database menyimpan nama .pdf
-    =============================================== */
-
     hasilArsip.push({
 
       nama_file:
-
-        hasilUpload.nama_file ||
-
         file.originalname,
 
 
       url_file:
-
         hasilUpload.secure_url,
 
 
       public_id:
-
         hasilUpload.public_id,
 
 
       tipe_file:
-
-        hasilUpload.tipe_file ||
-
         file.mimetype,
 
 
@@ -440,7 +210,13 @@ async function uploadBanyakArsip(files) {
 
         hasilUpload.resource_type ||
 
-        "raw",
+        (
+          file.mimetype === "application/pdf"
+
+            ? "raw"
+
+            : "image"
+        ),
 
     });
 
@@ -477,7 +253,7 @@ async function hapusSatuArsipCloudinary(arsip) {
 
           arsip.resource_type ||
 
-          "raw",
+          "image",
 
       }
 
@@ -544,9 +320,7 @@ router.get("/", async function (req, res) {
       await Surat.find({
 
         isDeleted: {
-
           $ne: true,
-
         },
 
       })
@@ -592,58 +366,53 @@ router.get("/", async function (req, res) {
    GET RIWAYAT SURAT
 ========================================================= */
 
-router.get(
-  "/riwayat",
+router.get("/riwayat", async function (req, res) {
 
-  async function (req, res) {
+  try {
 
-    try {
+    const surat =
 
-      const surat =
+      await Surat.find({
 
-        await Surat.find({
+        isDeleted: true,
 
-          isDeleted: true,
+      })
 
-        })
+        .sort({
 
-          .sort({
+          updatedAt: -1,
 
-            updatedAt: -1,
-
-          });
+        });
 
 
-      return res.json({
+    return res.json({
 
-        success: true,
+      success: true,
 
-        data: surat,
+      data: surat,
 
-      });
+    });
 
-    } catch (error) {
+  } catch (error) {
 
-      console.error(
-        "Gagal mengambil riwayat surat:",
-        error
-      );
+    console.error(
+      "Gagal mengambil riwayat surat:",
+      error
+    );
 
 
-      return res.status(500).json({
+    return res.status(500).json({
 
-        success: false,
+      success: false,
 
-        message:
-          "Gagal mengambil data riwayat surat.",
+      message:
+        "Gagal mengambil data riwayat surat.",
 
-      });
-
-    }
+    });
 
   }
 
-);
+});
 
 
 /* =========================================================
@@ -660,9 +429,7 @@ router.get(
 
     try {
 
-      const id =
-        req.params.id;
-
+      const id = req.params.id;
 
       const index =
         Number(req.params.index);
@@ -723,9 +490,7 @@ router.get(
 
       const daftarArsip =
 
-        Array.isArray(
-          surat.arsip_surat
-        )
+        Array.isArray(surat.arsip_surat)
 
           ? surat.arsip_surat
 
@@ -733,6 +498,7 @@ router.get(
 
 
       const arsip =
+
         daftarArsip[index];
 
 
@@ -842,9 +608,7 @@ router.get(
 
     try {
 
-      const id =
-        req.params.id;
-
+      const id = req.params.id;
 
       const index =
         Number(req.params.index);
@@ -905,9 +669,7 @@ router.get(
 
       const daftarArsip =
 
-        Array.isArray(
-          surat.arsip_surat
-        )
+        Array.isArray(surat.arsip_surat)
 
           ? surat.arsip_surat
 
@@ -915,6 +677,7 @@ router.get(
 
 
       const arsip =
+
         daftarArsip[index];
 
 
@@ -954,6 +717,7 @@ router.get(
 
 
       const buffer =
+
         Buffer.from(arrayBuffer);
 
 
@@ -1013,80 +777,74 @@ router.get(
    GET SATU SURAT
 ========================================================= */
 
-router.get(
-  "/:id",
+router.get("/:id", async function (req, res) {
 
-  async function (req, res) {
+  try {
 
-    try {
-
-      const id =
-        req.params.id;
+    const id = req.params.id;
 
 
-      if (!idValid(id)) {
+    if (!idValid(id)) {
 
-        return res.status(400).json({
-
-          success: false,
-
-          message:
-            "ID surat tidak valid.",
-
-        });
-
-      }
-
-
-      const surat =
-
-        await Surat.findById(id);
-
-
-      if (!surat) {
-
-        return res.status(404).json({
-
-          success: false,
-
-          message:
-            "Surat tidak ditemukan.",
-
-        });
-
-      }
-
-
-      return res.json({
-
-        success: true,
-
-        data: surat,
-
-      });
-
-    } catch (error) {
-
-      console.error(
-        "Gagal mengambil surat:",
-        error
-      );
-
-
-      return res.status(500).json({
+      return res.status(400).json({
 
         success: false,
 
         message:
-          "Gagal mengambil surat.",
+          "ID surat tidak valid.",
 
       });
 
     }
 
+
+    const surat =
+
+      await Surat.findById(id);
+
+
+    if (!surat) {
+
+      return res.status(404).json({
+
+        success: false,
+
+        message:
+          "Surat tidak ditemukan.",
+
+      });
+
+    }
+
+
+    return res.json({
+
+      success: true,
+
+      data: surat,
+
+    });
+
+  } catch (error) {
+
+    console.error(
+      "Gagal mengambil surat:",
+      error
+    );
+
+
+    return res.status(500).json({
+
+      success: false,
+
+      message:
+        "Gagal mengambil surat.",
+
+    });
+
   }
 
-);
+});
 
 
 /* =========================================================
@@ -1258,6 +1016,8 @@ router.post(
 
 /* =========================================================
    UPDATE SURAT + TAMBAH ARSIP BARU
+
+   ARSIP LAMA TETAP ADA
 ========================================================= */
 
 router.put(
@@ -1270,8 +1030,7 @@ router.put(
 
     try {
 
-      const id =
-        req.params.id;
+      const id = req.params.id;
 
 
       if (!idValid(id)) {
@@ -1397,6 +1156,10 @@ router.put(
       };
 
 
+      /* ===============================================
+         TAMBAHKAN FILE BARU
+      =============================================== */
+
       if (
 
         req.files &&
@@ -1493,7 +1256,10 @@ router.put(
 
 
 /* =========================================================
-   HAPUS SATU ARSIP
+   HAPUS SATU ARSIP SAJA
+
+   DELETE:
+   /api/surat/:id/arsip/:index
 ========================================================= */
 
 router.delete(
@@ -1504,8 +1270,7 @@ router.delete(
 
     try {
 
-      const id =
-        req.params.id;
+      const id = req.params.id;
 
       const index =
         Number(req.params.index);
@@ -1519,6 +1284,26 @@ router.delete(
 
           message:
             "ID surat tidak valid.",
+
+        });
+
+      }
+
+
+      if (
+
+        !Number.isInteger(index) ||
+
+        index < 0
+
+      ) {
+
+        return res.status(400).json({
+
+          success: false,
+
+          message:
+            "Index arsip tidak valid.",
 
         });
 
@@ -1546,9 +1331,7 @@ router.delete(
 
       const daftarArsip =
 
-        Array.isArray(
-          surat.arsip_surat
-        )
+        Array.isArray(surat.arsip_surat)
 
           ? surat.arsip_surat
 
@@ -1556,6 +1339,7 @@ router.delete(
 
 
       const arsip =
+
         daftarArsip[index];
 
 
@@ -1711,6 +1495,12 @@ router.put(
 
     } catch (error) {
 
+      console.error(
+        "Gagal memulihkan surat:",
+        error
+      );
+
+
       return res.status(500).json({
 
         success: false,
@@ -1791,7 +1581,7 @@ router.delete(
           success: false,
 
           message:
-            "Surat tidak ditemukan.",
+            "Surat tidak ditemukan atau sudah berada di riwayat.",
 
         });
 
@@ -1812,6 +1602,12 @@ router.delete(
 
     } catch (error) {
 
+      console.error(
+        "Gagal memindahkan surat:",
+        error
+      );
+
+
       return res.status(500).json({
 
         success: false,
@@ -1829,7 +1625,7 @@ router.delete(
 
 
 /* =========================================================
-   HAPUS PERMANEN
+   HAPUS PERMANEN + SEMUA FILE CLOUDINARY
 ========================================================= */
 
 router.delete(
@@ -1874,7 +1670,7 @@ router.delete(
           success: false,
 
           message:
-            "Surat tidak ditemukan.",
+            "Surat tidak ditemukan di riwayat.",
 
         });
 
@@ -1883,9 +1679,7 @@ router.delete(
 
       await hapusSemuaArsipCloudinary(
 
-        Array.isArray(
-          surat.arsip_surat
-        )
+        Array.isArray(surat.arsip_surat)
 
           ? surat.arsip_surat
 
@@ -1904,6 +1698,12 @@ router.delete(
       });
 
     } catch (error) {
+
+      console.error(
+        "Gagal menghapus surat permanen:",
+        error
+      );
+
 
       return res.status(500).json({
 
