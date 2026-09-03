@@ -13,9 +13,9 @@ const API_URL = "https://disposisi-react-8vdu.vercel.app";
 function TambahSurat() {
   const navigate = useNavigate();
 
-  /* =========================================================
-     FORM DATA
-  ========================================================= */
+  // =========================================================
+  // FORM DATA
+  // =========================================================
 
   const [formData, setFormData] = useState({
     nomor_surat: "",
@@ -29,23 +29,28 @@ function TambahSurat() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // FILE SURAT
   const [scanSurat, setScanSurat] = useState(null);
 
-  /* =========================================================
-     HAMBURGER MENU
-  ========================================================= */
+  // PREVIEW FILE
+  const [previewFile, setPreviewFile] = useState("");
+
+  // =========================================================
+  // HAMBURGER MENU
+  // =========================================================
 
   const [menuOpen, setMenuOpen] = useState(false);
 
-  /* =========================================================
-     KAMERA
-  ========================================================= */
+  // =========================================================
+  // KAMERA
+  // =========================================================
 
   const [showCamera, setShowCamera] = useState(false);
 
-  /* =========================================================
-     TANGGAL & JAM OTOMATIS WITA
-  ========================================================= */
+  // =========================================================
+  // TANGGAL & JAM OTOMATIS WITA
+  // =========================================================
 
   useEffect(() => {
     const updateWaktuIndonesia = () => {
@@ -66,7 +71,8 @@ function TambahSurat() {
           return acc;
         }, {});
 
-      const tanggalIndonesia = `${parts.year}-${parts.month}-${parts.day}`;
+      const tanggalIndonesia =
+        `${parts.year}-${parts.month}-${parts.day}`;
 
       const formatterJam = new Intl.DateTimeFormat("en-GB", {
         timeZone: "Asia/Makassar",
@@ -75,7 +81,8 @@ function TambahSurat() {
         hour12: false,
       });
 
-      const jamIndonesia = formatterJam.format(sekarang);
+      const jamIndonesia =
+        formatterJam.format(sekarang);
 
       setFormData((prev) => ({
         ...prev,
@@ -86,14 +93,29 @@ function TambahSurat() {
 
     updateWaktuIndonesia();
 
-    const interval = setInterval(updateWaktuIndonesia, 60000);
+    const interval = setInterval(
+      updateWaktuIndonesia,
+      60000
+    );
 
     return () => clearInterval(interval);
   }, []);
 
-  /* =========================================================
-     HANDLE INPUT
-  ========================================================= */
+  // =========================================================
+  // BERSIHKAN PREVIEW
+  // =========================================================
+
+  useEffect(() => {
+    return () => {
+      if (previewFile) {
+        URL.revokeObjectURL(previewFile);
+      }
+    };
+  }, [previewFile]);
+
+  // =========================================================
+  // HANDLE INPUT
+  // =========================================================
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -104,9 +126,10 @@ function TambahSurat() {
     }));
   };
 
-  /* =========================================================
-     HANDLE TANGGAL SURAT
-  ========================================================= */
+  // =========================================================
+  // HANDLE TANGGAL SURAT
+  // FORMAT: DD-MM-YYYY
+  // =========================================================
 
   const handleTanggalSuratChange = (e) => {
     let value = e.target.value.replace(/\D/g, "");
@@ -116,11 +139,17 @@ function TambahSurat() {
     }
 
     if (value.length > 2) {
-      value = value.slice(0, 2) + "-" + value.slice(2);
+      value =
+        value.slice(0, 2) +
+        "-" +
+        value.slice(2);
     }
 
     if (value.length > 5) {
-      value = value.slice(0, 5) + "-" + value.slice(5);
+      value =
+        value.slice(0, 5) +
+        "-" +
+        value.slice(5);
     }
 
     setFormData((prev) => ({
@@ -129,19 +158,21 @@ function TambahSurat() {
     }));
   };
 
-  /* =========================================================
-     FILE YANG DIIZINKAN
-  ========================================================= */
+  // =========================================================
+  // FILE YANG DIIZINKAN
+  // =========================================================
 
   const validFileTypes = [
     "application/pdf",
     "image/jpeg",
+    "image/jpg",
     "image/png",
+    "image/webp",
   ];
 
-  /* =========================================================
-     VALIDASI FILE
-  ========================================================= */
+  // =========================================================
+  // VALIDASI FILE
+  // =========================================================
 
   const validateFile = (file) => {
     if (!file) {
@@ -150,14 +181,16 @@ function TambahSurat() {
 
     if (!validFileTypes.includes(file.type)) {
       setError(
-        "File scan surat harus berupa PDF, JPG, JPEG, atau PNG."
+        "File scan surat harus berupa PDF, JPG, JPEG, PNG, atau WEBP."
       );
 
       return false;
     }
 
     if (file.size > 20 * 1024 * 1024) {
-      setError("Ukuran scan surat maksimal 20 MB.");
+      setError(
+        "Ukuran scan surat maksimal 20 MB."
+      );
 
       return false;
     }
@@ -165,17 +198,50 @@ function TambahSurat() {
     return true;
   };
 
-  /* =========================================================
-     PILIH FILE SCAN
-  ========================================================= */
+  // =========================================================
+  // SIMPAN FILE
+  // =========================================================
 
-  const handleScanChange = (e) => {
-    const file = e.target.files?.[0] || null;
-
+  const prosesFile = (file) => {
     setError("");
 
     if (!file) {
       setScanSurat(null);
+
+      if (previewFile) {
+        URL.revokeObjectURL(previewFile);
+      }
+
+      setPreviewFile("");
+
+      return;
+    }
+
+    if (!validateFile(file)) {
+      return;
+    }
+
+    if (previewFile) {
+      URL.revokeObjectURL(previewFile);
+    }
+
+    setScanSurat(file);
+
+    const url =
+      URL.createObjectURL(file);
+
+    setPreviewFile(url);
+  };
+
+  // =========================================================
+  // PILIH FILE
+  // =========================================================
+
+  const handleScanChange = (e) => {
+    const file =
+      e.target.files?.[0] || null;
+
+    if (!file) {
       return;
     }
 
@@ -185,34 +251,70 @@ function TambahSurat() {
       return;
     }
 
-    setScanSurat(file);
+    prosesFile(file);
   };
 
-  /* =========================================================
-     HASIL FOTO KAMERA
-  ========================================================= */
+  // =========================================================
+  // HASIL FOTO KAMERA
+  // =========================================================
 
   const handleCameraCapture = (file) => {
     setError("");
+
+    if (!file) {
+      return;
+    }
 
     if (!validateFile(file)) {
       return;
     }
 
-    setScanSurat(file);
+    prosesFile(file);
+
     setShowCamera(false);
   };
 
-  /* =========================================================
-     SIMPAN SURAT
-  ========================================================= */
+  // =========================================================
+  // CEK JENIS FILE
+  // =========================================================
+
+  const adalahGambar = () => {
+    if (!scanSurat) return false;
+
+    return scanSurat.type.startsWith("image/");
+  };
+
+  const adalahPDF = () => {
+    if (!scanSurat) return false;
+
+    return scanSurat.type === "application/pdf";
+  };
+
+  // =========================================================
+  // HAPUS FILE
+  // =========================================================
+
+  const hapusFile = () => {
+    if (previewFile) {
+      URL.revokeObjectURL(previewFile);
+    }
+
+    setScanSurat(null);
+    setPreviewFile("");
+  };
+
+  // =========================================================
+  // SIMPAN SURAT
+  // =========================================================
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     setError("");
 
-    /* VALIDASI FORM */
+    // =======================================================
+    // VALIDASI FORM
+    // =======================================================
 
     if (
       !formData.nomor_surat.trim() ||
@@ -223,14 +325,22 @@ function TambahSurat() {
       !formData.jam_diterima ||
       !formData.perihal.trim()
     ) {
-      setError("Semua field bertanda * wajib diisi.");
+      setError(
+        "Semua field bertanda * wajib diisi."
+      );
+
       return;
     }
 
-    /* VALIDASI SCAN */
+    // =======================================================
+    // VALIDASI FILE
+    // =======================================================
 
     if (!scanSurat) {
-      setError("Scan surat wajib dipilih atau difoto.");
+      setError(
+        "Scan surat wajib dipilih atau difoto."
+      );
+
       return;
     }
 
@@ -243,7 +353,9 @@ function TambahSurat() {
 
       const data = new FormData();
 
-      /* DATA SURAT */
+      // =====================================================
+      // DATA SURAT
+      // =====================================================
 
       data.append(
         "nomor_surat",
@@ -280,7 +392,9 @@ function TambahSurat() {
         formData.perihal.trim()
       );
 
-      /* DATA TAMBAHAN */
+      // =====================================================
+      // DATA TAMBAHAN
+      // =====================================================
 
       data.append("sifat_surat", "");
 
@@ -294,18 +408,23 @@ function TambahSurat() {
         JSON.stringify([])
       );
 
-      data.append("catatan", "");
+      data.append(
+        "catatan",
+        ""
+      );
 
-      /* FILE */
+      // =====================================================
+      // FILE
+      // =====================================================
 
       data.append(
         "arsip_surat",
         scanSurat
       );
 
-      /* =====================================================
-         KIRIM KE BACKEND ONLINE
-      ===================================================== */
+      // =====================================================
+      // KIRIM KE BACKEND
+      // =====================================================
 
       const response = await fetch(
         `${API_URL}/api/surat`,
@@ -315,11 +434,20 @@ function TambahSurat() {
         }
       );
 
-      const result = await response.json();
+      let result;
+
+      try {
+        result = await response.json();
+      } catch {
+        throw new Error(
+          "Server memberikan respons yang tidak valid."
+        );
+      }
 
       if (!response.ok) {
         throw new Error(
-          result.message || "Gagal menyimpan surat."
+          result.message ||
+          "Gagal menyimpan surat."
         );
       }
 
@@ -346,14 +474,16 @@ function TambahSurat() {
     }
   };
 
-  /* =========================================================
-     TAMPILAN
-  ========================================================= */
+  // =========================================================
+  // TAMPILAN
+  // =========================================================
 
   return (
     <div className="tambah-page">
 
-      {/* HAMBURGER HP */}
+      {/* =====================================================
+          HAMBURGER HP
+      ===================================================== */}
 
       <button
         type="button"
@@ -364,7 +494,9 @@ function TambahSurat() {
         ☰
       </button>
 
-      {/* SIDEBAR */}
+      {/* =====================================================
+          SIDEBAR
+      ===================================================== */}
 
       <aside
         className={`tambah-sidebar ${
@@ -372,28 +504,30 @@ function TambahSurat() {
         }`}
       >
 
-        {/* BRAND */}
-
         <div className="tambah-brand">
 
           <div className="tambah-brand-logo">
+
             <img
               src={logoSulut}
               alt="Logo Sulawesi Utara"
             />
+
           </div>
 
           <div className="tambah-brand-text">
 
-            <h2>DISNAKERTRANS</h2>
+            <h2>
+              DISNAKERTRANS
+            </h2>
 
-            <span>Sulawesi Utara</span>
+            <span>
+              Sulawesi Utara
+            </span>
 
           </div>
 
         </div>
-
-        {/* MENU */}
 
         <nav className="tambah-menu">
 
@@ -432,7 +566,9 @@ function TambahSurat() {
 
       </aside>
 
-      {/* MAIN */}
+      {/* =====================================================
+          MAIN
+      ===================================================== */}
 
       <main className="tambah-main">
 
@@ -442,7 +578,9 @@ function TambahSurat() {
 
           <div className="tambah-topbar-left">
 
-            <h1>Tambah Surat</h1>
+            <h1>
+              Tambah Surat
+            </h1>
 
             <p>
               Sistem Informasi Disposisi Surat
@@ -460,9 +598,13 @@ function TambahSurat() {
 
             <div className="tambah-page-title">
 
-              <span>DATA ADMINISTRASI</span>
+              <span>
+                DATA ADMINISTRASI
+              </span>
 
-              <h2>Tambah Surat Masuk</h2>
+              <h2>
+                Tambah Surat Masuk
+              </h2>
 
               <p>
                 Masukkan data surat masuk ke dalam sistem.
@@ -487,7 +629,9 @@ function TambahSurat() {
             </div>
           )}
 
-          {/* FORM */}
+          {/* =================================================
+              FORM
+          ================================================= */}
 
           <form
             className="tambah-form-card"
@@ -498,7 +642,9 @@ function TambahSurat() {
 
               <div>
 
-                <h3>Informasi Surat</h3>
+                <h3>
+                  Informasi Surat
+                </h3>
 
                 <p>
                   Lengkapi informasi surat dengan benar.
@@ -507,6 +653,8 @@ function TambahSurat() {
               </div>
 
             </div>
+
+            {/* FORM GRID */}
 
             <div className="tambah-form-grid">
 
@@ -634,7 +782,9 @@ function TambahSurat() {
 
             </div>
 
-            {/* PERIHAL */}
+            {/* =================================================
+                PERIHAL
+            ================================================= */}
 
             <div className="tambah-form-group tambah-full">
 
@@ -652,7 +802,9 @@ function TambahSurat() {
 
             </div>
 
-            {/* SCAN SURAT */}
+            {/* =================================================
+                SCAN SURAT
+            ================================================= */}
 
             <div className="tambah-form-group tambah-full">
 
@@ -663,12 +815,12 @@ function TambahSurat() {
               <input
                 id="arsip_surat"
                 type="file"
-                accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp"
                 className="tambah-scan-input"
                 onChange={handleScanChange}
               />
 
-              {/* CAMERA */}
+              {/* TOMBOL KAMERA */}
 
               <button
                 type="button"
@@ -686,19 +838,123 @@ function TambahSurat() {
               {/* FILE TERPILIH */}
 
               {scanSurat && (
-                <div className="tambah-scan-selected">
-                  ✓ {scanSurat.name}
+
+                <div
+                  style={{
+                    marginTop: "18px",
+                    border: "1px solid #d9dee5",
+                    borderRadius: "12px",
+                    overflow: "hidden",
+                    background: "#f7f8fa",
+                  }}
+                >
+
+                  <div
+                    style={{
+                      padding: "12px 16px",
+                      background: "#eef1f5",
+                      borderBottom: "1px solid #d9dee5",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      gap: "10px",
+                      flexWrap: "wrap",
+                    }}
+                  >
+
+                    <div>
+
+                      <strong>
+                        {adalahPDF()
+                          ? "📄 PDF Terpilih"
+                          : "🖼️ Foto Surat"}
+                      </strong>
+
+                      <div
+                        style={{
+                          marginTop: "5px",
+                          fontSize: "14px",
+                        }}
+                      >
+                        {scanSurat.name}
+                      </div>
+
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={hapusFile}
+                      style={{
+                        padding: "7px 12px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      ✕ Hapus
+                    </button>
+
+                  </div>
+
+                  {/* PREVIEW PDF */}
+
+                  {adalahPDF() && previewFile && (
+
+                    <iframe
+                      src={previewFile}
+                      title="Preview PDF Surat"
+                      style={{
+                        width: "100%",
+                        height: "600px",
+                        border: "none",
+                        display: "block",
+                      }}
+                    />
+
+                  )}
+
+                  {/* PREVIEW GAMBAR */}
+
+                  {adalahGambar() && previewFile && (
+
+                    <div
+                      style={{
+                        padding: "20px",
+                        textAlign: "center",
+                      }}
+                    >
+
+                      <img
+                        src={previewFile}
+                        alt="Preview Scan Surat"
+                        style={{
+                          maxWidth: "100%",
+                          maxHeight: "650px",
+                          borderRadius: "8px",
+                        }}
+                      />
+
+                    </div>
+
+                  )}
+
                 </div>
+
               )}
 
               <small className="tambah-scan-info">
-                Upload PDF, JPG, JPEG, atau PNG.
+
+                Upload PDF, JPG, JPEG, PNG, atau WEBP.
+
+                <br />
+
                 Maksimal 20 MB.
+
               </small>
 
             </div>
 
-            {/* BUTTON */}
+            {/* =================================================
+                BUTTON
+            ================================================= */}
 
             <div className="tambah-form-actions">
 
@@ -727,17 +983,21 @@ function TambahSurat() {
 
       </main>
 
-      {/* MODAL KAMERA */}
+      {/* =====================================================
+          MODAL KAMERA
+      ===================================================== */}
 
       {showCamera && (
+
         <CameraCapture
           onCapture={handleCameraCapture}
           onClose={() => setShowCamera(false)}
         />
+
       )}
 
     </div>
   );
 }
 
-export default TambahSurat;
+export default TambahSurat; 
