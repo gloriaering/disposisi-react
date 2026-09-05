@@ -34,6 +34,9 @@ function EditSurat() {
   const [arsipLama, setArsipLama] = useState([]);
   const [arsipBaru, setArsipBaru] = useState([]);
 
+  // URL Blob untuk preview PDF
+  const [pdfPreviewUrls, setPdfPreviewUrls] = useState({});
+
   // =========================================================
   // STATUS
   // =========================================================
@@ -52,8 +55,17 @@ function EditSurat() {
         setLoading(true);
         setError("");
 
+        const token = localStorage.getItem("token");
+
         const response = await fetch(
-          `${API_URL}/api/surat/${id}`
+          `${API_URL}/api/surat/${id}`,
+          {
+            headers: token
+              ? {
+                  Authorization: `Bearer ${token}`,
+                }
+              : {},
+          }
         );
 
         const result = await response.json();
@@ -61,7 +73,7 @@ function EditSurat() {
         if (!response.ok) {
           throw new Error(
             result.message ||
-            "Gagal mengambil data surat."
+              "Gagal mengambil data surat."
           );
         }
 
@@ -97,12 +109,16 @@ function EditSurat() {
             surat.sifat_surat || "",
 
           diteruskan_kepada:
-            Array.isArray(surat.diteruskan_kepada)
+            Array.isArray(
+              surat.diteruskan_kepada
+            )
               ? surat.diteruskan_kepada
               : [],
 
           dengan_hormat_harap:
-            Array.isArray(surat.dengan_hormat_harap)
+            Array.isArray(
+              surat.dengan_hormat_harap
+            )
               ? surat.dengan_hormat_harap
               : [],
 
@@ -117,14 +133,14 @@ function EditSurat() {
         if (Array.isArray(surat.arsip_surat)) {
           setArsipLama(surat.arsip_surat);
         } else if (surat.arsip_surat) {
-          // Untuk jaga-jaga kalau data lama masih object
-          setArsipLama([surat.arsip_surat]);
+          setArsipLama([
+            surat.arsip_surat,
+          ]);
         } else {
           setArsipLama([]);
         }
 
       } catch (err) {
-
         console.error(
           "Gagal mengambil surat:",
           err
@@ -132,35 +148,126 @@ function EditSurat() {
 
         setError(
           err.message ||
-          "Gagal mengambil data surat."
+            "Gagal mengambil data surat."
         );
 
       } finally {
-
         setLoading(false);
-
       }
     };
 
     if (id) {
       getSurat();
     }
-
   }, [id]);
+
+  // =========================================================
+  // LOAD PDF UNTUK PREVIEW
+  // =========================================================
+
+  useEffect(() => {
+    if (!arsipLama.length) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const objectUrls = [];
+
+    const loadPDF = async () => {
+      const token =
+        localStorage.getItem("token");
+
+      const hasil = {};
+
+      for (
+        let index = 0;
+        index < arsipLama.length;
+        index++
+      ) {
+        const arsip =
+          arsipLama[index];
+
+        const fileIsPDF =
+          arsip?.tipe_file ===
+            "application/pdf" ||
+          arsip?.nama_file
+            ?.toLowerCase()
+            .endsWith(".pdf");
+
+        if (!fileIsPDF) {
+          continue;
+        }
+
+        try {
+          const response = await fetch(
+            `${API_URL}/api/surat/preview/${id}/${index}`,
+            {
+              headers: token
+                ? {
+                    Authorization:
+                      `Bearer ${token}`,
+                  }
+                : {},
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error(
+              `Gagal mengambil PDF (${response.status})`
+            );
+          }
+
+          const blob =
+            await response.blob();
+
+          const blobUrl =
+            URL.createObjectURL(blob);
+
+          objectUrls.push(blobUrl);
+
+          hasil[index] =
+            blobUrl;
+
+        } catch (err) {
+          console.error(
+            `Gagal preview PDF ${index + 1}:`,
+            err
+          );
+        }
+      }
+
+      if (!cancelled) {
+        setPdfPreviewUrls(hasil);
+      }
+    };
+
+    loadPDF();
+
+    return () => {
+      cancelled = true;
+
+      objectUrls.forEach((url) => {
+        URL.revokeObjectURL(url);
+      });
+    };
+
+  }, [arsipLama, id]);
 
   // =========================================================
   // HANDLE INPUT
   // =========================================================
 
   const handleChange = (e) => {
-
-    const { name, value } = e.target;
+    const {
+      name,
+      value,
+    } = e.target;
 
     setForm((prev) => ({
       ...prev,
       [name]: value,
     }));
-
   };
 
   // =========================================================
@@ -168,7 +275,6 @@ function EditSurat() {
   // =========================================================
 
   const handleTanggalSuratChange = (e) => {
-
     let value =
       e.target.value.replace(/\D/g, "");
 
@@ -194,7 +300,6 @@ function EditSurat() {
       ...prev,
       tanggal_surat: value,
     }));
-
   };
 
   // =========================================================
@@ -210,33 +315,30 @@ function EditSurat() {
   ];
 
   const validateFile = (file) => {
-
     if (!file) {
       return false;
     }
 
     if (!validFileTypes.includes(file.type)) {
-
       setError(
         `${file.name} tidak didukung. Gunakan PDF, JPG, JPEG, PNG, atau WEBP.`
       );
 
       return false;
-
     }
 
-    if (file.size > 20 * 1024 * 1024) {
-
+    if (
+      file.size >
+      20 * 1024 * 1024
+    ) {
       setError(
         `${file.name} terlalu besar. Maksimal 20 MB.`
       );
 
       return false;
-
     }
 
     return true;
-
   };
 
   // =========================================================
@@ -244,57 +346,56 @@ function EditSurat() {
   // =========================================================
 
   const handleFileChange = (e) => {
-
     const files =
-      Array.from(e.target.files || []);
+      Array.from(
+        e.target.files || []
+      );
 
     setError("");
 
     const fileValid = [];
 
     files.forEach((file) => {
-
       if (validateFile(file)) {
         fileValid.push(file);
       }
-
     });
 
     setArsipBaru((prev) => {
-
       const gabungan = [
         ...prev,
         ...fileValid,
       ];
 
       if (gabungan.length > 20) {
-
         setError(
           "Maksimal 20 file baru."
         );
 
-        return gabungan.slice(0, 20);
-
+        return gabungan.slice(
+          0,
+          20
+        );
       }
 
       return gabungan;
-
     });
 
     e.target.value = "";
-
   };
 
   // =========================================================
   // HAPUS FILE BARU
   // =========================================================
 
-  const handleRemoveFileBaru = (index) => {
-
+  const handleRemoveFileBaru = (
+    index
+  ) => {
     setArsipBaru((prev) =>
-      prev.filter((_, i) => i !== index)
+      prev.filter(
+        (_, i) => i !== index
+      )
     );
-
   };
 
   // =========================================================
@@ -302,21 +403,26 @@ function EditSurat() {
   // =========================================================
 
   const isImage = (file) => {
-
     return (
-      file?.tipe_file?.startsWith("image/") ||
-      file?.type?.startsWith("image/")
+      file?.tipe_file?.startsWith(
+        "image/"
+      ) ||
+      file?.type?.startsWith(
+        "image/"
+      )
     );
-
   };
 
   const isPDF = (file) => {
-
     return (
-      file?.tipe_file === "application/pdf" ||
-      file?.type === "application/pdf"
+      file?.tipe_file ===
+        "application/pdf" ||
+      file?.type ===
+        "application/pdf" ||
+      file?.nama_file
+        ?.toLowerCase()
+        .endsWith(".pdf")
     );
-
   };
 
   // =========================================================
@@ -324,7 +430,6 @@ function EditSurat() {
   // =========================================================
 
   const handleSubmit = async (e) => {
-
     e.preventDefault();
 
     setError("");
@@ -342,20 +447,18 @@ function EditSurat() {
       !form.jam_diterima ||
       !form.perihal.trim()
     ) {
-
       setError(
         "Semua field bertanda * wajib diisi."
       );
 
       return;
-
     }
 
     try {
-
       setSaving(true);
 
-      const data = new FormData();
+      const data =
+        new FormData();
 
       // =====================================================
       // DATA FORM
@@ -404,14 +507,16 @@ function EditSurat() {
       data.append(
         "diteruskan_kepada",
         JSON.stringify(
-          form.diteruskan_kepada || []
+          form.diteruskan_kepada ||
+            []
         )
       );
 
       data.append(
         "dengan_hormat_harap",
         JSON.stringify(
-          form.dengan_hormat_harap || []
+          form.dengan_hormat_harap ||
+            []
         )
       );
 
@@ -425,36 +530,44 @@ function EditSurat() {
       // =====================================================
 
       arsipBaru.forEach((file) => {
-
         data.append(
           "arsip_surat",
           file
         );
-
       });
 
       // =====================================================
       // KIRIM KE BACKEND
       // =====================================================
 
-      const response = await fetch(
-        `${API_URL}/api/surat/${id}`,
-        {
-          method: "PUT",
-          body: data,
-        }
-      );
+      const token =
+        localStorage.getItem("token");
+
+      const response =
+        await fetch(
+          `${API_URL}/api/surat/${id}`,
+          {
+            method: "PUT",
+
+            headers: token
+              ? {
+                  Authorization:
+                    `Bearer ${token}`,
+                }
+              : {},
+
+            body: data,
+          }
+        );
 
       const result =
         await response.json();
 
       if (!response.ok) {
-
         throw new Error(
           result.message ||
-          "Gagal memperbarui surat."
+            "Gagal memperbarui surat."
         );
-
       }
 
       alert(
@@ -464,7 +577,6 @@ function EditSurat() {
       navigate("/surat");
 
     } catch (err) {
-
       console.error(
         "Gagal memperbarui surat:",
         err
@@ -472,15 +584,12 @@ function EditSurat() {
 
       setError(
         err.message ||
-        "Gagal memperbarui surat."
+          "Gagal memperbarui surat."
       );
 
     } finally {
-
       setSaving(false);
-
     }
-
   };
 
   // =========================================================
@@ -488,9 +597,7 @@ function EditSurat() {
   // =========================================================
 
   if (loading) {
-
     return (
-
       <div
         style={{
           padding: "50px",
@@ -499,9 +606,7 @@ function EditSurat() {
       >
         Memuat data surat...
       </div>
-
     );
-
   }
 
   // =========================================================
@@ -509,7 +614,6 @@ function EditSurat() {
   // =========================================================
 
   return (
-
     <div className="tambah-page">
 
       {/* =====================================================
@@ -543,7 +647,6 @@ function EditSurat() {
 
         </div>
 
-
         <nav className="tambah-menu">
 
           <p className="tambah-menu-title">
@@ -558,7 +661,6 @@ function EditSurat() {
             Dashboard
           </Link>
 
-
           <Link
             to="/surat"
             className="tambah-menu-item active"
@@ -566,7 +668,6 @@ function EditSurat() {
             <span>▣</span>
             Surat Masuk
           </Link>
-
 
           <Link
             to="/riwayat"
@@ -580,13 +681,11 @@ function EditSurat() {
 
       </aside>
 
-
       {/* =====================================================
           MAIN
       ===================================================== */}
 
       <main className="tambah-main">
-
 
         {/* TOPBAR */}
 
@@ -606,11 +705,9 @@ function EditSurat() {
 
         </header>
 
-
         {/* CONTENT */}
 
         <section className="tambah-content">
-
 
           {/* HEADER */}
 
@@ -632,7 +729,6 @@ function EditSurat() {
 
             </div>
 
-
             <Link
               to="/surat"
               className="tambah-btn-back"
@@ -642,17 +738,13 @@ function EditSurat() {
 
           </div>
 
-
           {/* ERROR */}
 
           {error && (
-
             <div className="tambah-error">
               {error}
             </div>
-
           )}
-
 
           {/* =================================================
               FORM
@@ -662,7 +754,6 @@ function EditSurat() {
             className="tambah-form-card"
             onSubmit={handleSubmit}
           >
-
 
             {/* FORM HEADER */}
 
@@ -682,13 +773,11 @@ function EditSurat() {
 
             </div>
 
-
             {/* =================================================
                 FORM GRID
             ================================================= */}
 
             <div className="tambah-form-grid">
-
 
               {/* SURAT DARI */}
 
@@ -701,12 +790,15 @@ function EditSurat() {
                 <input
                   type="text"
                   name="asal_surat"
-                  value={form.asal_surat}
-                  onChange={handleChange}
+                  value={
+                    form.asal_surat
+                  }
+                  onChange={
+                    handleChange
+                  }
                 />
 
               </div>
-
 
               {/* TANGGAL DITERIMA */}
 
@@ -718,12 +810,13 @@ function EditSurat() {
 
                 <input
                   type="text"
-                  value={form.tanggal_diterima}
+                  value={
+                    form.tanggal_diterima
+                  }
                   readOnly
                 />
 
               </div>
-
 
               {/* NOMOR SURAT */}
 
@@ -736,12 +829,15 @@ function EditSurat() {
                 <input
                   type="text"
                   name="nomor_surat"
-                  value={form.nomor_surat}
-                  onChange={handleChange}
+                  value={
+                    form.nomor_surat
+                  }
+                  onChange={
+                    handleChange
+                  }
                 />
 
               </div>
-
 
               {/* NOMOR AGENDA */}
 
@@ -754,12 +850,15 @@ function EditSurat() {
                 <input
                   type="text"
                   name="nomor_agenda"
-                  value={form.nomor_agenda}
-                  onChange={handleChange}
+                  value={
+                    form.nomor_agenda
+                  }
+                  onChange={
+                    handleChange
+                  }
                 />
 
               </div>
-
 
               {/* TANGGAL SURAT */}
 
@@ -772,15 +871,18 @@ function EditSurat() {
                 <input
                   type="text"
                   name="tanggal_surat"
-                  value={form.tanggal_surat}
-                  onChange={handleTanggalSuratChange}
+                  value={
+                    form.tanggal_surat
+                  }
+                  onChange={
+                    handleTanggalSuratChange
+                  }
                   placeholder="28-08-2026"
                   maxLength={10}
                   inputMode="numeric"
                 />
 
               </div>
-
 
               {/* JAM DITERIMA */}
 
@@ -792,14 +894,15 @@ function EditSurat() {
 
                 <input
                   type="time"
-                  value={form.jam_diterima}
+                  value={
+                    form.jam_diterima
+                  }
                   readOnly
                 />
 
               </div>
 
             </div>
-
 
             {/* =================================================
                 PERIHAL
@@ -813,13 +916,16 @@ function EditSurat() {
 
               <textarea
                 name="perihal"
-                value={form.perihal}
-                onChange={handleChange}
+                value={
+                  form.perihal
+                }
+                onChange={
+                  handleChange
+                }
                 rows="4"
               />
 
             </div>
-
 
             {/* =================================================
                 FILE BARU
@@ -835,7 +941,9 @@ function EditSurat() {
                 type="file"
                 multiple
                 accept=".pdf,.jpg,.jpeg,.png,.webp"
-                onChange={handleFileChange}
+                onChange={
+                  handleFileChange
+                }
               />
 
               <small>
@@ -844,7 +952,6 @@ function EditSurat() {
               </small>
 
             </div>
-
 
             {/* =================================================
                 FILE BARU DIPILIH
@@ -860,7 +967,6 @@ function EditSurat() {
                   File Baru yang Akan Ditambahkan
                 </h3>
 
-
                 {arsipBaru.map(
                   (file, index) => (
 
@@ -871,18 +977,20 @@ function EditSurat() {
                         padding: "15px",
                         border:
                           "1px solid #ddd",
-                        borderRadius: "10px",
+                        borderRadius:
+                          "10px",
                       }}
                     >
 
                       <strong>
+
                         {isPDF(file)
                           ? "📄 PDF"
                           : "🖼️ Gambar"}{" "}
 
                         {file.name}
-                      </strong>
 
+                      </strong>
 
                       {/* PREVIEW GAMBAR BARU */}
 
@@ -890,19 +998,27 @@ function EditSurat() {
 
                         <div
                           style={{
-                            marginTop: "15px",
+                            marginTop:
+                              "15px",
                           }}
                         >
 
                           <img
                             src={
-                              URL.createObjectURL(file)
+                              URL.createObjectURL(
+                                file
+                              )
                             }
-                            alt={file.name}
+                            alt={
+                              file.name
+                            }
                             style={{
-                              maxWidth: "100%",
-                              maxHeight: "400px",
-                              borderRadius: "8px",
+                              maxWidth:
+                                "100%",
+                              maxHeight:
+                                "400px",
+                              borderRadius:
+                                "8px",
                             }}
                           />
 
@@ -910,16 +1026,43 @@ function EditSurat() {
 
                       )}
 
+                      {/* INFO PDF BARU */}
+
+                      {isPDF(file) && (
+
+                        <div
+                          style={{
+                            marginTop:
+                              "15px",
+                            padding:
+                              "15px",
+                            background:
+                              "#f8fafc",
+                            borderRadius:
+                              "8px",
+                            color:
+                              "#64748b",
+                          }}
+                        >
+                          📄 File PDF siap ditambahkan.
+                        </div>
+
+                      )}
 
                       <button
                         type="button"
                         onClick={() =>
-                          handleRemoveFileBaru(index)
+                          handleRemoveFileBaru(
+                            index
+                          )
                         }
                         style={{
-                          marginTop: "10px",
-                          padding: "8px 12px",
-                          cursor: "pointer",
+                          marginTop:
+                            "10px",
+                          padding:
+                            "8px 12px",
+                          cursor:
+                            "pointer",
                         }}
                       >
                         🗑️ Hapus
@@ -934,7 +1077,6 @@ function EditSurat() {
 
             )}
 
-
             {/* =================================================
                 ARSIP LAMA
             ================================================= */}
@@ -947,7 +1089,6 @@ function EditSurat() {
                 Arsip Surat yang Sudah Tersimpan
               </h3>
 
-
               {arsipLama.length === 0 && (
 
                 <div
@@ -955,15 +1096,16 @@ function EditSurat() {
                     padding: "20px",
                     border:
                       "1px dashed #ccc",
-                    borderRadius: "10px",
-                    textAlign: "center",
+                    borderRadius:
+                      "10px",
+                    textAlign:
+                      "center",
                   }}
                 >
                   Belum ada arsip surat.
                 </div>
 
               )}
-
 
               {/* =================================================
                   TAMPILKAN SEMUA FILE LAMA
@@ -978,7 +1120,8 @@ function EditSurat() {
                       index
                     }
                     style={{
-                      marginTop: "20px",
+                      marginTop:
+                        "20px",
                       border:
                         "1px solid #ddd",
                       borderRadius:
@@ -988,19 +1131,20 @@ function EditSurat() {
                     }}
                   >
 
-
                     {/* HEADER FILE */}
 
                     <div
                       style={{
-                        padding: "15px",
+                        padding:
+                          "15px",
                         background:
                           "#f5f5f5",
                         display:
                           "flex",
                         justifyContent:
                           "space-between",
-                        gap: "10px",
+                        gap:
+                          "10px",
                         flexWrap:
                           "wrap",
                       }}
@@ -1010,7 +1154,9 @@ function EditSurat() {
 
                         {isPDF(arsip)
                           ? "📄 PDF"
-                          : isImage(arsip)
+                          : isImage(
+                              arsip
+                            )
                           ? "🖼️ Gambar"
                           : "📁 File"}{" "}
 
@@ -1018,14 +1164,12 @@ function EditSurat() {
 
                       </strong>
 
-
                       <span>
                         {arsip.nama_file ||
                           "Arsip Surat"}
                       </span>
 
                     </div>
-
 
                     {/* =================================================
                         GAMBAR
@@ -1035,21 +1179,26 @@ function EditSurat() {
 
                       <div
                         style={{
-                          padding: "20px",
+                          padding:
+                            "20px",
                           textAlign:
                             "center",
                         }}
                       >
 
                         <img
-                          src={arsip.url_file}
+                          src={
+                            arsip.url_file
+                          }
                           alt={
                             arsip.nama_file ||
                             "Arsip Surat"
                           }
                           style={{
-                            maxWidth: "100%",
-                            maxHeight: "650px",
+                            maxWidth:
+                              "100%",
+                            maxHeight:
+                              "650px",
                             borderRadius:
                               "8px",
                           }}
@@ -1059,28 +1208,98 @@ function EditSurat() {
 
                     )}
 
-
                     {/* =================================================
                         PDF
                     ================================================= */}
 
                     {isPDF(arsip) && (
 
-                      <iframe
-                        src={arsip.url_file}
-                        title={
-                          arsip.nama_file ||
-                          `PDF ${index + 1}`
-                        }
+                      <div
                         style={{
-                          width: "100%",
-                          height: "650px",
-                          border: "none",
+                          width:
+                            "100%",
+                          height:
+                            "650px",
+                          background:
+                            "#ffffff",
                         }}
-                      />
+                      >
+
+                        {pdfPreviewUrls[
+                          index
+                        ] ? (
+
+                          <iframe
+                            src={
+                              pdfPreviewUrls[
+                                index
+                              ]
+                            }
+                            title={
+                              arsip.nama_file ||
+                              `PDF ${index + 1}`
+                            }
+                            style={{
+                              width:
+                                "100%",
+                              height:
+                                "100%",
+                              border:
+                                "none",
+                              display:
+                                "block",
+                              background:
+                                "#ffffff",
+                            }}
+                          />
+
+                        ) : (
+
+                          <div
+                            style={{
+                              width:
+                                "100%",
+                              height:
+                                "100%",
+                              display:
+                                "flex",
+                              alignItems:
+                                "center",
+                              justifyContent:
+                                "center",
+                              flexDirection:
+                                "column",
+                              gap:
+                                "10px",
+                              color:
+                                "#64748b",
+                            }}
+                          >
+
+                            <div
+                              style={{
+                                fontSize:
+                                  "32px",
+                              }}
+                            >
+                              📄
+                            </div>
+
+                            <strong>
+                              Memuat PDF...
+                            </strong>
+
+                            <span>
+                              Tunggu sebentar
+                            </span>
+
+                          </div>
+
+                        )}
+
+                      </div>
 
                     )}
-
 
                     {/* =================================================
                         BUTTON BUKA
@@ -1088,32 +1307,30 @@ function EditSurat() {
 
                     <div
                       style={{
-                        padding: "15px",
+                        padding:
+                          "15px",
                         borderTop:
                           "1px solid #ddd",
                       }}
                     >
 
                       <a
-                        href={arsip.url_file}
+                        href={
+                          arsip.url_file
+                        }
                         target="_blank"
                         rel="noopener noreferrer"
                         style={{
                           display:
                             "inline-block",
-
                           padding:
                             "10px 15px",
-
                           background:
                             "#173f5f",
-
                           color:
                             "#fff",
-
                           borderRadius:
                             "8px",
-
                           textDecoration:
                             "none",
                         }}
@@ -1130,7 +1347,6 @@ function EditSurat() {
 
             </div>
 
-
             {/* =================================================
                 BUTTON
             ================================================= */}
@@ -1143,7 +1359,6 @@ function EditSurat() {
               >
                 Batal
               </Link>
-
 
               <button
                 type="submit"
@@ -1166,7 +1381,6 @@ function EditSurat() {
       </main>
 
     </div>
-
   );
 }
 

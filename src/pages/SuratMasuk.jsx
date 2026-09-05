@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import logoSulut from "../assets/images/logo-sulut.png";
 import "../assets/css/SuratMasuk.css";
 
 function SuratMasuk() {
+  const navigate = useNavigate();
+
   const [search, setSearch] = useState("");
   const [suratList, setSuratList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -13,23 +15,78 @@ function SuratMasuk() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   /* =========================================================
+     URL BACKEND
+  ========================================================= */
+
+  const API_URL =
+    import.meta.env.VITE_API_URL ||
+    "http://localhost:5000";
+
+  /* =========================================================
+     CEK LOGIN
+  ========================================================= */
+
+  const getToken = () => {
+    return localStorage.getItem("token");
+  };
+
+  /* =========================================================
+     LOGOUT
+  ========================================================= */
+
+  const logout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("bidang");
+
+    navigate("/login");
+  };
+
+  /* =========================================================
      AMBIL DATA SURAT DARI BACKEND
   ========================================================= */
 
   const fetchSurat = async () => {
+    const token = getToken();
+
+    // Kalau belum login
+    if (!token) {
+      logout();
+      return;
+    }
+
     try {
       setLoading(true);
       setError("");
 
       const response = await fetch(
-        "https://disposisi-react-8vdu.vercel.app/api/surat"
+        `${API_URL}/api/surat`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       const result = await response.json();
 
+      /* =====================================================
+         TOKEN TIDAK VALID / EXPIRED
+      ===================================================== */
+
+      if (
+        response.status === 401 ||
+        response.status === 403
+      ) {
+        logout();
+        return;
+      }
+
       if (!response.ok) {
         throw new Error(
-          result.message || "Gagal mengambil data surat."
+          result.message ||
+            "Gagal mengambil data surat."
         );
       }
 
@@ -144,23 +201,51 @@ function SuratMasuk() {
       return;
     }
 
+    const token = getToken();
+
+    // Kalau token tidak ada
+    if (!token) {
+      logout();
+      return;
+    }
+
     try {
       const response = await fetch(
-        `https://disposisi-react-8vdu.vercel.app/api/surat/${id}`,
+        `${API_URL}/api/surat/${id}`,
         {
           method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
       const result = await response.json();
 
+      /* =====================================================
+         TOKEN TIDAK VALID / EXPIRED
+      ===================================================== */
+
+      if (
+        response.status === 401 ||
+        response.status === 403
+      ) {
+        alert(
+          "Sesi login sudah berakhir. Silakan login kembali."
+        );
+
+        logout();
+        return;
+      }
+
       if (!response.ok) {
         throw new Error(
           result.message ||
-          "Gagal menghapus surat."
+            "Gagal menghapus surat."
         );
       }
 
+      // Hapus dari tampilan
       setSuratList((prev) =>
         prev.filter(
           (surat) =>
@@ -172,7 +257,6 @@ function SuratMasuk() {
       alert(
         "Surat berhasil dipindahkan ke Riwayat Surat."
       );
-
     } catch (error) {
       console.error(
         "Gagal menghapus surat:",
@@ -180,7 +264,8 @@ function SuratMasuk() {
       );
 
       alert(
-        "Gagal menghapus surat. Pastikan backend sedang berjalan."
+        error.message ||
+          "Gagal menghapus surat. Pastikan backend sedang berjalan."
       );
     }
   };
@@ -205,14 +290,15 @@ function SuratMasuk() {
         />
       )}
 
-
       {/* =====================================================
           SIDEBAR
       ===================================================== */}
 
       <aside
         className={`surat-sidebar ${
-          sidebarOpen ? "sidebar-open" : ""
+          sidebarOpen
+            ? "sidebar-open"
+            : ""
         }`}
       >
 
@@ -243,7 +329,6 @@ function SuratMasuk() {
 
         </div>
 
-
         {/* MENU */}
 
         <nav className="surat-menu">
@@ -251,7 +336,6 @@ function SuratMasuk() {
           <p className="surat-menu-title">
             MENU UTAMA
           </p>
-
 
           {/* DASHBOARD */}
 
@@ -266,7 +350,6 @@ function SuratMasuk() {
             Dashboard
           </Link>
 
-
           {/* SURAT MASUK */}
 
           <Link
@@ -279,7 +362,6 @@ function SuratMasuk() {
             <span>▣</span>
             Surat Masuk
           </Link>
-
 
           {/* RIWAYAT */}
 
@@ -298,20 +380,17 @@ function SuratMasuk() {
 
       </aside>
 
-
       {/* =====================================================
           MAIN CONTENT
       ===================================================== */}
 
       <main className="surat-main">
 
-
         {/* =====================================================
             TOPBAR
         ===================================================== */}
 
         <header className="surat-topbar">
-
 
           {/* HAMBURGER */}
 
@@ -327,7 +406,6 @@ function SuratMasuk() {
           >
             ☰
           </button>
-
 
           {/* TITLE */}
 
@@ -345,13 +423,11 @@ function SuratMasuk() {
 
         </header>
 
-
         {/* =====================================================
             CONTENT
         ===================================================== */}
 
         <section className="surat-content">
-
 
           {/* PAGE HEADER */}
 
@@ -368,7 +444,6 @@ function SuratMasuk() {
               </h2>
 
             </div>
-
 
             {/* BUTTON TAMBAH */}
 
@@ -387,17 +462,13 @@ function SuratMasuk() {
 
           </div>
 
-
           {/* ERROR */}
 
           {error && (
-
             <div className="surat-error">
               {error}
             </div>
-
           )}
-
 
           {/* =====================================================
               TABLE CARD
@@ -405,11 +476,9 @@ function SuratMasuk() {
 
           <div className="surat-table-card">
 
-
             {/* TABLE HEADER */}
 
             <div className="surat-table-top">
-
 
               {/* SEARCH */}
 
@@ -425,15 +494,15 @@ function SuratMasuk() {
                   autoComplete="off"
                   value={search}
                   onChange={(e) =>
-                    setSearch(e.target.value)
+                    setSearch(
+                      e.target.value
+                    )
                   }
                 />
-
 
                 {/* CLEAR SEARCH */}
 
                 {search && (
-
                   <button
                     type="button"
                     className="surat-search-clear"
@@ -444,11 +513,9 @@ function SuratMasuk() {
                   >
                     ×
                   </button>
-
                 )}
 
               </div>
-
 
               {/* COUNT */}
 
@@ -461,7 +528,6 @@ function SuratMasuk() {
               </div>
 
             </div>
-
 
             {/* =====================================================
                 LOADING
@@ -496,7 +562,6 @@ function SuratMasuk() {
               </div>
 
             ) : (
-
 
               /* =====================================================
                   TABLE
@@ -542,7 +607,6 @@ function SuratMasuk() {
 
                   </thead>
 
-
                   <tbody>
 
                     {filteredSurat.length > 0 ? (
@@ -554,7 +618,6 @@ function SuratMasuk() {
                             key={row._id}
                           >
 
-
                             {/* NOMOR */}
 
                             <td className="row-number">
@@ -562,7 +625,6 @@ function SuratMasuk() {
                               {index + 1}
 
                             </td>
-
 
                             {/* NOMOR SURAT */}
 
@@ -576,7 +638,6 @@ function SuratMasuk() {
 
                             </td>
 
-
                             {/* ASAL SURAT */}
 
                             <td>
@@ -589,7 +650,6 @@ function SuratMasuk() {
 
                             </td>
 
-
                             {/* PERIHAL */}
 
                             <td>
@@ -601,7 +661,6 @@ function SuratMasuk() {
                               </div>
 
                             </td>
-
 
                             {/* TANGGAL */}
 
@@ -616,7 +675,6 @@ function SuratMasuk() {
                               </span>
 
                             </td>
-
 
                             {/* DITERIMA */}
 
@@ -644,13 +702,11 @@ function SuratMasuk() {
 
                             </td>
 
-
                             {/* AKSI */}
 
                             <td>
 
                               <div className="action-group">
-
 
                                 {/* DETAIL */}
 
@@ -661,7 +717,6 @@ function SuratMasuk() {
                                   Detail
                                 </Link>
 
-
                                 {/* EDIT */}
 
                                 <Link
@@ -670,7 +725,6 @@ function SuratMasuk() {
                                 >
                                   Edit
                                 </Link>
-
 
                                 {/* CETAK */}
 
@@ -683,14 +737,15 @@ function SuratMasuk() {
                                   Cetak
                                 </Link>
 
-
                                 {/* HAPUS */}
 
                                 <button
                                   type="button"
                                   className="action-btn btn-delete"
                                   onClick={() =>
-                                    handleDelete(row._id)
+                                    handleDelete(
+                                      row._id
+                                    )
                                   }
                                 >
                                   Hapus

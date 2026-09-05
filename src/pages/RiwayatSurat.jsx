@@ -1,47 +1,91 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import logoSulut from "../assets/images/logo-sulut.png";
 import "../assets/css/RiwayatSurat.css";
 
 function RiwayatSurat() {
+  const navigate = useNavigate();
+
+  const API_URL =
+    import.meta.env.VITE_API_URL ||
+    "http://localhost:5000";
+
   const [suratList, setSuratList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const [menuOpen, setMenuOpen] = useState(false);
-  
-  /* =========================================================
-     STATE SURAT YANG DIPILIH
-  ========================================================= */
 
   const [selectedSurat, setSelectedSurat] = useState([]);
+
+  /* =========================================================
+     TOKEN
+  ========================================================= */
+
+  const getToken = () => {
+    return localStorage.getItem("token");
+  };
+
+  /* =========================================================
+     LOGOUT
+  ========================================================= */
+
+  const logout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("bidang");
+
+    navigate("/login");
+  };
 
   /* =========================================================
      AMBIL DATA RIWAYAT SURAT
   ========================================================= */
 
   const fetchRiwayat = async () => {
+    const token = getToken();
+
+    if (!token) {
+      logout();
+      return;
+    }
+
     try {
       setLoading(true);
       setError("");
 
       const response = await fetch(
-        "https://disposisi-react-8vdu.vercel.app/api/surat/riwayat"
+        `${API_URL}/api/surat/riwayat`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       const result = await response.json();
 
+      if (
+        response.status === 401 ||
+        response.status === 403
+      ) {
+        logout();
+        return;
+      }
+
       if (!response.ok) {
         throw new Error(
-          result.message || "Gagal mengambil riwayat surat."
+          result.message ||
+            "Gagal mengambil riwayat surat."
         );
       }
 
       setSuratList(
-        Array.isArray(result.data) ? result.data : []
+        Array.isArray(result.data)
+          ? result.data
+          : []
       );
-
-      /* Reset pilihan */
 
       setSelectedSurat([]);
 
@@ -52,7 +96,8 @@ function RiwayatSurat() {
       );
 
       setError(
-        "Gagal mengambil riwayat surat. Pastikan backend sedang berjalan."
+        error.message ||
+          "Gagal mengambil riwayat surat. Pastikan backend sedang berjalan."
       );
     } finally {
       setLoading(false);
@@ -74,6 +119,13 @@ function RiwayatSurat() {
   const formatTanggal = (tanggal) => {
     if (!tanggal) {
       return "-";
+    }
+
+    if (
+      typeof tanggal === "string" &&
+      /^\d{2}-\d{2}-\d{4}$/.test(tanggal)
+    ) {
+      return tanggal;
     }
 
     const date = new Date(tanggal);
@@ -116,15 +168,14 @@ function RiwayatSurat() {
 
   const handleSelectSurat = (id) => {
     setSelectedSurat((prev) => {
-
       if (prev.includes(id)) {
         return prev.filter(
-          (selectedId) => selectedId !== id
+          (selectedId) =>
+            selectedId !== id
         );
       }
 
       return [...prev, id];
-
     });
   };
 
@@ -133,28 +184,19 @@ function RiwayatSurat() {
   ========================================================= */
 
   const handleSelectAll = () => {
-
-    /* Kalau semua sudah dipilih → kosongkan */
-
     if (
-      selectedSurat.length === suratList.length &&
+      selectedSurat.length ===
+        suratList.length &&
       suratList.length > 0
     ) {
-
       setSelectedSurat([]);
-
     } else {
-
-      /* Pilih semua ID */
-
       const semuaId = suratList.map(
         (surat) => surat._id
       );
 
       setSelectedSurat(semuaId);
-
     }
-
   };
 
   /* =========================================================
@@ -170,35 +212,54 @@ function RiwayatSurat() {
       return;
     }
 
+    const token = getToken();
+
+    if (!token) {
+      logout();
+      return;
+    }
+
     try {
       const response = await fetch(
-        `https://disposisi-react-8vdu.vercel.app/api/surat/${id}/pulihkan`,
+        `${API_URL}/api/surat/${id}/restore`,
         {
           method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
       const result = await response.json();
 
+      if (
+        response.status === 401 ||
+        response.status === 403
+      ) {
+        logout();
+        return;
+      }
+
       if (!response.ok) {
         throw new Error(
-          result.message || "Gagal memulihkan surat."
+          result.message ||
+            "Gagal memulihkan surat."
         );
       }
 
       setSuratList((prev) =>
         prev.filter(
           (surat) =>
-            String(surat._id) !== String(id)
+            String(surat._id) !==
+            String(id)
         )
       );
-
-      /* Hapus dari pilihan */
 
       setSelectedSurat((prev) =>
         prev.filter(
           (selectedId) =>
-            String(selectedId) !== String(id)
+            String(selectedId) !==
+            String(id)
         )
       );
 
@@ -207,16 +268,15 @@ function RiwayatSurat() {
       );
 
     } catch (error) {
-
       console.error(
         "Gagal memulihkan surat:",
         error
       );
 
       alert(
-        "Gagal memulihkan surat. Pastikan backend sedang berjalan."
+        error.message ||
+          "Gagal memulihkan surat."
       );
-
     }
   };
 
@@ -225,7 +285,6 @@ function RiwayatSurat() {
   ========================================================= */
 
   const handlePermanentDelete = async (id) => {
-
     const yakin = window.confirm(
       "PERINGATAN!\n\nSurat ini akan dihapus secara permanen dan tidak dapat dipulihkan lagi.\n\nApakah Anda yakin?"
     );
@@ -234,37 +293,54 @@ function RiwayatSurat() {
       return;
     }
 
-    try {
+    const token = getToken();
 
+    if (!token) {
+      logout();
+      return;
+    }
+
+    try {
       const response = await fetch(
-        `https://disposisi-react-8vdu.vercel.app/api/surat/${id}/permanen`,
+        `${API_URL}/api/surat/${id}/permanen`,
         {
           method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
       const result = await response.json();
 
+      if (
+        response.status === 401 ||
+        response.status === 403
+      ) {
+        logout();
+        return;
+      }
+
       if (!response.ok) {
         throw new Error(
           result.message ||
-          "Gagal menghapus surat secara permanen."
+            "Gagal menghapus surat secara permanen."
         );
       }
 
       setSuratList((prev) =>
         prev.filter(
           (surat) =>
-            String(surat._id) !== String(id)
+            String(surat._id) !==
+            String(id)
         )
       );
-
-      /* Hapus dari selected */
 
       setSelectedSurat((prev) =>
         prev.filter(
           (selectedId) =>
-            String(selectedId) !== String(id)
+            String(selectedId) !==
+            String(id)
         )
       );
 
@@ -273,27 +349,24 @@ function RiwayatSurat() {
       );
 
     } catch (error) {
-
       console.error(
         "Gagal menghapus surat permanen:",
         error
       );
 
       alert(
-        "Gagal menghapus surat secara permanen."
+        error.message ||
+          "Gagal menghapus surat secara permanen."
       );
-
     }
   };
 
   /* =========================================================
-     HAPUS BEBERAPA SURAT SEKALIGUS
+     HAPUS BEBERAPA SURAT
   ========================================================= */
 
   const handleDeleteSelected = async () => {
-
     if (selectedSurat.length === 0) {
-
       alert(
         "Pilih minimal satu surat terlebih dahulu."
       );
@@ -309,40 +382,48 @@ function RiwayatSurat() {
       return;
     }
 
+    const token = getToken();
+
+    if (!token) {
+      logout();
+      return;
+    }
+
     try {
-
-      /* Hapus semua surat yang dipilih */
-
       const hasil = await Promise.all(
-
         selectedSurat.map(async (id) => {
-
           const response = await fetch(
-            `https://disposisi-react-8vdu.vercel.app/api/surat/${id}/permanen`,
+            `${API_URL}/api/surat/${id}/permanen`,
             {
               method: "DELETE",
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
             }
           );
 
-          const result = await response.json();
+          const result =
+            await response.json();
+
+          if (
+            response.status === 401 ||
+            response.status === 403
+          ) {
+            throw new Error(
+              "Sesi login sudah berakhir."
+            );
+          }
 
           if (!response.ok) {
-
             throw new Error(
               result.message ||
-              "Gagal menghapus salah satu surat."
+                "Gagal menghapus salah satu surat."
             );
-
           }
 
           return id;
-
         })
-
       );
-
-
-      /* Hapus dari tampilan */
 
       setSuratList((prev) =>
         prev.filter(
@@ -351,18 +432,13 @@ function RiwayatSurat() {
         )
       );
 
-
-      /* Kosongkan pilihan */
-
       setSelectedSurat([]);
-
 
       alert(
         `${hasil.length} surat berhasil dihapus secara permanen.`
       );
 
     } catch (error) {
-
       console.error(
         "Gagal menghapus surat terpilih:",
         error
@@ -370,15 +446,11 @@ function RiwayatSurat() {
 
       alert(
         error.message ||
-        "Terjadi kesalahan saat menghapus surat."
+          "Terjadi kesalahan saat menghapus surat."
       );
 
-      /* Refresh data */
-
       fetchRiwayat();
-
     }
-
   };
 
   /* =========================================================
@@ -386,52 +458,48 @@ function RiwayatSurat() {
   ========================================================= */
 
   return (
-
     <div className="riwayat-page">
-      
+
+      {/* HAMBURGER */}
+
       <button
-  className="riwayat-mobile-menu-btn"
-  onClick={() => setMenuOpen(!menuOpen)}
->
-  ☰
-</button>
+        className="riwayat-mobile-menu-btn"
+        onClick={() =>
+          setMenuOpen(!menuOpen)
+        }
+      >
+        ☰
+      </button>
 
       {/* SIDEBAR */}
 
-      <aside className="riwayat-sidebar">
+      <aside
+        className={`riwayat-sidebar ${
+          menuOpen ? "menu-open" : ""
+        }`}
+      >
 
         <div className="riwayat-brand">
 
           <div className="riwayat-brand-logo">
-
             <img
               src={logoSulut}
               alt="Logo Sulawesi Utara"
             />
-
           </div>
 
           <div className="riwayat-brand-text">
-
-            <h2>
-              DISNAKERTRANS
-            </h2>
-
-            <span>
-              Sulawesi Utara
-            </span>
-
+            <h2>DISNAKERTRANS</h2>
+            <span>Sulawesi Utara</span>
           </div>
 
         </div>
-
 
         <nav className="riwayat-menu">
 
           <p className="riwayat-menu-title">
             MENU UTAMA
           </p>
-
 
           <Link
             to="/"
@@ -441,7 +509,6 @@ function RiwayatSurat() {
             Dashboard
           </Link>
 
-
           <Link
             to="/surat"
             className="riwayat-menu-item"
@@ -449,7 +516,6 @@ function RiwayatSurat() {
             <span>▣</span>
             Surat Masuk
           </Link>
-
 
           <Link
             to="/riwayat"
@@ -463,13 +529,11 @@ function RiwayatSurat() {
 
       </aside>
 
-
       {/* MAIN */}
 
       <main className="riwayat-main">
 
         <section className="riwayat-content">
-
 
           {/* HEADER */}
 
@@ -491,7 +555,6 @@ function RiwayatSurat() {
 
             </div>
 
-
             <Link
               to="/surat"
               className="riwayat-btn-back"
@@ -501,24 +564,19 @@ function RiwayatSurat() {
 
           </div>
 
-
           {/* ERROR */}
 
           {error && (
-
             <div className="riwayat-error">
               {error}
             </div>
-
           )}
-
 
           {/* TABLE CARD */}
 
           <div className="riwayat-table-card">
 
-
-            {/* TABLE HEADER */}
+            {/* TABLE TOP */}
 
             <div className="riwayat-table-top">
 
@@ -528,56 +586,38 @@ function RiwayatSurat() {
                   Daftar Riwayat Surat
                 </strong>
 
-                {/* INFO SURAT TERPILIH */}
-
                 {selectedSurat.length > 0 && (
-
                   <span className="riwayat-selected-info">
-
                     {selectedSurat.length} surat dipilih
-
                   </span>
-
                 )}
 
               </div>
 
-
               <div className="riwayat-top-actions">
 
-                {/* TOTAL */}
-
                 <div className="riwayat-count">
-
                   Total {suratList.length} surat
-
                 </div>
 
-
-                {/* HAPUS TERPILIH */}
-
                 {selectedSurat.length > 0 && (
-
                   <button
                     type="button"
                     className="riwayat-delete-selected"
                     onClick={handleDeleteSelected}
                   >
-                    🗑 Hapus Terpilih
-                    ({selectedSurat.length})
+                    🗑 Hapus Terpilih (
+                    {selectedSurat.length})
                   </button>
-
                 )}
 
               </div>
 
             </div>
 
-
             {/* LOADING */}
 
             {loading ? (
-
               <div className="riwayat-empty">
 
                 <div className="riwayat-loading-icon">
@@ -614,23 +654,20 @@ function RiwayatSurat() {
 
                     <tr>
 
-
-                      {/* CHECKBOX PILIH SEMUA */}
-
                       <th className="riwayat-checkbox-column">
 
                         <input
                           type="checkbox"
                           checked={
                             suratList.length > 0 &&
-                            selectedSurat.length === suratList.length
+                            selectedSurat.length ===
+                              suratList.length
                           }
                           onChange={handleSelectAll}
                           title="Pilih semua surat"
                         />
 
                       </th>
-
 
                       <th className="riwayat-col-no">
                         No
@@ -664,7 +701,6 @@ function RiwayatSurat() {
 
                   </thead>
 
-
                   <tbody>
 
                     {suratList.length > 0 ? (
@@ -675,147 +711,99 @@ function RiwayatSurat() {
                           <tr
                             key={row._id}
                             className={
-                              selectedSurat.includes(row._id)
+                              selectedSurat.includes(
+                                row._id
+                              )
                                 ? "riwayat-row-selected"
                                 : ""
                             }
                           >
 
-
-                            {/* CHECKBOX */}
-
                             <td className="riwayat-checkbox-column">
 
                               <input
                                 type="checkbox"
-                                checked={
-                                  selectedSurat.includes(row._id)
-                                }
+                                checked={selectedSurat.includes(
+                                  row._id
+                                )}
                                 onChange={() =>
-                                  handleSelectSurat(row._id)
+                                  handleSelectSurat(
+                                    row._id
+                                  )
                                 }
                               />
 
                             </td>
 
-
-                            {/* NO */}
-
                             <td className="riwayat-row-number">
-
                               {index + 1}
-
                             </td>
 
-
-                            {/* NOMOR SURAT */}
-
                             <td>
-
                               <div className="riwayat-nomor">
-
                                 {row.nomor_surat || "-"}
-
                               </div>
-
                             </td>
 
-
-                            {/* SURAT DARI */}
-
                             <td>
-
                               <div className="riwayat-asal">
-
                                 {row.asal_surat || "-"}
-
                               </div>
-
                             </td>
 
-
-                            {/* PERIHAL */}
-
                             <td>
-
                               <div className="riwayat-perihal">
-
                                 {row.perihal || "-"}
-
                               </div>
-
                             </td>
 
-
-                            {/* TANGGAL SURAT */}
-
                             <td>
-
                               <span className="riwayat-tanggal">
-
                                 {formatTanggal(
                                   row.tanggal_surat
                                 )}
-
                               </span>
-
                             </td>
 
-
-                            {/* DITERIMA */}
-
                             <td>
-
                               <div>
-
                                 <div className="riwayat-tanggal">
-
                                   {formatTanggal(
                                     row.tanggal_diterima
                                   )}
-
                                 </div>
 
                                 <div className="riwayat-jam">
-
                                   {formatJam(
                                     row.jam_diterima
                                   )}
-
                                 </div>
-
                               </div>
-
                             </td>
-
-
-                            {/* AKSI */}
 
                             <td>
 
                               <div className="riwayat-action">
 
-
-                                {/* PULIHKAN */}
-
                                 <button
                                   type="button"
                                   className="riwayat-action-btn restore"
                                   onClick={() =>
-                                    handleRestore(row._id)
+                                    handleRestore(
+                                      row._id
+                                    )
                                   }
                                 >
                                   ♻️ Pulihkan
                                 </button>
 
-
-                                {/* HAPUS SATU */}
-
                                 <button
                                   type="button"
                                   className="riwayat-action-btn permanent"
                                   onClick={() =>
-                                    handlePermanentDelete(row._id)
+                                    handlePermanentDelete(
+                                      row._id
+                                    )
                                   }
                                 >
                                   🗑️ Hapus Permanen
@@ -872,7 +860,6 @@ function RiwayatSurat() {
       </main>
 
     </div>
-
   );
 }
 

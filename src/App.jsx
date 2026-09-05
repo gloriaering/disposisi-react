@@ -1,4 +1,6 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+
+import Login from "./pages/Login";
 
 import Dashboard from "./pages/Dashboard";
 import SuratMasuk from "./pages/SuratMasuk";
@@ -8,56 +10,202 @@ import EditSurat from "./pages/EditSurat";
 import CetakSurat from "./pages/CetakSurat";
 import RiwayatSurat from "./pages/RiwayatSurat";
 
+
+/* =========================================================
+   PROTECTED ROUTE
+
+   CEK APAKAH USER SUDAH LOGIN
+========================================================= */
+
+function ProtectedRoute({ children }) {
+
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+
+    return <Navigate to="/login" replace />;
+
+  }
+
+  return children;
+
+}
+
+
+/* =========================================================
+   APP
+========================================================= */
+
 function App() {
+
   return (
+
     <BrowserRouter>
+
       <Routes>
 
-        {/* DASHBOARD */}
+
+        {/* =================================================
+            LOGIN
+        ================================================= */}
+
+        <Route
+          path="/login"
+          element={
+
+            localStorage.getItem("token")
+
+              ? <Navigate to="/" replace />
+
+              : <Login />
+
+          }
+        />
+
+
+        {/* =================================================
+            DASHBOARD
+        ================================================= */}
+
         <Route
           path="/"
-          element={<Dashboard />}
+          element={
+
+            <ProtectedRoute>
+
+              <Dashboard />
+
+            </ProtectedRoute>
+
+          }
         />
 
-        {/* SURAT MASUK */}
+
+        {/* =================================================
+            SURAT MASUK
+        ================================================= */}
+
         <Route
           path="/surat"
-          element={<SuratMasuk />}
+          element={
+
+            <ProtectedRoute>
+
+              <SuratMasuk />
+
+            </ProtectedRoute>
+
+          }
         />
 
-        {/* TAMBAH SURAT */}
+
+        {/* =================================================
+            TAMBAH SURAT
+        ================================================= */}
+
         <Route
           path="/surat/tambah"
-          element={<TambahSurat />}
+          element={
+
+            <ProtectedRoute>
+
+              <TambahSurat />
+
+            </ProtectedRoute>
+
+          }
         />
 
-        {/* DETAIL SURAT */}
+
+        {/* =================================================
+            DETAIL SURAT
+        ================================================= */}
+
         <Route
           path="/surat/detail/:id"
-          element={<DetailSurat />}
+          element={
+
+            <ProtectedRoute>
+
+              <DetailSurat />
+
+            </ProtectedRoute>
+
+          }
         />
 
-        {/* EDIT SURAT */}
+
+        {/* =================================================
+            EDIT SURAT
+        ================================================= */}
+
         <Route
           path="/surat/edit/:id"
-          element={<EditSurat />}
+          element={
+
+            <ProtectedRoute>
+
+              <EditSurat />
+
+            </ProtectedRoute>
+
+          }
         />
 
-        {/* CETAK SURAT */}
+
+        {/* =================================================
+            CETAK SURAT
+        ================================================= */}
+
         <Route
           path="/surat/cetak/:id"
-          element={<CetakSurat />}
+          element={
+
+            <ProtectedRoute>
+
+              <CetakSurat />
+
+            </ProtectedRoute>
+
+          }
         />
 
-        {/* RIWAYAT SURAT */}
+
+        {/* =================================================
+            RIWAYAT SURAT
+        ================================================= */}
+
         <Route
           path="/riwayat"
-          element={<RiwayatSurat />}
+          element={
+
+            <ProtectedRoute>
+
+              <RiwayatSurat />
+
+            </ProtectedRoute>
+
+          }
         />
 
+
+        {/* =================================================
+            JIKA URL TIDAK DITEMUKAN
+        ================================================= */}
+
+        <Route
+          path="*"
+          element={<Navigate to="/" replace />}
+        />
+
+
       </Routes>
+
     </BrowserRouter>
+
   );
+
 }
+
 
 export default App;

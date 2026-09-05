@@ -1,19 +1,100 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+
 import logoSulut from "../assets/images/logo-sulut.png";
 import "../assets/css/Dashboard.css";
 
 function Dashboard() {
+  const navigate = useNavigate();
+
+  // URL BACKEND
+  const API_URL =
+    import.meta.env.VITE_API_URL ||
+    "http://localhost:5000";
+
+  /* =========================================================
+     MENU MOBILE
+  ========================================================= */
+
   const [menuOpen, setMenuOpen] = useState(false);
+
+  /* =========================================================
+     STATISTIK
+  ========================================================= */
 
   const [totalSurat, setTotalSurat] = useState(0);
   const [suratHariIni, setSuratHariIni] = useState(0);
+
+  /* =========================================================
+     STATUS
+  ========================================================= */
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   /* =========================================================
-     AMBIL DATA SURAT DARI MONGODB MELALUI BACKEND
+     DATA USER LOGIN
+  ========================================================= */
+
+  const [user, setUser] = useState(null);
+
+  /* =========================================================
+     CEK LOGIN + AMBIL DATA USER
+  ========================================================= */
+
+  useEffect(() => {
+    try {
+      const token = localStorage.getItem("token");
+
+      // JIKA BELUM LOGIN
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      const userLogin = JSON.parse(
+        localStorage.getItem("user")
+      );
+
+      setUser(userLogin);
+    } catch (error) {
+      console.error(
+        "Gagal mengambil data user:",
+        error
+      );
+
+      navigate("/login");
+    }
+  }, [navigate]);
+
+  /* =========================================================
+     LOGOUT
+  ========================================================= */
+
+  const handleLogout = () => {
+    const yakin = window.confirm(
+      "Apakah Anda yakin ingin logout?"
+    );
+
+    if (!yakin) {
+      return;
+    }
+
+    // HAPUS TOKEN
+    localStorage.removeItem("token");
+
+    // HAPUS USER
+    localStorage.removeItem("user");
+
+    // HAPUS BIDANG
+    localStorage.removeItem("bidang");
+
+    // KEMBALI KE LOGIN
+    navigate("/login");
+  };
+
+  /* =========================================================
+     AMBIL DATA SURAT DARI BACKEND
   ========================================================= */
 
   const hitungStatistik = async () => {
@@ -21,12 +102,45 @@ function Dashboard() {
       setLoading(true);
       setError("");
 
+      // AMBIL TOKEN
+      const token = localStorage.getItem("token");
+
+      // JIKA TOKEN TIDAK ADA
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      // FETCH DATA SURAT
       const response = await fetch(
-        "https://disposisi-react-8vdu.vercel.app/api/surat"
+        `${API_URL}/api/surat`,
+        {
+          method: "GET",
+
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       const result = await response.json();
 
+      // TOKEN TIDAK VALID
+      if (
+        response.status === 401 ||
+        response.status === 403
+      ) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        localStorage.removeItem("bidang");
+
+        navigate("/login");
+
+        return;
+      }
+
+      // ERROR SERVER
       if (!response.ok) {
         throw new Error(
           result.message ||
@@ -34,20 +148,15 @@ function Dashboard() {
         );
       }
 
+      // AMBIL DATA SURAT
       const surat = Array.isArray(result.data)
         ? result.data
         : [];
 
-      /* =====================================================
-         TOTAL SEMUA SURAT
-      ===================================================== */
-
+      // TOTAL SURAT
       setTotalSurat(surat.length);
 
-      /* =====================================================
-         TANGGAL HARI INI
-      ===================================================== */
-
+      // TANGGAL HARI INI
       const sekarang = new Date();
 
       const tahunHariIni =
@@ -64,10 +173,7 @@ function Dashboard() {
       const hariIni =
         `${tahunHariIni}-${bulanHariIni}-${tanggalHariIni}`;
 
-      /* =====================================================
-         HITUNG SURAT YANG DITERIMA HARI INI
-      ===================================================== */
-
+      // HITUNG SURAT HARI INI
       const jumlahHariIni = surat.filter(
         (item) => {
           const tanggal =
@@ -89,7 +195,6 @@ function Dashboard() {
       ).length;
 
       setSuratHariIni(jumlahHariIni);
-
     } catch (error) {
       console.error(
         "Gagal mengambil statistik surat:",
@@ -97,26 +202,31 @@ function Dashboard() {
       );
 
       setError(
-        "Tidak dapat mengambil data dari server."
+        error.message ||
+          "Tidak dapat mengambil data dari server."
       );
 
       setTotalSurat(0);
       setSuratHariIni(0);
-
     } finally {
       setLoading(false);
     }
   };
-
 
   /* =========================================================
      LOAD DATA SAAT DASHBOARD DIBUKA
   ========================================================= */
 
   useEffect(() => {
-    hitungStatistik();
-  }, []);
+    const token = localStorage.getItem("token");
 
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    hitungStatistik();
+  }, [navigate]);
 
   /* =========================================================
      RETURN
@@ -130,26 +240,23 @@ function Dashboard() {
       ===================================================== */}
 
       <aside
-  className={`sidebar ${
-    menuOpen ? "sidebar-open" : ""
-  }`}
->
+        className={`sidebar ${
+          menuOpen ? "sidebar-open" : ""
+        }`}
+      >
 
         {/* BRAND */}
 
         <div className="brand">
 
           <div className="brand-logo">
-
             <img
               src={logoSulut}
               alt="Logo Sulawesi Utara"
             />
-
           </div>
 
           <div className="brand-text">
-
             <h2>
               DISNAKERTRANS
             </h2>
@@ -157,11 +264,9 @@ function Dashboard() {
             <span>
               Sulawesi Utara
             </span>
-
           </div>
 
         </div>
-
 
         {/* MENU */}
 
@@ -170,7 +275,6 @@ function Dashboard() {
           <p className="menu-title">
             MENU UTAMA
           </p>
-
 
           {/* DASHBOARD */}
 
@@ -181,7 +285,6 @@ function Dashboard() {
             <span>⌂</span>
             Dashboard
           </Link>
-
 
           {/* SURAT MASUK */}
 
@@ -197,13 +300,11 @@ function Dashboard() {
 
       </aside>
 
-
       {/* =====================================================
           MAIN CONTENT
       ===================================================== */}
 
       <main className="main-content">
-
 
         {/* ===================================================
             TOPBAR
@@ -211,34 +312,119 @@ function Dashboard() {
 
         <header className="topbar">
 
-  <button
-    className="hamburger-btn"
-    onClick={() => setMenuOpen(!menuOpen)}
-  >
-    ☰
-  </button>
+          {/* HAMBURGER */}
 
-  <div className="topbar-left">
+          <button
+            className="hamburger-btn"
+            onClick={() =>
+              setMenuOpen(!menuOpen)
+            }
+          >
+            ☰
+          </button>
 
-    <h1>
-      Dashboard
-    </h1>
+          <div className="topbar-left">
 
-    <p>
-      Sistem Informasi Disposisi Surat
-    </p>
+            <h1>
+              Dashboard
+            </h1>
 
-  </div>
+            <p>
+              Sistem Informasi Disposisi Surat
+            </p>
 
-</header>
+          </div>
 
+          {/* =================================================
+              USER + LOGOUT
+          ================================================= */}
+
+          <div
+            style={{
+              marginLeft: "auto",
+              display: "flex",
+              alignItems: "center",
+              gap: "14px",
+            }}
+          >
+
+            {/* NAMA USER */}
+
+            <div
+              style={{
+                textAlign: "right",
+              }}
+            >
+              <strong
+                style={{
+                  display: "block",
+                  color: "#1e293b",
+                  fontSize: "14px",
+                }}
+              >
+                {user?.username || "User"}
+              </strong>
+
+              <span
+                style={{
+                  display: "block",
+                  color: "#64748b",
+                  fontSize: "11px",
+                  marginTop: "2px",
+                }}
+              >
+                Pengguna
+              </span>
+            </div>
+
+            {/* TOMBOL LOGOUT */}
+
+            <button
+              onClick={handleLogout}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "7px",
+
+                height: "38px",
+                padding: "0 15px",
+
+                border: "none",
+                borderRadius: "7px",
+
+                background: "#dc2626",
+                color: "#ffffff",
+
+                fontSize: "13px",
+                fontWeight: "700",
+
+                cursor: "pointer",
+
+                boxShadow:
+                  "0 3px 8px rgba(220, 38, 38, 0.25)",
+              }}
+            >
+              <span
+                style={{
+                  fontSize: "15px",
+                }}
+              >
+                ↪
+              </span>
+
+              Logout
+            </button>
+
+          </div>
+
+        </header>
 
         {/* ===================================================
             DASHBOARD CONTENT
         =================================================== */}
 
         <section className="dashboard">
-
 
           {/* =================================================
               MAIN BANNER
@@ -260,17 +446,16 @@ function Dashboard() {
 
           </div>
 
-
           {/* =================================================
               ERROR
           ================================================= */}
 
           {error && (
-
             <div
               style={{
                 background: "#fff1f2",
-                border: "1px solid #fecdd3",
+                border:
+                  "1px solid #fecdd3",
                 color: "#be123c",
                 padding: "12px 15px",
                 borderRadius: "10px",
@@ -280,16 +465,13 @@ function Dashboard() {
             >
               {error}
             </div>
-
           )}
-
 
           {/* =================================================
               STATISTICS
           ================================================= */}
 
           <div className="statistics">
-
 
             {/* TOTAL SURAT */}
 
@@ -315,7 +497,6 @@ function Dashboard() {
 
             </div>
 
-
             {/* SURAT HARI INI */}
 
             <div className="stat-card">
@@ -339,7 +520,6 @@ function Dashboard() {
               </div>
 
             </div>
-
 
             {/* STATUS SISTEM */}
 
@@ -369,7 +549,6 @@ function Dashboard() {
 
           </div>
 
-
           {/* =================================================
               QUICK ACTION
           ================================================= */}
@@ -389,7 +568,6 @@ function Dashboard() {
 
             </div>
 
-
             <Link
               to="/surat/tambah"
               className="btn-primary"
@@ -398,7 +576,6 @@ function Dashboard() {
             </Link>
 
           </div>
-
 
           {/* =================================================
               INFORMATION

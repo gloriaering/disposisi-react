@@ -6,11 +6,20 @@
   box-sizing: border-box;
 }
 
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
 .riwayat-page {
   min-height: 100vh;
   background: #edf3f8;
   color: #17344e;
-  font-family: Arial, Helvetica, sans-serif;
 }
 
 
@@ -20,8 +29,8 @@
 
 .riwayat-sidebar {
   position: fixed;
-  left: 0;
   top: 0;
+  left: 0;
 
   width: 245px;
   height: 100vh;
@@ -43,17 +52,20 @@
 
   color: #ffffff;
 
-  z-index: 100;
+  z-index: 1000;
 
   overflow-y: auto;
   overflow-x: hidden;
 
   box-shadow:
     8px 0 35px rgba(4, 25, 48, 0.16);
+
+  transition: left 0.3s ease;
 }
 
 .riwayat-sidebar::before {
   content: "";
+
   position: absolute;
 
   width: 380px;
@@ -74,6 +86,7 @@
 
 .riwayat-sidebar::after {
   content: "";
+
   position: absolute;
 
   width: 250px;
@@ -304,6 +317,8 @@
   position: relative;
   z-index: 2;
 
+  width: 100%;
+
   padding: 32px;
 }
 
@@ -353,6 +368,8 @@
   color: #7d8e9d;
 
   font-size: 12px;
+
+  line-height: 1.5;
 }
 
 
@@ -366,7 +383,7 @@
   align-items: center;
   justify-content: center;
 
-  height: 44px;
+  min-height: 44px;
 
   padding: 0 18px;
 
@@ -390,13 +407,16 @@
 
   transition:
     transform 0.2s ease,
-    background 0.2s ease;
+    background 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .riwayat-btn-back:hover {
   transform: translateY(-2px);
 
   background: #f5fafc;
+
+  border-color: #bfd5e2;
 }
 
 
@@ -418,6 +438,8 @@
   color: #be123c;
 
   font-size: 12px;
+
+  line-height: 1.5;
 }
 
 
@@ -426,6 +448,8 @@
 ========================================================= */
 
 .riwayat-table-card {
+  width: 100%;
+
   overflow: hidden;
 
   border:
@@ -433,12 +457,10 @@
 
   border-radius: 19px;
 
-  background:
-    rgba(255, 255, 255, 0.94);
+  background: rgba(255, 255, 255, 0.96);
 
   box-shadow:
-    0 10px 30px
-    rgba(24, 66, 96, 0.06);
+    0 10px 30px rgba(24, 66, 96, 0.06);
 }
 
 
@@ -454,7 +476,9 @@
 
   gap: 15px;
 
-  padding: 18px 20px;
+  min-height: 68px;
+
+  padding: 16px 20px;
 
   border-bottom:
     1px solid #e5edf3;
@@ -497,7 +521,7 @@
 
 
 /* =========================================================
-   SURAT DIPILIH
+   SELECTED INFO
 ========================================================= */
 
 .riwayat-selected-info {
@@ -505,9 +529,9 @@
 
   margin-top: 5px;
 
-  font-size: 12px;
-
   color: #2563eb;
+
+  font-size: 11px;
 }
 
 .riwayat-row-selected {
@@ -520,32 +544,58 @@
 ========================================================= */
 
 .riwayat-delete-selected {
-  border: none;
+  min-height: 34px;
 
-  padding: 9px 14px;
+  padding: 0 14px;
 
-  border-radius: 7px;
+  border: 1px solid #dc2626;
+
+  border-radius: 8px;
 
   cursor: pointer;
 
   background: #dc2626;
 
-  color: white;
+  color: #ffffff;
 
-  font-size: 12px;
+  font-family: inherit;
+
+  font-size: 11px;
+
   font-weight: 600;
 
   white-space: nowrap;
 
   transition:
-    opacity 0.2s ease,
-    transform 0.2s ease;
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .riwayat-delete-selected:hover {
-  opacity: 0.9;
+  background: #b91c1c;
+
+  border-color: #b91c1c;
 
   transform: translateY(-1px);
+
+  box-shadow:
+    0 5px 12px rgba(220, 38, 38, 0.18);
+}
+
+.riwayat-delete-selected:active {
+  transform: translateY(0);
+}
+
+.riwayat-delete-selected:disabled {
+  opacity: 0.55;
+
+  cursor: not-allowed;
+
+  transform: none;
+
+  box-shadow: none;
 }
 
 
@@ -617,6 +667,8 @@
   vertical-align: middle;
 
   font-size: 11px;
+
+  line-height: 1.45;
 }
 
 .riwayat-table tbody tr {
@@ -649,7 +701,11 @@
   width: 16px;
   height: 16px;
 
+  margin: 0;
+
   cursor: pointer;
+
+  accent-color: #2563eb;
 }
 
 
@@ -734,13 +790,11 @@
   align-items: center;
   justify-content: center;
 
-  min-height: 30px;
+  min-height: 31px;
 
   padding: 0 10px;
 
   border-radius: 7px;
-
-  border: none;
 
   cursor: pointer;
 
@@ -762,9 +816,13 @@
   transform: translateY(-1px);
 }
 
+.riwayat-action-btn:active {
+  transform: translateY(0);
+}
+
 
 /* =========================================================
-   PULIHKAN
+   RESTORE
 ========================================================= */
 
 .riwayat-action-btn.restore {
@@ -784,7 +842,7 @@
 
 
 /* =========================================================
-   HAPUS PERMANEN
+   PERMANENT DELETE
 ========================================================= */
 
 .riwayat-action-btn.permanent {
@@ -855,7 +913,6 @@
 }
 
 @keyframes riwayatSpin {
-
   from {
     transform: rotate(0deg);
   }
@@ -863,7 +920,6 @@
   to {
     transform: rotate(360deg);
   }
-
 }
 
 
@@ -931,12 +987,13 @@
     align-items: flex-start;
 
     flex-direction: column;
+
+    gap: 18px;
   }
 
   .riwayat-btn-back {
     align-self: flex-end;
   }
-
 }
 
 
@@ -946,7 +1003,9 @@
 
 @media (max-width: 650px) {
 
-  /* HAMBURGER */
+  /* =====================================================
+     HAMBURGER
+  ===================================================== */
 
   .riwayat-mobile-menu-btn {
     display: flex;
@@ -968,35 +1027,38 @@
 
     background: #0b2d52;
 
-    color: white;
+    color: #ffffff;
 
     font-size: 24px;
 
     cursor: pointer;
 
-    z-index: 1000;
+    z-index: 2000;
 
     box-shadow:
       0 5px 15px rgba(0, 0, 0, 0.18);
+
+    transition:
+      transform 0.2s ease,
+      background 0.2s ease;
+  }
+
+  .riwayat-mobile-menu-btn:active {
+    transform: scale(0.95);
   }
 
 
-  /* SIDEBAR */
+  /* =====================================================
+     SIDEBAR
+  ===================================================== */
 
   .riwayat-sidebar {
-    position: fixed;
-
-    top: 0;
-    left: -245px;
+    left: -260px;
 
     width: 245px;
-    height: 100vh;
 
-    padding: 30px 0;
-
-    transition: left 0.3s ease;
-
-    z-index: 999;
+    transition:
+      left 0.3s ease;
   }
 
   .riwayat-sidebar.menu-open {
@@ -1004,7 +1066,9 @@
   }
 
 
-  /* MAIN */
+  /* =====================================================
+     MAIN
+  ===================================================== */
 
   .riwayat-main {
     margin-left: 0;
@@ -1013,21 +1077,33 @@
   }
 
 
-  /* CONTENT */
+  /* =====================================================
+     CONTENT
+  ===================================================== */
 
   .riwayat-content {
-    padding: 80px 20px 20px;
+    padding: 78px 15px 20px;
   }
 
 
-  /* HEADER */
+  /* =====================================================
+     HEADER
+  ===================================================== */
 
   .riwayat-page-header {
-    align-items: flex-start;
+    align-items: stretch;
 
     flex-direction: column;
 
-    gap: 18px;
+    gap: 16px;
+
+    margin-bottom: 20px;
+  }
+
+  .riwayat-page-title > span {
+    margin-bottom: 6px;
+
+    font-size: 9px;
   }
 
   .riwayat-page-title h2 {
@@ -1035,44 +1111,329 @@
   }
 
   .riwayat-page-title p {
+    margin-top: 7px;
+
     font-size: 11px;
   }
 
 
-  /* BACK BUTTON */
+  /* =====================================================
+     BACK BUTTON
+  ===================================================== */
 
   .riwayat-btn-back {
     width: 100%;
+
+    min-height: 42px;
 
     align-self: stretch;
   }
 
 
-  /* TABLE TOP */
+  /* =====================================================
+     TABLE TOP
+  ===================================================== */
 
   .riwayat-table-top {
     flex-direction: column;
 
-    align-items: flex-start;
+    align-items: stretch;
+
+    gap: 12px;
+
+    padding: 15px;
+  }
+
+  .riwayat-table-top strong {
+    font-size: 12px;
   }
 
   .riwayat-top-actions {
     width: 100%;
 
+    display: flex;
+
     flex-wrap: wrap;
 
-    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .riwayat-count {
+    flex: 1;
+
+    text-align: center;
+  }
+
+  .riwayat-delete-selected {
+    min-height: 34px;
+
+    flex: 1;
   }
 
 
-  /* CARD */
+  /* =====================================================
+     TABLE CARD
+  ===================================================== */
 
   .riwayat-table-card {
     border-radius: 15px;
   }
 
 
-  /* MENU */
+  /* =====================================================
+     TABLE → CARD
+  ===================================================== */
+
+  .riwayat-table-wrapper {
+    overflow-x: visible;
+  }
+
+  .riwayat-table {
+    width: 100%;
+
+    min-width: 0;
+  }
+
+  .riwayat-table thead {
+    display: none;
+  }
+
+  .riwayat-table tbody {
+    display: block;
+
+    padding: 12px;
+  }
+
+  .riwayat-table tbody tr {
+    position: relative;
+
+    display: block;
+
+    width: 100%;
+
+    margin-bottom: 14px;
+
+    padding: 15px;
+
+    border:
+      1px solid #e2eaf0;
+
+    border-radius: 13px;
+
+    background: #ffffff;
+
+    box-shadow:
+      0 4px 12px rgba(24, 66, 96, 0.05);
+  }
+
+  .riwayat-table tbody tr:last-child {
+    margin-bottom: 0;
+  }
+
+  .riwayat-table tbody tr:hover {
+    background: #ffffff;
+  }
+
+  .riwayat-table tbody tr.riwayat-row-selected {
+    background: #f0f7ff !important;
+
+    border-color: #bfdbfe;
+
+    box-shadow:
+      0 5px 15px rgba(37, 99, 235, 0.08);
+  }
+
+
+  /* =====================================================
+     CELL
+  ===================================================== */
+
+  .riwayat-table tbody td {
+    display: flex;
+
+    align-items: flex-start;
+
+    gap: 10px;
+
+    width: 100%;
+
+    padding: 7px 0;
+
+    border-bottom: none;
+
+    font-size: 11px;
+
+    line-height: 1.45;
+  }
+
+
+  /* =====================================================
+     CHECKBOX
+  ===================================================== */
+
+  .riwayat-table tbody td.riwayat-checkbox-column {
+    position: absolute;
+
+    top: 14px;
+    right: 14px;
+
+    width: auto;
+
+    padding: 0;
+
+    display: block;
+  }
+
+  .riwayat-table tbody td.riwayat-checkbox-column input {
+    width: 18px;
+    height: 18px;
+
+    margin: 0;
+  }
+
+
+  /* =====================================================
+     NO
+  ===================================================== */
+
+  .riwayat-table tbody td.riwayat-row-number {
+    display: block;
+
+    padding:
+      0 38px 10px 0;
+
+    color: #7890a0 !important;
+
+    font-size: 10px;
+
+    text-align: left;
+  }
+
+  .riwayat-table tbody td.riwayat-row-number::before {
+    content: "No. ";
+
+    color: #8aa0ae;
+
+    font-weight: 600;
+  }
+
+
+  /* =====================================================
+     LABEL
+  ===================================================== */
+
+  .riwayat-table tbody td:nth-child(3)::before {
+    content: "Nomor Surat";
+  }
+
+  .riwayat-table tbody td:nth-child(4)::before {
+    content: "Surat Dari";
+  }
+
+  .riwayat-table tbody td:nth-child(5)::before {
+    content: "Perihal";
+  }
+
+  .riwayat-table tbody td:nth-child(6)::before {
+    content: "Tanggal Surat";
+  }
+
+  .riwayat-table tbody td:nth-child(7)::before {
+    content: "Diterima";
+  }
+
+  .riwayat-table tbody td:nth-child(3)::before,
+  .riwayat-table tbody td:nth-child(4)::before,
+  .riwayat-table tbody td:nth-child(5)::before,
+  .riwayat-table tbody td:nth-child(6)::before,
+  .riwayat-table tbody td:nth-child(7)::before {
+    flex:
+      0 0 88px;
+
+    color: #7b91a0;
+
+    font-size: 9px;
+
+    font-weight: 700;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.3px;
+  }
+
+
+  /* =====================================================
+     DATA
+  ===================================================== */
+
+  .riwayat-nomor,
+  .riwayat-asal,
+  .riwayat-perihal {
+    max-width: none;
+
+    min-width: 0;
+
+    color: #294f67;
+
+    font-size: 11px;
+
+    line-height: 1.5;
+
+    overflow-wrap: anywhere;
+  }
+
+  .riwayat-tanggal,
+  .riwayat-jam {
+    font-size: 10px;
+
+    white-space: normal;
+  }
+
+
+  /* =====================================================
+     ACTION
+  ===================================================== */
+
+  .riwayat-table tbody td:last-child {
+    display: block;
+
+    margin-top: 8px;
+
+    padding-top: 12px;
+
+    border-top:
+      1px solid #edf1f4;
+  }
+
+  .riwayat-table tbody td:last-child::before {
+    display: none;
+  }
+
+  .riwayat-action {
+    display: grid;
+
+    grid-template-columns:
+      1fr 1fr;
+
+    width: 100%;
+
+    gap: 8px;
+  }
+
+  .riwayat-action-btn {
+    width: 100%;
+
+    min-height: 36px;
+
+    padding: 0 8px;
+
+    font-size: 10px;
+  }
+
+
+  /* =====================================================
+     MENU MOBILE
+  ===================================================== */
 
   .riwayat-brand {
     margin-bottom: 35px;
@@ -1089,6 +1450,21 @@
     display: none;
   }
 
+
+  /* =====================================================
+     EMPTY
+  ===================================================== */
+
+  .riwayat-empty-table {
+    display: block !important;
+
+    height: auto;
+
+    padding:
+      45px 20px !important;
+
+    text-align: center;
+  }
 }
 
 
@@ -1099,7 +1475,8 @@
 @media (max-width: 400px) {
 
   .riwayat-content {
-    padding: 75px 15px 15px;
+    padding:
+      75px 12px 15px;
   }
 
   .riwayat-mobile-menu-btn {
@@ -1108,18 +1485,67 @@
 
     width: 42px;
     height: 42px;
+
+    font-size: 22px;
   }
 
   .riwayat-page-title h2 {
     font-size: 21px;
   }
 
-  .riwayat-delete-selected {
+  .riwayat-top-actions {
+    flex-direction: column;
+
     width: 100%;
   }
 
-  .riwayat-top-actions {
-    flex-direction: column;
+  .riwayat-count,
+  .riwayat-delete-selected {
+    width: 100%;
+
+    flex: none;
   }
 
+  .riwayat-action {
+    grid-template-columns: 1fr;
+  }
+
+  .riwayat-table tbody {
+    padding: 9px;
+  }
+
+  .riwayat-table tbody tr {
+    padding: 13px;
+  }
+
+  .riwayat-table tbody td:nth-child(3)::before,
+  .riwayat-table tbody td:nth-child(4)::before,
+  .riwayat-table tbody td:nth-child(5)::before,
+  .riwayat-table tbody td:nth-child(6)::before,
+  .riwayat-table tbody td:nth-child(7)::before {
+    flex-basis: 78px;
+
+    font-size: 8px;
+  }
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .riwayat-sidebar,
+  .riwayat-menu-item,
+  .riwayat-btn-back,
+  .riwayat-delete-selected,
+  .riwayat-action-btn,
+  .riwayat-mobile-menu-btn {
+    transition: none;
+  }
+
+  .riwayat-loading-icon {
+    animation: none;
+  }
 }

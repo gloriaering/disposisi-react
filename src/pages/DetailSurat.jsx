@@ -2,820 +2,1264 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import logoSulut from "../assets/images/logo-sulut.png";
 
-/* =========================================================
-   API URL
-========================================================= */
-
 const API_URL = "https://disposisi-react-8vdu.vercel.app";
 
+function DetailSurat() {
+  const { id } = useParams();
 
-/* =========================================================
-   PARSE TANGGAL
-========================================================= */
+  // =========================================================
+  // STATE
+  // =========================================================
 
-function parseDateLocal(value) {
-  if (!value) return null;
+  const [surat, setSurat] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const text = String(value).trim();
+  const [arsipAktif, setArsipAktif] = useState(null);
 
-  // FORMAT DD-MM-YYYY
-  const matchDDMMYYYY = text.match(
-    /^(\d{2})-(\d{2})-(\d{4})$/
-  );
+  // URL Blob untuk preview PDF
+  const [pdfPreviewUrls, setPdfPreviewUrls] = useState({});
 
-  if (matchDDMMYYYY) {
-    const date = new Date(
-      Number(matchDDMMYYYY[3]),
-      Number(matchDDMMYYYY[2]) - 1,
-      Number(matchDDMMYYYY[1])
-    );
+  // =========================================================
+  // AMBIL DATA SURAT
+  // =========================================================
 
-    if (!Number.isNaN(date.getTime())) {
-      return date;
+  useEffect(() => {
+    const getSurat = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        const token =
+          localStorage.getItem("token");
+
+        const response = await fetch(
+          `${API_URL}/api/surat/${id}`,
+          {
+            headers: token
+              ? {
+                  Authorization:
+                    `Bearer ${token}`,
+                }
+              : {},
+          }
+        );
+
+        const result =
+          await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            result.message ||
+              "Gagal mengambil data surat."
+          );
+        }
+
+        const data =
+          result.data || result;
+
+        setSurat(data);
+
+      } catch (err) {
+        console.error(
+          "Gagal mengambil detail surat:",
+          err
+        );
+
+        setError(
+          err.message ||
+            "Gagal mengambil data surat."
+        );
+
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      getSurat();
     }
-  }
+  }, [id]);
 
-  // FORMAT YYYY-MM-DD
-  const matchYYYYMMDD = text.match(
-    /^(\d{4})-(\d{2})-(\d{2})/
-  );
+  // =========================================================
+  // DAFTAR ARSIP
+  // =========================================================
 
-  if (matchYYYYMMDD) {
-    const date = new Date(
-      Number(matchYYYYMMDD[1]),
-      Number(matchYYYYMMDD[2]) - 1,
-      Number(matchYYYYMMDD[3])
-    );
+  const daftarArsip =
+    Array.isArray(surat?.arsip_surat)
+      ? surat.arsip_surat
+      : surat?.arsip_surat
+      ? [surat.arsip_surat]
+      : [];
 
-    if (!Number.isNaN(date.getTime())) {
-      return date;
+  // =========================================================
+  // LOAD PDF UNTUK PREVIEW
+  // =========================================================
+
+  useEffect(() => {
+    if (!surat) {
+      return;
     }
-  }
 
-  const date = new Date(value);
+    const arsipArray =
+      Array.isArray(surat.arsip_surat)
+        ? surat.arsip_surat
+        : surat.arsip_surat
+        ? [surat.arsip_surat]
+        : [];
 
-  return Number.isNaN(date.getTime())
-    ? null
-    : date;
-}
+    if (arsipArray.length === 0) {
+      return;
+    }
 
+    let cancelled = false;
 
-/* =========================================================
-   FORMAT TANGGAL
-========================================================= */
+    const objectUrls = [];
 
-function formatTanggal(value) {
-  const date = parseDateLocal(value);
+    const loadPDF = async () => {
+      const token =
+        localStorage.getItem("token");
 
-  if (!date) return "-";
+      const hasil = {};
 
-  const hari = String(
-    date.getDate()
-  ).padStart(2, "0");
+      for (
+        let index = 0;
+        index < arsipArray.length;
+        index++
+      ) {
+        const arsip =
+          arsipArray[index];
 
-  const bulan = String(
-    date.getMonth() + 1
-  ).padStart(2, "0");
+        const fileIsPDF =
+          arsip?.tipe_file ===
+            "application/pdf" ||
+          arsip?.nama_file
+            ?.toLowerCase()
+            .endsWith(".pdf");
 
-  const tahun = date.getFullYear();
+        if (!fileIsPDF) {
+          continue;
+        }
 
-  return `${hari}/${bulan}/${tahun}`;
-}
+        try {
+          const response =
+            await fetch(
+              `${API_URL}/api/surat/preview/${surat._id}/${index}`,
+              {
+                headers: token
+                  ? {
+                      Authorization:
+                        `Bearer ${token}`,
+                    }
+                  : {},
+              }
+            );
 
+          if (!response.ok) {
+            throw new Error(
+              `Gagal mengambil PDF (${response.status})`
+            );
+          }
 
-/* =========================================================
-   FORMAT JAM
-========================================================= */
+          const blob =
+            await response.blob();
 
-function formatJam(value) {
-  if (!value) return "-";
+          const blobUrl =
+            URL.createObjectURL(blob);
 
-  const text = String(value).trim();
+          objectUrls.push(blobUrl);
 
-  const match = text.match(
-    /^(\d{1,2}):(\d{2})/
-  );
+          hasil[index] =
+            blobUrl;
 
-  if (!match) {
-    return `${text} WITA`;
-  }
+        } catch (err) {
+          console.error(
+            `Gagal preview PDF ${index + 1}:`,
+            err
+          );
+        }
+      }
 
-  return `${String(
-    match[1]
-  ).padStart(2, "0")}:${match[2]} WITA`;
-}
+      if (!cancelled) {
+        setPdfPreviewUrls(hasil);
+      }
+    };
 
+    loadPDF();
 
-/* =========================================================
-   SIDEBAR
-========================================================= */
+    return () => {
+      cancelled = true;
 
-function Sidebar() {
-  return (
-    <aside className="sidebar">
+      objectUrls.forEach(
+        (url) => {
+          URL.revokeObjectURL(url);
+        }
+      );
+    };
+  }, [surat]);
 
-      <div className="brand">
+  // =========================================================
+  // HELPER TANGGAL
+  // =========================================================
 
-        <div className="brand-logo">
-          <img
-            src={logoSulut}
-            alt="Logo Sulawesi Utara"
-          />
-        </div>
+  const parseDateLocal = (value) => {
+    if (!value) {
+      return null;
+    }
 
-        <div className="brand-text">
+    if (
+      typeof value === "string" &&
+      /^\d{2}-\d{2}-\d{4}$/.test(value)
+    ) {
+      const [
+        tanggal,
+        bulan,
+        tahun,
+      ] = value.split("-");
 
-          <h2>
-            DISNAKERTRANS
-          </h2>
+      return new Date(
+        Number(tahun),
+        Number(bulan) - 1,
+        Number(tanggal)
+      );
+    }
 
-          <span>
-            Sulawesi Utara
-          </span>
+    const date =
+      new Date(value);
 
-        </div>
+    if (isNaN(date.getTime())) {
+      return null;
+    }
 
+    return date;
+  };
+
+  const formatTanggal = (value) => {
+    const date =
+      parseDateLocal(value);
+
+    if (!date) {
+      return "-";
+    }
+
+    return date.toLocaleDateString(
+      "id-ID",
+      {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      }
+    );
+  };
+
+  const formatJam = (value) => {
+    if (!value) {
+      return "-";
+    }
+
+    if (
+      typeof value === "string" &&
+      /^\d{2}:\d{2}/.test(value)
+    ) {
+      return value.slice(0, 5);
+    }
+
+    const date =
+      new Date(value);
+
+    if (isNaN(date.getTime())) {
+      return value;
+    }
+
+    return date.toLocaleTimeString(
+      "id-ID",
+      {
+        hour: "2-digit",
+        minute: "2-digit",
+      }
+    );
+  };
+
+  // =========================================================
+  // CEK JENIS FILE
+  // =========================================================
+
+  const adalahPDF = (file) => {
+    return (
+      file?.tipe_file ===
+        "application/pdf" ||
+      file?.nama_file
+        ?.toLowerCase()
+        .endsWith(".pdf")
+    );
+  };
+
+  const adalahGambar = (file) => {
+    return (
+      file?.tipe_file?.startsWith(
+        "image/"
+      ) ||
+      /\.(jpg|jpeg|png|webp)$/i.test(
+        file?.nama_file || ""
+      )
+    );
+  };
+
+  // =========================================================
+  // PILIH FILE
+  // =========================================================
+
+  const bukaFullscreen = (arsip) => {
+    setArsipAktif(arsip);
+  };
+
+  // =========================================================
+  // LOADING
+  // =========================================================
+
+  if (loading) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontFamily:
+            "Arial, sans-serif",
+        }}
+      >
+        Memuat data surat...
       </div>
+    );
+  }
 
+  // =========================================================
+  // ERROR
+  // =========================================================
 
-      <nav className="menu">
+  if (error) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          padding: "40px",
+          fontFamily:
+            "Arial, sans-serif",
+        }}
+      >
+        <h2>
+          Terjadi Kesalahan
+        </h2>
+
+        <p>{error}</p>
+
+        <Link to="/surat">
+          ← Kembali ke Surat Masuk
+        </Link>
+      </div>
+    );
+  }
+
+  // =========================================================
+  // JIKA DATA TIDAK ADA
+  // =========================================================
+
+  if (!surat) {
+    return (
+      <div
+        style={{
+          padding: "40px",
+          textAlign: "center",
+        }}
+      >
+        Data surat tidak ditemukan.
+      </div>
+    );
+  }
+
+  // =========================================================
+  // TAMPILAN
+  // =========================================================
+
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        background:
+          "#f8fafc",
+        fontFamily:
+          "Arial, sans-serif",
+      }}
+    >
+
+      {/* =====================================================
+          SIDEBAR
+      ===================================================== */}
+
+      <aside
+        style={{
+          position: "fixed",
+          left: 0,
+          top: 0,
+          bottom: 0,
+          width: "250px",
+          background:
+            "#173f5f",
+          color: "#fff",
+          padding: "25px 18px",
+          boxSizing:
+            "border-box",
+        }}
+      >
+
+        {/* BRAND */}
+
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            marginBottom:
+              "40px",
+          }}
+        >
+
+          <div
+            style={{
+              width: "48px",
+              height: "48px",
+              background: "#fff",
+              borderRadius:
+                "50%",
+              display: "flex",
+              alignItems:
+                "center",
+              justifyContent:
+                "center",
+              overflow: "hidden",
+            }}
+          >
+
+            <img
+              src={logoSulut}
+              alt="Logo Sulawesi Utara"
+              style={{
+                width: "42px",
+                height: "42px",
+                objectFit:
+                  "contain",
+              }}
+            />
+
+          </div>
+
+          <div>
+
+            <h2
+              style={{
+                margin: 0,
+                fontSize:
+                  "18px",
+              }}
+            >
+              DISNAKERTRANS
+            </h2>
+
+            <span
+              style={{
+                fontSize:
+                  "13px",
+                opacity: 0.8,
+              }}
+            >
+              Sulawesi Utara
+            </span>
+
+          </div>
+
+        </div>
+
+        {/* MENU */}
+
+        <p
+          style={{
+            fontSize:
+              "11px",
+            opacity: 0.6,
+            marginBottom:
+              "12px",
+          }}
+        >
+          MENU UTAMA
+        </p>
 
         <Link
           to="/"
-          className="menu-item"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            padding:
+              "13px 14px",
+            marginBottom:
+              "6px",
+            borderRadius:
+              "8px",
+            color: "#fff",
+            textDecoration:
+              "none",
+          }}
         >
           <span>⌂</span>
           Dashboard
         </Link>
 
-
         <Link
           to="/surat"
-          className="menu-item active"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            padding:
+              "13px 14px",
+            marginBottom:
+              "6px",
+            borderRadius:
+              "8px",
+            background:
+              "rgba(255,255,255,0.15)",
+            color: "#fff",
+            textDecoration:
+              "none",
+          }}
         >
           <span>▣</span>
           Surat Masuk
         </Link>
 
-
         <Link
           to="/riwayat"
-          className="menu-item"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            padding:
+              "13px 14px",
+            marginBottom:
+              "6px",
+            borderRadius:
+              "8px",
+            color: "#fff",
+            textDecoration:
+              "none",
+          }}
         >
           <span>↶</span>
           Riwayat Surat
         </Link>
 
-      </nav>
+      </aside>
 
-    </aside>
-  );
-}
+      {/* =====================================================
+          MAIN
+      ===================================================== */}
 
+      <main
+        style={{
+          marginLeft:
+            "250px",
+          minHeight:
+            "100vh",
+        }}
+      >
 
-/* =========================================================
-   TOPBAR
-========================================================= */
+        {/* TOPBAR */}
 
-function Topbar() {
-  return (
-    <header className="topbar">
+        <header
+          style={{
+            background:
+              "#ffffff",
+            borderBottom:
+              "1px solid #e2e8f0",
+            padding:
+              "20px 30px",
+          }}
+        >
 
-      <div>
+          <h1
+            style={{
+              margin: 0,
+              fontSize:
+                "24px",
+              color:
+                "#173f5f",
+            }}
+          >
+            Detail Surat
+          </h1>
 
-        <h1>
-          Detail Surat
-        </h1>
+          <p
+            style={{
+              margin:
+                "5px 0 0",
+              color:
+                "#64748b",
+            }}
+          >
+            Sistem Informasi Disposisi Surat
+          </p>
 
-        <p>
-          Informasi lengkap surat masuk
-        </p>
+        </header>
 
-      </div>
+        {/* CONTENT */}
 
-    </header>
-  );
-}
+        <section
+          style={{
+            padding:
+              "30px",
+            maxWidth:
+              "1400px",
+            margin:
+              "0 auto",
+          }}
+        >
 
+          {/* HEADER */}
 
-/* =========================================================
-   DETAIL SURAT
-========================================================= */
+          <div
+            style={{
+              display: "flex",
+              justifyContent:
+                "space-between",
+              alignItems:
+                "flex-start",
+              gap: "20px",
+              marginBottom:
+                "25px",
+              flexWrap:
+                "wrap",
+            }}
+          >
 
-function DetailSurat() {
+            <div>
 
-  const { id } = useParams();
+              <span
+                style={{
+                  fontSize:
+                    "12px",
+                  fontWeight:
+                    "bold",
+                  color:
+                    "#64748b",
+                }}
+              >
+                DATA ADMINISTRASI
+              </span>
 
-  const [surat, setSurat] =
-    useState(null);
+              <h2
+                style={{
+                  margin:
+                    "6px 0",
+                  color:
+                    "#173f5f",
+                }}
+              >
+                Detail Surat Masuk
+              </h2>
 
-  const [loading, setLoading] =
-    useState(true);
-
-  const [error, setError] =
-    useState("");
-
-  // FILE YANG SEDANG DILIHAT FULLSCREEN
-  const [arsipAktif, setArsipAktif] =
-    useState(null);
-
-
-  /* =======================================================
-     AMBIL DATA SURAT
-  ======================================================= */
-
-  useEffect(() => {
-
-    const fetchDetailSurat =
-      async () => {
-
-        try {
-
-          setLoading(true);
-          setError("");
-
-          const response =
-            await fetch(
-              `${API_URL}/api/surat/${id}`
-            );
-
-          const result =
-            await response.json();
-
-          if (!response.ok) {
-
-            throw new Error(
-              result.message ||
-              "Data surat tidak ditemukan."
-            );
-
-          }
-
-          setSurat(
-            result.data || result
-          );
-
-        } catch (error) {
-
-          console.error(
-            "Gagal mengambil detail surat:",
-            error
-          );
-
-          setError(
-            error.message ||
-            "Gagal mengambil data surat."
-          );
-
-        } finally {
-
-          setLoading(false);
-
-        }
-
-      };
-
-
-    if (id) {
-      fetchDetailSurat();
-    }
-
-  }, [id]);
-
-
-  /* =======================================================
-     LOADING
-  ======================================================= */
-
-  if (loading) {
-
-    return (
-
-      <div className="app">
-
-        <Sidebar />
-
-        <main className="main-content">
-
-          <Topbar />
-
-          <section className="page-content">
-
-            <div className="form-card">
-
-              Memuat data surat...
+              <p
+                style={{
+                  margin: 0,
+                  color:
+                    "#64748b",
+                }}
+              >
+                Informasi lengkap surat yang telah tersimpan.
+              </p>
 
             </div>
 
-          </section>
-
-        </main>
-
-      </div>
-
-    );
-
-  }
-
-
-  /* =======================================================
-     ERROR
-  ======================================================= */
-
-  if (!surat || error) {
-
-    return (
-
-      <div className="app">
-
-        <Sidebar />
-
-        <main className="main-content">
-
-          <Topbar />
-
-          <section className="page-content">
-
-            <div className="form-card">
-
-              <h2>
-                Surat Tidak Ditemukan
-              </h2>
-
-              <p>
-                {error ||
-                  "Data surat tidak tersedia."}
-              </p>
+            <div
+              style={{
+                display: "flex",
+                gap: "10px",
+                flexWrap:
+                  "wrap",
+              }}
+            >
 
               <Link
                 to="/surat"
-                className="btn-secondary"
+                style={{
+                  display:
+                    "inline-block",
+                  padding:
+                    "10px 16px",
+                  background:
+                    "#e2e8f0",
+                  color:
+                    "#334155",
+                  borderRadius:
+                    "8px",
+                  textDecoration:
+                    "none",
+                }}
               >
                 ← Kembali
               </Link>
 
-            </div>
-
-          </section>
-
-        </main>
-
-      </div>
-
-    );
-
-  }
-
-
-  /* =======================================================
-     DATA ARSIP
-
-     PERBAIKAN UTAMA:
-     arsip_surat SEKARANG BERUPA ARRAY
-  ======================================================= */
-
-  let daftarArsip = [];
-
-  if (Array.isArray(surat.arsip_surat)) {
-
-    daftarArsip =
-      surat.arsip_surat;
-
-  } else if (
-    surat.arsip_surat &&
-    typeof surat.arsip_surat === "object"
-  ) {
-
-    // UNTUK DATA LAMA YANG MASIH SATU FILE
-    daftarArsip = [
-      surat.arsip_surat
-    ];
-
-  }
-
-
-  /* =======================================================
-     CEK JENIS FILE
-  ======================================================= */
-
-  const adalahPDF = (arsip) => {
-
-    if (!arsip) return false;
-
-    return (
-
-      arsip.tipe_file ===
-        "application/pdf" ||
-
-      arsip.nama_file
-        ?.toLowerCase()
-        .endsWith(".pdf")
-
-    );
-
-  };
-
-
-  const adalahGambar = (arsip) => {
-
-    if (!arsip) return false;
-
-    return (
-
-      arsip.tipe_file
-        ?.startsWith("image/") ||
-
-      /\.(jpg|jpeg|png|webp)$/i.test(
-        arsip.nama_file || ""
-      )
-
-    );
-
-  };
-
-
-  /* =======================================================
-     TAMPILAN
-  ======================================================= */
-
-  return (
-
-    <div className="app">
-
-      <Sidebar />
-
-
-      <main className="main-content">
-
-        <Topbar />
-
-
-        <section className="page-content">
-
-
-          {/* =================================================
-              HEADER
-          ================================================= */}
-
-          <div className="page-header">
-
-            <div>
-
-              <h2>
-                Detail Surat Masuk
-              </h2>
-
-              <p>
-                Informasi lengkap data surat.
-              </p>
+              <Link
+                to={`/surat/edit/${surat._id}`}
+                style={{
+                  display:
+                    "inline-block",
+                  padding:
+                    "10px 16px",
+                  background:
+                    "#173f5f",
+                  color:
+                    "#fff",
+                  borderRadius:
+                    "8px",
+                  textDecoration:
+                    "none",
+                }}
+              >
+                ✎ Edit Surat
+              </Link>
 
             </div>
-
-
-            <Link
-              to="/surat"
-              className="btn-secondary"
-            >
-              ← Kembali
-            </Link>
 
           </div>
 
-
           {/* =================================================
-              CARD
+              INFORMASI SURAT
           ================================================= */}
 
-          <div className="form-card">
+          <div
+            style={{
+              background:
+                "#fff",
+              border:
+                "1px solid #e2e8f0",
+              borderRadius:
+                "12px",
+              padding:
+                "25px",
+              marginBottom:
+                "25px",
+              boxShadow:
+                "0 2px 8px rgba(0,0,0,0.04)",
+            }}
+          >
 
+            <h3
+              style={{
+                marginTop: 0,
+                color:
+                  "#173f5f",
+              }}
+            >
+              Informasi Surat
+            </h3>
 
-            {/* =============================================
-                INFORMASI SURAT
-            ============================================= */}
+            <div
+              style={{
+                display:
+                  "grid",
+                gridTemplateColumns:
+                  "repeat(2, minmax(0, 1fr))",
+                gap:
+                  "20px",
+              }}
+            >
 
-            <div className="form-section">
+              {/* NOMOR SURAT */}
 
-              <h3>
-                Informasi Surat
-              </h3>
+              <div>
 
-
-              <div className="form-grid">
-
-
-                <div className="form-group">
-
-                  <label>
-                    Nomor Surat
-                  </label>
-
-                  <input
-                    value={
-                      surat.nomor_surat || ""
-                    }
-                    readOnly
-                  />
-
-                </div>
-
-
-                <div className="form-group">
-
-                  <label>
-                    Nomor Agenda
-                  </label>
-
-                  <input
-                    value={
-                      surat.nomor_agenda || ""
-                    }
-                    readOnly
-                  />
-
-                </div>
-
-
-                <div className="form-group">
-
-                  <label>
-                    Surat Dari
-                  </label>
-
-                  <input
-                    value={
-                      surat.asal_surat || ""
-                    }
-                    readOnly
-                  />
-
-                </div>
-
-
-                <div className="form-group">
-
-                  <label>
-                    Sifat Surat
-                  </label>
-
-                  <input
-                    value={
-                      surat.sifat_surat || "-"
-                    }
-                    readOnly
-                  />
-
-                </div>
-
-
-                <div className="form-group">
-
-                  <label>
-                    Tanggal Surat
-                  </label>
-
-                  <input
-                    value={
-                      formatTanggal(
-                        surat.tanggal_surat
-                      )
-                    }
-                    readOnly
-                  />
-
-                </div>
-
-
-                <div className="form-group">
-
-                  <label>
-                    Tanggal Diterima
-                  </label>
-
-                  <input
-                    value={
-                      formatTanggal(
-                        surat.tanggal_diterima
-                      )
-                    }
-                    readOnly
-                  />
-
-                </div>
-
-
-                <div className="form-group">
-
-                  <label>
-                    Jam Diterima
-                  </label>
-
-                  <input
-                    value={
-                      formatJam(
-                        surat.jam_diterima
-                      )
-                    }
-                    readOnly
-                  />
-
-                </div>
-
-
-              </div>
-
-            </div>
-
-
-            {/* =============================================
-                PERIHAL
-            ============================================= */}
-
-            <div className="form-section">
-
-              <h3>
-                Perihal
-              </h3>
-
-
-              <div className="form-group">
-
-                <textarea
-                  value={
-                    surat.perihal || ""
-                  }
-                  readOnly
-                  rows="4"
-                />
-
-              </div>
-
-            </div>
-
-
-            {/* =============================================
-                SCAN SURAT
-            ============================================= */}
-
-            <div className="form-section">
-
-              <h3>
-                Scan Surat
-              </h3>
-
-
-              {/* JIKA BELUM ADA FILE */}
-
-              {daftarArsip.length === 0 && (
+                <small
+                  style={{
+                    color:
+                      "#64748b",
+                  }}
+                >
+                  Nomor Surat
+                </small>
 
                 <div
                   style={{
-                    padding: "20px",
-                    background: "#f8fafc",
-                    borderRadius: "10px",
+                    marginTop:
+                      "5px",
+                    fontWeight:
+                      "600",
                   }}
                 >
-                  Scan surat belum tersedia.
+                  {surat.nomor_surat ||
+                    "-"}
                 </div>
 
-              )}
+              </div>
 
+              {/* NOMOR AGENDA */}
 
-              {/* ===========================================
-                  TAMPILKAN SEMUA FILE
-              =========================================== */}
+              <div>
 
-              {daftarArsip.map(
+                <small
+                  style={{
+                    color:
+                      "#64748b",
+                  }}
+                >
+                  Nomor Agenda
+                </small>
+
+                <div
+                  style={{
+                    marginTop:
+                      "5px",
+                    fontWeight:
+                      "600",
+                  }}
+                >
+                  {surat.nomor_agenda ||
+                    "-"}
+                </div>
+
+              </div>
+
+              {/* SURAT DARI */}
+
+              <div>
+
+                <small
+                  style={{
+                    color:
+                      "#64748b",
+                  }}
+                >
+                  Surat Dari
+                </small>
+
+                <div
+                  style={{
+                    marginTop:
+                      "5px",
+                    fontWeight:
+                      "600",
+                  }}
+                >
+                  {surat.asal_surat ||
+                    "-"}
+                </div>
+
+              </div>
+
+              {/* SIFAT SURAT */}
+
+              <div>
+
+                <small
+                  style={{
+                    color:
+                      "#64748b",
+                  }}
+                >
+                  Sifat Surat
+                </small>
+
+                <div
+                  style={{
+                    marginTop:
+                      "5px",
+                    fontWeight:
+                      "600",
+                  }}
+                >
+                  {surat.sifat_surat ||
+                    "-"}
+                </div>
+
+              </div>
+
+              {/* TANGGAL SURAT */}
+
+              <div>
+
+                <small
+                  style={{
+                    color:
+                      "#64748b",
+                  }}
+                >
+                  Tanggal Surat
+                </small>
+
+                <div
+                  style={{
+                    marginTop:
+                      "5px",
+                    fontWeight:
+                      "600",
+                  }}
+                >
+                  {formatTanggal(
+                    surat.tanggal_surat
+                  )}
+                </div>
+
+              </div>
+
+              {/* TANGGAL DITERIMA */}
+
+              <div>
+
+                <small
+                  style={{
+                    color:
+                      "#64748b",
+                  }}
+                >
+                  Tanggal Diterima
+                </small>
+
+                <div
+                  style={{
+                    marginTop:
+                      "5px",
+                    fontWeight:
+                      "600",
+                  }}
+                >
+                  {formatTanggal(
+                    surat.tanggal_diterima
+                  )}
+                </div>
+
+              </div>
+
+              {/* JAM DITERIMA */}
+
+              <div>
+
+                <small
+                  style={{
+                    color:
+                      "#64748b",
+                  }}
+                >
+                  Jam Diterima
+                </small>
+
+                <div
+                  style={{
+                    marginTop:
+                      "5px",
+                    fontWeight:
+                      "600",
+                  }}
+                >
+                  {formatJam(
+                    surat.jam_diterima
+                  )}
+                </div>
+
+              </div>
+
+            </div>
+
+            {/* PERIHAL */}
+
+            <div
+              style={{
+                marginTop:
+                  "25px",
+                paddingTop:
+                  "20px",
+                borderTop:
+                  "1px solid #e2e8f0",
+              }}
+            >
+
+              <small
+                style={{
+                  color:
+                    "#64748b",
+                }}
+              >
+                Perihal
+              </small>
+
+              <div
+                style={{
+                  marginTop:
+                    "8px",
+                  lineHeight:
+                    "1.6",
+                  whiteSpace:
+                    "pre-wrap",
+                }}
+              >
+                {surat.perihal ||
+                  "-"}
+              </div>
+
+            </div>
+
+          </div>
+
+          {/* =================================================
+              SCAN SURAT
+          ================================================= */}
+
+          <div
+            style={{
+              background:
+                "#fff",
+              border:
+                "1px solid #e2e8f0",
+              borderRadius:
+                "12px",
+              padding:
+                "25px",
+              marginBottom:
+                "25px",
+              boxShadow:
+                "0 2px 8px rgba(0,0,0,0.04)",
+            }}
+          >
+
+            <h3
+              style={{
+                marginTop: 0,
+                color:
+                  "#173f5f",
+              }}
+            >
+              Scan Surat
+            </h3>
+
+            {daftarArsip.length === 0 ? (
+
+              <div
+                style={{
+                  padding:
+                    "30px",
+                  textAlign:
+                    "center",
+                  border:
+                    "1px dashed #cbd5e1",
+                  borderRadius:
+                    "10px",
+                  color:
+                    "#64748b",
+                }}
+              >
+                Belum ada scan surat.
+              </div>
+
+            ) : (
+
+              daftarArsip.map(
                 (arsip, index) => (
 
                   <div
                     key={
                       arsip.public_id ||
-                      `${arsip.nama_file}-${index}`
+                      index
                     }
                     style={{
-                      marginTop: "25px",
+                      marginTop:
+                        "20px",
                       border:
-                        "1px solid #d6e2ea",
-                      borderRadius: "12px",
-                      overflow: "hidden",
-                      background: "#ffffff",
+                        "1px solid #e2e8f0",
+                      borderRadius:
+                        "12px",
+                      overflow:
+                        "hidden",
                     }}
                   >
-
 
                     {/* HEADER FILE */}
 
                     <div
                       style={{
-                        padding: "15px 20px",
-                        background: "#f8fafc",
-                        borderBottom:
-                          "1px solid #d6e2ea",
-                        display: "flex",
+                        padding:
+                          "15px",
+                        background:
+                          "#f8fafc",
+                        display:
+                          "flex",
                         justifyContent:
                           "space-between",
-                        alignItems: "center",
-                        gap: "10px",
-                        flexWrap: "wrap",
+                        alignItems:
+                          "center",
+                        gap:
+                          "10px",
+                        flexWrap:
+                          "wrap",
                       }}
                     >
 
-                      <div>
+                      <strong>
+                        {adalahPDF(
+                          arsip
+                        )
+                          ? "📄 PDF"
+                          : adalahGambar(
+                              arsip
+                            )
+                          ? "🖼️ Gambar"
+                          : "📁 File"}{" "}
 
-                        <strong>
-
-                          {adalahPDF(arsip)
-                            ? "📄"
-                            : adalahGambar(arsip)
-                            ? "🖼️"
-                            : "📁"}
-
-                          {" "}File {index + 1}
-
-                        </strong>
-
-                        <div
-                          style={{
-                            marginTop: "5px",
-                            color: "#64748b",
-                            fontSize: "14px",
-                          }}
-                        >
-                          {arsip.nama_file ||
-                            "Arsip Surat"}
-                        </div>
-
-                      </div>
-
+                        {index + 1}
+                      </strong>
 
                       <span
                         style={{
-                          fontSize: "13px",
-                          color: "#64748b",
+                          color:
+                            "#64748b",
+                          wordBreak:
+                            "break-word",
                         }}
                       >
-                        {arsip.tipe_file ||
-                          "File"}
+                        {arsip.nama_file ||
+                          "Arsip Surat"}
                       </span>
 
                     </div>
 
+                    {/* =================================================
+                        PDF PREVIEW
+                    ================================================= */}
 
-                    {/* =====================================
-                        PREVIEW PDF
-                    ===================================== */}
-
-                    {adalahPDF(arsip) && (
-
-                      <iframe
-                        title={`Preview PDF ${index + 1}`}
-                        src={arsip.url_file}
-                        style={{
-                          width: "100%",
-                          height: "700px",
-                          border: "none",
-                          display: "block",
-                          background: "#ffffff",
-                        }}
-                      />
-
-                    )}
-
-
-                    {/* =====================================
-                        PREVIEW GAMBAR
-                    ===================================== */}
-
-                    {adalahGambar(arsip) && (
+                    {adalahPDF(
+                      arsip
+                    ) && (
 
                       <div
                         style={{
-                          width: "100%",
-                          minHeight: "400px",
-                          display: "flex",
-                          justifyContent:
-                            "center",
-                          alignItems:
-                            "center",
+                          width:
+                            "100%",
+                          height:
+                            "700px",
                           background:
                             "#ffffff",
-                          padding: "20px",
-                          boxSizing:
-                            "border-box",
+                        }}
+                      >
+
+                        {pdfPreviewUrls[
+                          index
+                        ] ? (
+
+                          <iframe
+                            title={`Preview PDF ${
+                              index + 1
+                            }`}
+                            src={
+                              pdfPreviewUrls[
+                                index
+                              ]
+                            }
+                            style={{
+                              width:
+                                "100%",
+                              height:
+                                "100%",
+                              border:
+                                "none",
+                              display:
+                                "block",
+                              background:
+                                "#ffffff",
+                            }}
+                          />
+
+                        ) : (
+
+                          <div
+                            style={{
+                              width:
+                                "100%",
+                              height:
+                                "100%",
+                              display:
+                                "flex",
+                              alignItems:
+                                "center",
+                              justifyContent:
+                                "center",
+                              flexDirection:
+                                "column",
+                              gap:
+                                "10px",
+                              color:
+                                "#64748b",
+                            }}
+                          >
+
+                            <div
+                              style={{
+                                fontSize:
+                                  "35px",
+                              }}
+                            >
+                              📄
+                            </div>
+
+                            <strong>
+                              Memuat PDF...
+                            </strong>
+
+                            <span>
+                              Tunggu sebentar
+                            </span>
+
+                          </div>
+
+                        )}
+
+                      </div>
+
+                    )}
+
+                    {/* =================================================
+                        GAMBAR
+                    ================================================= */}
+
+                    {adalahGambar(
+                      arsip
+                    ) && (
+
+                      <div
+                        style={{
+                          padding:
+                            "20px",
+                          textAlign:
+                            "center",
+                          background:
+                            "#f8fafc",
                         }}
                       >
 
                         <img
-                          src={arsip.url_file}
+                          src={
+                            arsip.url_file
+                          }
                           alt={
                             arsip.nama_file ||
-                            `Scan Surat ${index + 1}`
+                            "Scan Surat"
                           }
                           style={{
-                            maxWidth: "100%",
-                            maxHeight: "700px",
-                            objectFit: "contain",
-                            display: "block",
+                            maxWidth:
+                              "100%",
+                            maxHeight:
+                              "700px",
+                            borderRadius:
+                              "8px",
+                            objectFit:
+                              "contain",
                           }}
                         />
 
@@ -823,120 +1267,111 @@ function DetailSurat() {
 
                     )}
 
-
-                    {/* =====================================
-                        FILE LAIN
-                    ===================================== */}
-
-                    {!adalahPDF(arsip) &&
-                      !adalahGambar(arsip) && (
-
-                      <div
-                        style={{
-                          padding: "40px",
-                          textAlign: "center",
-                          color: "#64748b",
-                        }}
-                      >
-
-                        📁 File tidak dapat dipreview.
-
-                      </div>
-
-                    )}
-
-
-                    {/* =====================================
-                        BUTTON FILE
-                    ===================================== */}
+                    {/* =================================================
+                        BUTTON
+                    ================================================= */}
 
                     <div
                       style={{
-                        padding: "15px 20px",
+                        padding:
+                          "15px",
                         borderTop:
-                          "1px solid #d6e2ea",
-                        display: "flex",
-                        gap: "10px",
-                        flexWrap: "wrap",
+                          "1px solid #e2e8f0",
+                        display:
+                          "flex",
+                        gap:
+                          "10px",
+                        flexWrap:
+                          "wrap",
                       }}
                     >
 
+                      {/* FULLSCREEN */}
+
                       <button
                         type="button"
-                        className="btn-primary"
                         onClick={() =>
-                          setArsipAktif(arsip)
+                          bukaFullscreen(
+                            arsip
+                          )
                         }
                         style={{
-                          border: "none",
-                          cursor: "pointer",
+                          padding:
+                            "10px 15px",
+                          border:
+                            "none",
+                          borderRadius:
+                            "8px",
+                          background:
+                            "#173f5f",
+                          color:
+                            "#fff",
+                          cursor:
+                            "pointer",
                         }}
                       >
                         ⛶ Lihat Layar Penuh
                       </button>
 
+                      {/* BUKA FILE */}
 
                       <a
-                        href={arsip.url_file}
+                        href={
+                          arsip.url_file
+                        }
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="btn-primary"
                         style={{
-                          textDecoration: "none",
+                          display:
+                            "inline-block",
+                          padding:
+                            "10px 15px",
+                          background:
+                            "#e2e8f0",
+                          color:
+                            "#334155",
+                          borderRadius:
+                            "8px",
+                          textDecoration:
+                            "none",
                         }}
                       >
                         📂 Buka File
                       </a>
 
+                      {/* DOWNLOAD */}
 
                       <a
-                        href={arsip.url_file}
+                        href={
+                          arsip.url_file
+                        }
                         download
-                        className="btn-secondary"
                         style={{
-                          textDecoration: "none",
+                          display:
+                            "inline-block",
+                          padding:
+                            "10px 15px",
+                          background:
+                            "#16a34a",
+                          color:
+                            "#fff",
+                          borderRadius:
+                            "8px",
+                          textDecoration:
+                            "none",
                         }}
                       >
-                        ↓ Download
+                        ⬇ Download
                       </a>
 
                     </div>
 
-
                   </div>
 
                 )
+              )
 
-              )}
-
-            </div>
-
-
-            {/* =============================================
-                BUTTON BAWAH
-            ============================================= */}
-
-            <div className="form-actions">
-
-
-              <Link
-                to="/surat"
-                className="btn-secondary"
-              >
-                ← Kembali
-              </Link>
-
-
-              <Link
-                to={`/surat/edit/${surat._id}`}
-                className="btn-primary"
-              >
-                Edit Surat
-              </Link>
-
-
-            </div>
-
+            )}
 
           </div>
 
@@ -944,82 +1379,87 @@ function DetailSurat() {
 
       </main>
 
-
-      {/* ===================================================
-          MODAL LAYAR PENUH
-      =================================================== */}
+      {/* =========================================================
+          FULLSCREEN MODAL
+      ========================================================= */}
 
       {arsipAktif && (
 
         <div
           style={{
-            position: "fixed",
+            position:
+              "fixed",
             inset: 0,
-            background: "#ffffff",
+            background:
+              "rgba(0,0,0,0.85)",
             zIndex: 9999,
-            display: "flex",
-            flexDirection: "column",
+            display:
+              "flex",
+            flexDirection:
+              "column",
           }}
         >
-
 
           {/* HEADER MODAL */}
 
           <div
             style={{
-              padding: "15px 25px",
-              display: "flex",
+              height:
+                "70px",
+              flexShrink: 0,
+              background:
+                "#173f5f",
+              color:
+                "#fff",
+              display:
+                "flex",
+              alignItems:
+                "center",
               justifyContent:
                 "space-between",
-              alignItems: "center",
-              borderBottom:
-                "1px solid #d6e2ea",
-              background: "#ffffff",
-              gap: "15px",
+              padding:
+                "0 20px",
+              boxSizing:
+                "border-box",
+              gap:
+                "10px",
             }}
           >
 
-            <div
+            <strong
               style={{
-                overflow: "hidden",
+                overflow:
+                  "hidden",
+                textOverflow:
+                  "ellipsis",
+                whiteSpace:
+                  "nowrap",
               }}
             >
-
-              <h3
-                style={{
-                  margin: 0,
-                }}
-              >
-                {adalahPDF(arsipAktif)
-                  ? "📄 Scan Surat PDF"
-                  : adalahGambar(arsipAktif)
-                  ? "🖼️ Scan Surat"
-                  : "📁 Arsip Surat"}
-
-              </h3>
-
-
-              <small
-                style={{
-                  wordBreak: "break-word",
-                }}
-              >
-                {arsipAktif.nama_file ||
-                  "Arsip Surat"}
-              </small>
-
-            </div>
-
+              {arsipAktif.nama_file ||
+                "Preview Surat"}
+            </strong>
 
             <button
               type="button"
-              className="btn-secondary"
               onClick={() =>
                 setArsipAktif(null)
               }
               style={{
-                cursor: "pointer",
-                flexShrink: 0,
+                border:
+                  "none",
+                background:
+                  "#fff",
+                color:
+                  "#173f5f",
+                borderRadius:
+                  "8px",
+                padding:
+                  "9px 15px",
+                cursor:
+                  "pointer",
+                fontWeight:
+                  "bold",
               }}
             >
               ✕ Tutup
@@ -1027,57 +1467,140 @@ function DetailSurat() {
 
           </div>
 
+          {/* =====================================================
+              FULLSCREEN PDF
+          ===================================================== */}
 
-          {/* ===============================================
-              PDF FULLSCREEN
-          =============================================== */}
-
-          {adalahPDF(arsipAktif) && (
-
-            <iframe
-              title="PDF Fullscreen"
-              src={arsipAktif.url_file}
-              style={{
-                width: "100%",
-                flex: 1,
-                border: "none",
-                background: "#f8fafc",
-              }}
-            />
-
-          )}
-
-
-          {/* ===============================================
-              GAMBAR FULLSCREEN
-          =============================================== */}
-
-          {adalahGambar(arsipAktif) && (
+          {adalahPDF(
+            arsipAktif
+          ) && (
 
             <div
               style={{
                 flex: 1,
-                overflow: "auto",
-                padding: "25px",
-                display: "flex",
+                background:
+                  "#f8fafc",
+                minHeight: 0,
+              }}
+            >
+
+              {(() => {
+
+                const index =
+                  daftarArsip.indexOf(
+                    arsipAktif
+                  );
+
+                return pdfPreviewUrls[
+                  index
+                ] ? (
+
+                  <iframe
+                    title="PDF Fullscreen"
+                    src={
+                      pdfPreviewUrls[
+                        index
+                      ]
+                    }
+                    style={{
+                      width:
+                        "100%",
+                      height:
+                        "100%",
+                      minHeight:
+                        "calc(100vh - 70px)",
+                      border:
+                        "none",
+                      display:
+                        "block",
+                    }}
+                  />
+
+                ) : (
+
+                  <div
+                    style={{
+                      height:
+                        "calc(100vh - 70px)",
+                      display:
+                        "flex",
+                      alignItems:
+                        "center",
+                      justifyContent:
+                        "center",
+                      flexDirection:
+                        "column",
+                      gap:
+                        "10px",
+                      color:
+                        "#64748b",
+                    }}
+                  >
+
+                    <div
+                      style={{
+                        fontSize:
+                          "35px",
+                      }}
+                    >
+                      📄
+                    </div>
+
+                    <strong>
+                      Memuat PDF...
+                    </strong>
+
+                  </div>
+
+                );
+
+              })()}
+
+            </div>
+
+          )}
+
+          {/* =====================================================
+              FULLSCREEN GAMBAR
+          ===================================================== */}
+
+          {adalahGambar(
+            arsipAktif
+          ) && (
+
+            <div
+              style={{
+                flex: 1,
+                display:
+                  "flex",
+                alignItems:
+                  "center",
                 justifyContent:
                   "center",
-                alignItems:
-                  "flex-start",
-                background: "#f8fafc",
+                padding:
+                  "20px",
+                boxSizing:
+                  "border-box",
+                overflow:
+                  "auto",
               }}
             >
 
               <img
-                src={arsipAktif.url_file}
+                src={
+                  arsipAktif.url_file
+                }
                 alt={
                   arsipAktif.nama_file ||
-                  "Scan Surat"
+                  "Preview Surat"
                 }
                 style={{
-                  maxWidth: "100%",
-                  height: "auto",
-                  display: "block",
+                  maxWidth:
+                    "100%",
+                  maxHeight:
+                    "100%",
+                  objectFit:
+                    "contain",
                 }}
               />
 
@@ -1085,59 +1608,12 @@ function DetailSurat() {
 
           )}
 
-
-          {/* ===============================================
-              FILE LAIN
-          =============================================== */}
-
-          {!adalahPDF(arsipAktif) &&
-            !adalahGambar(arsipAktif) && (
-
-            <div
-              style={{
-                flex: 1,
-                display: "flex",
-                justifyContent:
-                  "center",
-                alignItems:
-                  "center",
-                flexDirection:
-                  "column",
-                gap: "15px",
-              }}
-            >
-
-              <h2>
-                📁 File tidak dapat dipreview
-              </h2>
-
-
-              <a
-                href={arsipAktif.url_file}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-primary"
-                style={{
-                  textDecoration: "none",
-                }}
-              >
-                📂 Buka File
-              </a>
-
-            </div>
-
-          )}
-
-
         </div>
 
       )}
 
-
     </div>
-
   );
-
 }
 
 export default DetailSurat;

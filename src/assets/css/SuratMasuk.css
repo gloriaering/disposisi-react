@@ -106,6 +106,27 @@ body {
 
 
 /* =========================================================
+   SIDEBAR OVERLAY
+========================================================= */
+
+.sidebar-overlay {
+  display: none;
+
+  position: fixed;
+
+  inset: 0;
+
+  background:
+    rgba(4, 18, 34, 0.48);
+
+  backdrop-filter:
+    blur(2px);
+
+  z-index: 998;
+}
+
+
+/* =========================================================
    BRAND
 ========================================================= */
 
@@ -439,7 +460,7 @@ body {
 
 
 /* =========================================================
-   HAMBURGER BUTTON
+   HAMBURGER
 ========================================================= */
 
 .surat-hamburger-btn {
@@ -458,6 +479,10 @@ body {
   padding: 5px 10px;
 
   flex-shrink: 0;
+}
+
+.surat-hamburger-btn:hover {
+  color: #1679a9;
 }
 
 
@@ -610,6 +635,8 @@ body {
   color: #be123c;
 
   font-size: 12px;
+
+  line-height: 1.5;
 }
 
 
@@ -752,6 +779,16 @@ body {
   font-size: 17px;
 
   line-height: 1;
+
+  transition:
+    background 0.18s ease,
+    color 0.18s ease;
+}
+
+.surat-search-clear:hover {
+  background: #dfeaf1;
+
+  color: #34556c;
 }
 
 
@@ -906,6 +943,8 @@ body {
   font-weight: 600;
 
   line-height: 1.45;
+
+  word-break: break-word;
 }
 
 
@@ -919,6 +958,8 @@ body {
   color: #405d70;
 
   line-height: 1.45;
+
+  word-break: break-word;
 }
 
 
@@ -934,6 +975,8 @@ body {
   color: #405d70;
 
   line-height: 1.5;
+
+  word-break: break-word;
 }
 
 
@@ -1044,6 +1087,10 @@ body {
   color: #277896;
 }
 
+.btn-detail:hover {
+  background: #dceef5;
+}
+
 
 /* =========================================================
    EDIT
@@ -1055,6 +1102,10 @@ body {
   border-color: #d4e0f5;
 
   color: #466fa5;
+}
+
+.btn-edit:hover {
+  background: #e2ebfb;
 }
 
 
@@ -1070,6 +1121,10 @@ body {
   color: #3b8052;
 }
 
+.btn-print:hover {
+  background: #e1f2e6;
+}
+
 
 /* =========================================================
    DELETE
@@ -1081,6 +1136,10 @@ body {
   border-color: #f3d0d5;
 
   color: #b4495a;
+}
+
+.btn-delete:hover {
+  background: #ffe2e5;
 }
 
 
@@ -1107,6 +1166,8 @@ body {
   margin: 0;
 
   font-size: 12px;
+
+  text-align: center;
 }
 
 .surat-loading-icon,
@@ -1184,6 +1245,14 @@ body {
     align-self: flex-end;
   }
 
+  .surat-table-top {
+    align-items: stretch;
+  }
+
+  .surat-search {
+    width: 330px;
+  }
+
 }
 
 
@@ -1193,7 +1262,9 @@ body {
 
 @media (max-width: 650px) {
 
-  /* SIDEBAR */
+  /* =======================================================
+     SIDEBAR
+  ======================================================= */
 
   .surat-sidebar {
     position: fixed;
@@ -1215,204 +1286,771 @@ body {
     z-index: 999;
   }
 
-
-  /* SIDEBAR TERBUKA */
-
   .surat-sidebar.sidebar-open {
     transform:
       translateX(0);
   }
 
+  .sidebar-overlay {
+    display: block;
+  }
 
-  /* MAIN */
+
+  /* =======================================================
+     MAIN
+  ======================================================= */
 
   .surat-main {
     margin-left: 0;
 
     width: 100%;
+
+    min-height: 100vh;
   }
 
 
-  /* TOPBAR */
+  /* =======================================================
+     TOPBAR
+  ======================================================= */
 
   .surat-topbar {
     min-height: 70px;
 
     height: auto;
 
-    padding: 14px 16px;
+    padding: 13px 16px;
 
-    gap: 10px;
+    gap: 8px;
   }
 
 
-  /* HAMBURGER */
+  /* =======================================================
+     HAMBURGER
+  ======================================================= */
 
   .surat-hamburger-btn {
-    display: block;
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 40px;
+    height: 40px;
 
     flex-shrink: 0;
+
+    padding: 0;
+
+    border-radius: 9px;
+
+    font-size: 24px;
+
+    color: #123b5b;
+
+    transition:
+      background 0.2s ease,
+      color 0.2s ease;
+  }
+
+  .surat-hamburger-btn:hover {
+    background: #edf4f8;
+
+    color: #1679a9;
   }
 
 
+  /* =======================================================
+     TOPBAR TITLE
+  ======================================================= */
+
+  .surat-topbar-left {
+    min-width: 0;
+  }
+
   .surat-topbar-left h1 {
-    font-size: 19px;
+    font-size: 18px;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
   }
 
   .surat-topbar-left p {
-    font-size: 10px;
+    margin-top: 4px;
+
+    font-size: 9px;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
   }
 
 
-  /* CONTENT */
+  /* =======================================================
+     CONTENT
+  ======================================================= */
 
   .surat-content {
-    padding: 16px;
+    padding: 18px 15px 30px;
   }
 
 
-  /* PAGE HEADER */
+  /* =======================================================
+     PAGE HEADER
+  ======================================================= */
 
   .surat-page-header {
     flex-direction: column;
 
     align-items: stretch;
 
-    gap: 16px;
+    gap: 15px;
 
     margin-bottom: 18px;
   }
 
-
   .surat-page-title > span {
+    margin-bottom: 6px;
+
     font-size: 8px;
 
-    margin-bottom: 6px;
+    letter-spacing: 1.3px;
   }
-
 
   .surat-page-title h2 {
     font-size: 21px;
+
+    letter-spacing: -0.3px;
   }
 
-
   .surat-page-title p {
+    margin-top: 6px;
+
     font-size: 10px;
   }
 
 
-  /* BUTTON */
+  /* =======================================================
+     BUTTON TAMBAH
+  ======================================================= */
 
   .surat-btn-add {
     width: 100%;
 
     min-width: 0;
 
-    height: 42px;
+    height: 43px;
 
     align-self: stretch;
+
+    border-radius: 10px;
+
+    font-size: 11px;
+  }
+
+  .plus-icon {
+    font-size: 17px;
   }
 
 
-  /* TABLE CARD */
+  /* =======================================================
+     ERROR
+  ======================================================= */
+
+  .surat-error {
+    margin-bottom: 15px;
+
+    padding: 12px 13px;
+
+    border-radius: 10px;
+
+    font-size: 11px;
+  }
+
+
+  /* =======================================================
+     TABLE CARD
+  ======================================================= */
 
   .surat-table-card {
     border-radius: 15px;
+
+    box-shadow:
+      0 7px 22px
+      rgba(24, 66, 96, 0.07);
   }
 
 
-  /* TABLE TOP */
+  /* =======================================================
+     TABLE TOP
+  ======================================================= */
 
   .surat-table-top {
     flex-direction: column;
 
     align-items: stretch;
 
-    gap: 12px;
+    gap: 11px;
 
-    padding: 15px;
+    padding: 14px;
   }
 
 
-  /* SEARCH */
+  /* =======================================================
+     SEARCH
+  ======================================================= */
 
   .surat-search {
     width: 100%;
+
+    height: 41px;
+  }
+
+  .surat-search input {
+    padding: 0 39px;
+
+    border-radius: 10px;
+
+    font-size: 11px;
+  }
+
+  .surat-search-icon {
+    left: 13px;
+
+    font-size: 13px;
+  }
+
+  .surat-search-clear {
+    right: 8px;
+
+    width: 24px;
+    height: 24px;
+
+    font-size: 16px;
   }
 
 
-  /* COUNT */
+  /* =======================================================
+     COUNT
+  ======================================================= */
 
   .surat-count {
     align-self: flex-start;
+
+    padding: 7px 10px;
+
+    border-radius: 7px;
 
     font-size: 10px;
   }
 
 
-  /* EMPTY */
+  /* =======================================================
+     TABLE → CARD
+  ======================================================= */
+
+  .surat-table-wrapper {
+    overflow: visible;
+
+    padding: 0;
+  }
+
+  .surat-table {
+    width: 100%;
+
+    min-width: 0;
+
+    display: block;
+  }
+
+  .surat-table thead {
+    display: none;
+  }
+
+  .surat-table tbody {
+    display: block;
+
+    padding: 12px;
+  }
+
+  .surat-table tbody tr {
+    position: relative;
+
+    display: block;
+
+    margin-bottom: 12px;
+
+    padding: 16px;
+
+    border:
+      1px solid #e2ebf1;
+
+    border-radius: 13px;
+
+    background: #ffffff;
+
+    box-shadow:
+      0 4px 14px
+      rgba(28, 70, 98, 0.055);
+  }
+
+  .surat-table tbody tr:last-child {
+    margin-bottom: 0;
+  }
+
+  .surat-table tbody tr:hover {
+    background: #ffffff;
+  }
+
+  .surat-table td {
+    display: flex;
+
+    align-items: flex-start;
+
+    gap: 10px;
+
+    width: 100%;
+
+    min-height: 0;
+
+    padding: 7px 0;
+
+    border-bottom: none;
+
+    font-size: 11px;
+  }
+
+
+  /* =======================================================
+     NOMOR
+  ======================================================= */
+
+  .surat-table td.col-no,
+  .surat-table td.row-number {
+    display: block;
+
+    width: auto;
+
+    min-height: 0;
+
+    margin-bottom: 8px;
+
+    padding: 0;
+
+    color: #1679a9 !important;
+
+    text-align: left !important;
+
+    font-size: 11px;
+
+    font-weight: 700;
+  }
+
+  .surat-table td.row-number::before {
+    content: "SURAT ";
+
+    color: #7d95a5;
+
+    font-size: 9px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.8px;
+  }
+
+
+  /* =======================================================
+     LABEL UNTUK DATA
+  ======================================================= */
+
+  .surat-table tbody tr td:nth-child(2)::before {
+    content: "Nomor Surat";
+  }
+
+  .surat-table tbody tr td:nth-child(3)::before {
+    content: "Surat Dari";
+  }
+
+  .surat-table tbody tr td:nth-child(4)::before {
+    content: "Perihal";
+  }
+
+  .surat-table tbody tr td:nth-child(5)::before {
+    content: "Tanggal Surat";
+  }
+
+  .surat-table tbody tr td:nth-child(6)::before {
+    content: "Diterima";
+  }
+
+  .surat-table tbody tr td:nth-child(7)::before {
+    content: "Aksi";
+  }
+
+  .surat-table tbody tr td:nth-child(n + 2)::before {
+    flex-shrink: 0;
+
+    width: 88px;
+
+    color: #8497a5;
+
+    font-size: 9px;
+
+    font-weight: 700;
+
+    line-height: 1.5;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.25px;
+  }
+
+
+  /* =======================================================
+     ISI DATA MOBILE
+  ======================================================= */
+
+  .nomor-surat,
+  .asal-surat,
+  .perihal {
+    min-width: 0;
+
+    max-width: none;
+
+    flex: 1;
+
+    color: #294e66;
+
+    font-size: 11px;
+
+    line-height: 1.45;
+
+    word-break: break-word;
+  }
+
+  .nomor-surat {
+    font-weight: 700;
+  }
+
+  .asal-surat,
+  .perihal {
+    font-weight: 500;
+  }
+
+  .tanggal-surat {
+    flex: 1;
+
+    white-space: normal;
+
+    color: #506b7d;
+
+    font-size: 11px;
+  }
+
+
+  /* =======================================================
+     DITERIMA MOBILE
+  ======================================================= */
+
+  .diterima {
+    flex: 1;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 2px;
+
+    white-space: normal;
+  }
+
+  .diterima span {
+    color: #506b7d;
+
+    font-size: 11px;
+  }
+
+  .diterima small {
+    color: #8b9ba8;
+
+    font-size: 9px;
+  }
+
+
+  /* =======================================================
+     ACTION MOBILE
+  ======================================================= */
+
+  .surat-table tbody tr td:last-child {
+    display: block;
+
+    margin-top: 8px;
+
+    padding-top: 12px;
+
+    border-top:
+      1px solid #edf2f5;
+  }
+
+  .surat-table tbody tr td:last-child::before {
+    display: block;
+
+    width: auto;
+
+    margin-bottom: 8px;
+  }
+
+  .action-group {
+    display: grid;
+
+    grid-template-columns:
+      repeat(3, 1fr);
+
+    gap: 7px;
+
+    width: 100%;
+  }
+
+  .action-btn {
+    width: 100%;
+
+    min-width: 0;
+
+    height: 34px;
+
+    padding: 0 5px;
+
+    border-radius: 8px;
+
+    font-size: 9px;
+  }
+
+  .btn-delete {
+    grid-column:
+      1 / -1;
+  }
+
+
+  /* =======================================================
+     EMPTY TABLE MOBILE
+  ======================================================= */
+
+  .surat-table tr:has(.surat-empty-table) {
+    padding: 20px 14px;
+
+    box-shadow: none;
+
+    border: none;
+  }
+
+  .surat-empty-table {
+    display: block !important;
+
+    height: auto;
+
+    padding: 25px 10px !important;
+
+    text-align: center !important;
+
+    font-size: 11px !important;
+
+    color: #8b9aa6 !important;
+  }
+
+
+  /* =======================================================
+     EMPTY / LOADING
+  ======================================================= */
 
   .surat-empty {
     min-height: 200px;
 
-    padding: 20px;
+    padding: 20px 15px;
+  }
+
+  .surat-empty p {
+    font-size: 11px;
+  }
+
+  .surat-loading-icon,
+  .surat-empty-icon {
+    width: 40px;
+    height: 40px;
+
+    border-radius: 11px;
+
+    font-size: 19px;
   }
 
 }
 
 
 /* =========================================================
-   VERY SMALL
+   VERY SMALL PHONE
 ========================================================= */
 
 @media (max-width: 400px) {
 
+  /* CONTENT */
+
   .surat-content {
-    padding: 15px;
+    padding:
+      16px 12px 25px;
   }
 
+
+  /* TOPBAR */
 
   .surat-topbar {
-    padding: 14px 15px;
+    padding:
+      12px 13px;
   }
-
 
   .surat-hamburger-btn {
-    font-size: 24px;
+    width: 37px;
+    height: 37px;
 
-    padding: 4px 7px;
+    font-size: 22px;
   }
-
 
   .surat-topbar-left h1 {
     font-size: 16px;
   }
 
-
   .surat-topbar-left p {
-    font-size: 9px;
+    font-size: 8px;
   }
 
+
+  /* PAGE TITLE */
+
+  .surat-page-title > span {
+    font-size: 7px;
+  }
 
   .surat-page-title h2 {
     font-size: 19px;
   }
 
-
-  .surat-table-top {
-    padding: 13px;
+  .surat-page-title p {
+    font-size: 9px;
   }
 
 
-  .surat-search {
-    height: 40px;
-  }
-
+  /* ADD BUTTON */
 
   .surat-btn-add {
     height: 40px;
 
-    font-size: 11px;
+    font-size: 10px;
+  }
+
+
+  /* TABLE CARD */
+
+  .surat-table-card {
+    border-radius: 13px;
+  }
+
+
+  /* TABLE TOP */
+
+  .surat-table-top {
+    padding: 12px;
+  }
+
+
+  /* SEARCH */
+
+  .surat-search {
+    height: 39px;
+  }
+
+  .surat-search input {
+    font-size: 10px;
+  }
+
+
+  /* COUNT */
+
+  .surat-count {
+    font-size: 9px;
+  }
+
+
+  /* MOBILE CARD */
+
+  .surat-table tbody {
+    padding: 10px;
+  }
+
+  .surat-table tbody tr {
+    padding: 14px;
+
+    margin-bottom: 10px;
+
+    border-radius: 12px;
+  }
+
+
+  /* DATA */
+
+  .surat-table td {
+    gap: 7px;
+
+    padding: 6px 0;
+
+    font-size: 10px;
+  }
+
+  .surat-table tbody tr td:nth-child(n + 2)::before {
+    width: 78px;
+
+    font-size: 8px;
+  }
+
+  .surat-table td.row-number {
+    font-size: 10px;
+  }
+
+  .surat-table td.row-number::before {
+    font-size: 8px;
+  }
+
+  .nomor-surat,
+  .asal-surat,
+  .perihal,
+  .tanggal-surat,
+  .diterima span {
+    font-size: 10px;
+  }
+
+  .diterima small {
+    font-size: 8px;
+  }
+
+
+  /* ACTION */
+
+  .action-group {
+    gap: 6px;
+  }
+
+  .action-btn {
+    height: 33px;
+
+    font-size: 8px;
+  }
+
+
+  /* EMPTY */
+
+  .surat-empty {
+    min-height: 180px;
   }
 
 }

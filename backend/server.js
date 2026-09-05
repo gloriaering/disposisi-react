@@ -5,6 +5,7 @@ const cors = require("cors");
 require("dotenv").config();
 
 const suratRoutes = require("./routes/suratRoutes");
+const authRoutes = require("./routes/authRoutes");
 
 const app = express();
 
@@ -105,6 +106,13 @@ app.get("/api/test-mongodb", (req, res) => {
   });
 
 });
+
+// =========================================================
+// ROUTE AUTH / LOGIN
+// =========================================================
+
+app.use("/api/auth", authRoutes);
+
 
 // =========================================================
 // ROUTE SURAT

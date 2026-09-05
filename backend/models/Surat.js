@@ -6,7 +6,6 @@ const mongoose = require("mongoose");
 ========================================================= */
 
 const arsipSchema = new mongoose.Schema(
-
   {
     nama_file: {
       type: String,
@@ -32,13 +31,10 @@ const arsipSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
-
   },
-
   {
     _id: false,
   }
-
 );
 
 
@@ -47,8 +43,22 @@ const arsipSchema = new mongoose.Schema(
 ========================================================= */
 
 const suratSchema = new mongoose.Schema(
-
   {
+
+    /* =====================================================
+       BIDANG PEMILIK SURAT
+    ===================================================== */
+
+    bidang: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+
+    /* =====================================================
+       INFORMASI SURAT
+    ===================================================== */
 
     nomor_surat: {
       type: String,
@@ -91,36 +101,33 @@ const suratSchema = new mongoose.Schema(
     },
 
 
-    /* DITERUSKAN KEPADA */
+    /* =====================================================
+       DITERUSKAN KEPADA
+    ===================================================== */
 
     diteruskan_kepada: {
-
       type: [String],
-
       default: [],
-
     },
 
 
-    /* DENGAN HORMAT HARAP */
+    /* =====================================================
+       DENGAN HORMAT HARAP
+    ===================================================== */
 
     dengan_hormat_harap: {
-
       type: [String],
-
       default: [],
-
     },
 
 
-    /* CATATAN */
+    /* =====================================================
+       CATATAN
+    ===================================================== */
 
     catatan: {
-
       type: String,
-
       default: "",
-
     },
 
 
@@ -129,11 +136,8 @@ const suratSchema = new mongoose.Schema(
     ===================================================== */
 
     arsip_surat: {
-
       type: [arsipSchema],
-
       default: [],
-
     },
 
 
@@ -142,11 +146,8 @@ const suratSchema = new mongoose.Schema(
     ===================================================== */
 
     isDeleted: {
-
       type: Boolean,
-
       default: false,
-
     },
 
   },
@@ -157,9 +158,7 @@ const suratSchema = new mongoose.Schema(
   ======================================================= */
 
   {
-
     timestamps: true,
-
   }
 
 );
@@ -170,11 +169,8 @@ const suratSchema = new mongoose.Schema(
 ========================================================= */
 
 const Surat = mongoose.model(
-
   "Surat",
-
   suratSchema
-
 );
 
 

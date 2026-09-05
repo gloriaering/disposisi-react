@@ -29,8 +29,10 @@ body {
   position: fixed;
   left: 0;
   top: 0;
+
   width: 245px;
   height: 100vh;
+
   padding: 30px 0;
 
   background:
@@ -47,33 +49,50 @@ body {
     );
 
   color: #ffffff;
+
   z-index: 100;
+
   overflow: hidden;
 
-  box-shadow: 8px 0 35px rgba(4, 25, 48, 0.16);
+  box-shadow:
+    8px 0 35px rgba(4, 25, 48, 0.16);
 }
 
 .sidebar::before {
   content: "";
+
   position: absolute;
+
   width: 380px;
   height: 380px;
+
   right: -240px;
   bottom: -100px;
+
   border-radius: 50%;
-  border: 1px solid rgba(111, 190, 255, 0.13);
+
+  border:
+    1px solid rgba(111, 190, 255, 0.13);
+
   pointer-events: none;
 }
 
 .sidebar::after {
   content: "";
+
   position: absolute;
+
   width: 250px;
   height: 250px;
+
   left: -160px;
   bottom: 90px;
+
   border-radius: 50%;
-  background: rgba(75, 165, 255, 0.045);
+
+  background:
+    rgba(75, 165, 255, 0.045);
+
   pointer-events: none;
 }
 
@@ -84,6 +103,7 @@ body {
 
 .brand {
   position: relative;
+
   z-index: 2;
 
   display: flex;
@@ -92,6 +112,7 @@ body {
   gap: 13px;
 
   padding: 0 20px;
+
   margin-bottom: 58px;
 }
 
@@ -112,9 +133,10 @@ body {
 
   object-fit: contain;
 
-  filter: drop-shadow(
-    0 4px 8px rgba(0, 0, 0, 0.18)
-  );
+  filter:
+    drop-shadow(
+      0 4px 8px rgba(0, 0, 0, 0.18)
+    );
 }
 
 .brand h2 {
@@ -124,6 +146,7 @@ body {
 
   font-size: 14px;
   line-height: 1.25;
+
   font-weight: 700;
 
   letter-spacing: 0.3px;
@@ -134,9 +157,11 @@ body {
 
   margin-top: 5px;
 
-  color: rgba(220, 238, 255, 0.62);
+  color:
+    rgba(220, 238, 255, 0.62);
 
   font-size: 10px;
+
   line-height: 1.35;
 }
 
@@ -147,20 +172,25 @@ body {
 
 .menu {
   position: relative;
+
   z-index: 2;
 
   display: flex;
+
   flex-direction: column;
 
   gap: 8px;
 }
 
 .menu-title {
-  margin: 0 0 9px 21px;
+  margin:
+    0 0 9px 21px;
 
-  color: rgba(197, 224, 248, 0.48);
+  color:
+    rgba(197, 224, 248, 0.48);
 
   font-size: 9px;
+
   font-weight: 700;
 
   letter-spacing: 1.5px;
@@ -170,6 +200,7 @@ body {
   position: relative;
 
   display: flex;
+
   align-items: center;
 
   gap: 14px;
@@ -177,15 +208,19 @@ body {
   height: 48px;
 
   padding: 0 19px;
+
   margin-right: 15px;
 
-  border-radius: 0 13px 13px 0;
+  border-radius:
+    0 13px 13px 0;
 
-  color: rgba(226, 240, 252, 0.72);
+  color:
+    rgba(226, 240, 252, 0.72);
 
   text-decoration: none;
 
   font-size: 13px;
+
   font-weight: 500;
 
   transition:
@@ -203,15 +238,18 @@ body {
 
   font-size: 17px;
 
-  color: rgba(203, 228, 249, 0.65);
+  color:
+    rgba(203, 228, 249, 0.65);
 }
 
 .menu-item:hover {
-  background: rgba(91, 176, 255, 0.09);
+  background:
+    rgba(91, 176, 255, 0.09);
 
   color: #ffffff;
 
-  transform: translateX(3px);
+  transform:
+    translateX(3px);
 }
 
 .menu-item.active {
@@ -242,7 +280,8 @@ body {
   width: 4px;
   height: 32px;
 
-  border-radius: 0 5px 5px 0;
+  border-radius:
+    0 5px 5px 0;
 
   background: #58baff;
 
@@ -285,29 +324,37 @@ body {
 
 .topbar {
   position: relative;
+
   z-index: 5;
 
   height: 82px;
 
   display: flex;
+
   align-items: center;
 
   padding: 0 34px;
 
-  background: rgba(255, 255, 255, 0.88);
+  background:
+    rgba(255, 255, 255, 0.88);
 
-  backdrop-filter: blur(14px);
+  backdrop-filter:
+    blur(14px);
 
   border-bottom:
     1px solid rgba(207, 220, 232, 0.75);
 
   box-shadow:
-    0 5px 25px rgba(15, 48, 77, 0.045);
+    0 5px 25px
+    rgba(15, 48, 77, 0.045);
 }
 
 .topbar-left {
   display: flex;
+
   flex-direction: column;
+
+  min-width: 0;
 }
 
 .topbar h1 {
@@ -321,7 +368,8 @@ body {
 }
 
 .topbar p {
-  margin: 6px 0 0;
+  margin:
+    6px 0 0;
 
   color: #8292a1;
 
@@ -337,6 +385,7 @@ body {
   display: none;
 
   border: none;
+
   background: transparent;
 
   color: #123b5b;
@@ -355,9 +404,11 @@ body {
 
 .dashboard {
   position: relative;
+
   z-index: 2;
 
-  min-height: calc(100vh - 82px);
+  min-height:
+    calc(100vh - 82px);
 
   padding: 32px;
 }
@@ -375,6 +426,7 @@ body {
   min-height: 190px;
 
   display: flex;
+
   align-items: center;
 
   padding: 35px 38px;
@@ -402,11 +454,13 @@ body {
   color: #ffffff;
 
   box-shadow:
-    0 18px 38px rgba(11, 55, 88, 0.17);
+    0 18px 38px
+    rgba(11, 55, 88, 0.17);
 }
 
 .welcome-card > div {
   position: relative;
+
   z-index: 3;
 }
 
@@ -421,7 +475,8 @@ body {
   width: 4px;
   height: 90px;
 
-  border-radius: 0 5px 5px 0;
+  border-radius:
+    0 5px 5px 0;
 
   background: #61c9ff;
 }
@@ -431,9 +486,11 @@ body {
 
   margin-bottom: 12px;
 
-  color: rgba(211, 239, 255, 0.64);
+  color:
+    rgba(211, 239, 255, 0.64);
 
   font-size: 10px;
+
   font-weight: 700;
 
   letter-spacing: 1.7px;
@@ -445,6 +502,7 @@ body {
   color: #ffffff;
 
   font-size: 30px;
+
   line-height: 1.2;
 
   font-weight: 700;
@@ -474,6 +532,7 @@ body {
   min-height: 115px;
 
   display: flex;
+
   align-items: center;
 
   gap: 17px;
@@ -481,14 +540,17 @@ body {
   padding: 20px 22px;
 
   border:
-    1px solid rgba(210, 223, 234, 0.9);
+    1px solid
+    rgba(210, 223, 234, 0.9);
 
   border-radius: 18px;
 
-  background: rgba(255, 255, 255, 0.91);
+  background:
+    rgba(255, 255, 255, 0.91);
 
   box-shadow:
-    0 8px 25px rgba(24, 66, 96, 0.055);
+    0 8px 25px
+    rgba(24, 66, 96, 0.055);
 
   overflow: hidden;
 }
@@ -500,6 +562,7 @@ body {
   flex-shrink: 0;
 
   display: flex;
+
   align-items: center;
   justify-content: center;
 
@@ -515,6 +578,10 @@ body {
   color: #1677a8;
 
   font-size: 21px;
+}
+
+.stat-content {
+  min-width: 0;
 }
 
 .stat-card span {
@@ -546,7 +613,9 @@ body {
   min-height: 105px;
 
   display: flex;
+
   align-items: center;
+
   justify-content: space-between;
 
   gap: 25px;
@@ -560,7 +629,12 @@ body {
   background: #ffffff;
 
   border:
-    1px solid rgba(207, 222, 233, 0.9);
+    1px solid
+    rgba(207, 222, 233, 0.9);
+
+  box-shadow:
+    0 7px 20px
+    rgba(24, 66, 96, 0.035);
 }
 
 .quick-card h3 {
@@ -588,9 +662,11 @@ body {
   display: inline-flex;
 
   align-items: center;
+
   justify-content: center;
 
   min-width: 150px;
+
   height: 44px;
 
   padding: 0 21px;
@@ -600,16 +676,30 @@ body {
   background:
     linear-gradient(
       135deg,
-      #1679a9,
-      #2d9cc4
+      #315f87,
+      #39769f
     );
 
-  color: white;
+  color: #ffffff;
 
   text-decoration: none;
 
   font-size: 12px;
+
   font-weight: 600;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.btn-primary:hover {
+  transform:
+    translateY(-1px);
+
+  box-shadow:
+    0 5px 12px
+    rgba(49, 95, 135, 0.20);
 }
 
 
@@ -621,6 +711,7 @@ body {
   display: flex;
 
   align-items: center;
+
   justify-content: space-between;
 
   margin-top: 30px;
@@ -674,106 +765,215 @@ body {
 
 @media (max-width: 650px) {
 
-  /* SIDEBAR */
+  /* =======================================================
+     SIDEBAR
+  ======================================================= */
 
   .sidebar {
-    width: 245px;
+    width: 250px;
 
-    transform: translateX(-100%);
+    transform:
+      translateX(-100%);
 
-    transition: transform 0.3s ease;
+    transition:
+      transform 0.3s ease;
 
     z-index: 999;
   }
 
   .sidebar.sidebar-open {
-    transform: translateX(0);
+    transform:
+      translateX(0);
   }
 
 
-  /* MAIN */
+  /* =======================================================
+     MAIN
+  ======================================================= */
 
   .main-content {
     margin-left: 0;
 
     width: 100%;
+
+    min-height: 100vh;
   }
 
 
-  /* TOPBAR */
+  /* =======================================================
+     TOPBAR
+  ======================================================= */
 
   .topbar {
-    height: 65px;
+    height: 64px;
 
-    padding: 10px 14px;
+    padding: 0 13px;
 
-    gap: 8px;
+    gap: 7px;
+
+    position: sticky;
+
+    top: 0;
   }
 
   .hamburger-btn {
-    display: block;
+    display: flex;
 
-    font-size: 24px;
+    align-items: center;
 
-    padding: 4px 8px;
+    justify-content: center;
+
+    width: 38px;
+    height: 38px;
+
+    padding: 0;
+
+    border-radius: 8px;
+
+    font-size: 22px;
+
+    color: #1e3a5f;
+
+    flex-shrink: 0;
+  }
+
+  .hamburger-btn:active {
+    background: #eef4f8;
+  }
+
+  .topbar-left {
+    min-width: 0;
   }
 
   .topbar h1 {
     font-size: 17px;
+
+    white-space: nowrap;
   }
 
   .topbar p {
-    margin-top: 3px;
+    margin-top: 2px;
 
     font-size: 9px;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
   }
 
 
-  /* DASHBOARD */
+  /* =======================================================
+     USER + LOGOUT
+  ======================================================= */
+
+  .topbar > div:last-child {
+    gap: 6px !important;
+  }
+
+  .topbar > div:last-child > div {
+    display: none;
+  }
+
+  .topbar > div:last-child button {
+    width: 35px !important;
+    height: 35px !important;
+
+    padding: 0 !important;
+
+    border-radius: 8px !important;
+
+    font-size: 0 !important;
+
+    box-shadow: none !important;
+  }
+
+  .topbar > div:last-child button span {
+    font-size: 17px !important;
+  }
+
+
+  /* =======================================================
+     DASHBOARD
+  ======================================================= */
 
   .dashboard {
+    min-height:
+      calc(100vh - 64px);
+
     padding: 14px;
   }
 
 
-  /* WELCOME */
+  /* =======================================================
+     WELCOME CARD
+  ======================================================= */
 
   .welcome-card {
-    min-height: 105px;
+    min-height: 120px;
 
-    padding: 15px 16px;
+    padding: 20px;
 
-    border-radius: 14px;
+    border-radius: 16px;
+
+    background:
+      radial-gradient(
+        circle at 90% 20%,
+        rgba(92, 202, 255, 0.18),
+        transparent 30%
+      ),
+      linear-gradient(
+        135deg,
+        #0b3155,
+        #164f76
+      );
+
+    box-shadow:
+      0 10px 25px
+      rgba(11, 55, 88, 0.12);
   }
 
   .welcome-card > div::before {
-    left: -16px;
+    left: -20px;
 
     width: 3px;
-    height: 60px;
+
+    height: 58px;
+
+    background: #69c7f5;
+
+    box-shadow: none;
   }
 
   .welcome-label {
-    margin-bottom: 6px;
+    margin-bottom: 8px;
 
-    font-size: 6px;
+    font-size: 7px;
 
-    letter-spacing: 1px;
+    letter-spacing: 1.1px;
   }
 
   .welcome-card h2 {
-    font-size: 17px;
+    max-width: 260px;
 
-    line-height: 1.15;
+    font-size: 19px;
+
+    line-height: 1.25;
 
     letter-spacing: -0.3px;
   }
 
 
-  /* STATISTICS */
+  /* =======================================================
+     STATISTICS
+  ======================================================= */
 
   .statistics {
-    grid-template-columns: 1fr;
+    display: grid;
+
+    grid-template-columns:
+      repeat(2, 1fr);
 
     gap: 10px;
 
@@ -781,51 +981,91 @@ body {
   }
 
   .stat-card {
-    min-height: 80px;
+    min-height: 105px;
 
-    gap: 13px;
+    display: flex;
 
-    padding: 14px 16px;
+    flex-direction: column;
+
+    align-items: flex-start;
+
+    justify-content: center;
+
+    gap: 9px;
+
+    padding: 14px;
 
     border-radius: 14px;
+
+    background: #ffffff;
+
+    box-shadow:
+      0 5px 18px
+      rgba(24, 66, 96, 0.05);
   }
 
   .stat-icon {
-    width: 45px;
-    height: 45px;
+    width: 38px;
+    height: 38px;
 
-    border-radius: 12px;
+    border-radius: 10px;
 
-    font-size: 18px;
+    font-size: 16px;
   }
 
   .stat-card span {
-    margin-bottom: 4px;
+    margin-bottom: 3px;
 
-    font-size: 11px;
+    font-size: 10px;
   }
 
   .stat-card strong {
-    font-size: 21px;
+    font-size: 20px;
   }
 
 
-  /* QUICK CARD */
+  /* =======================================================
+     STATUS SISTEM
+  ======================================================= */
+
+  .stat-card:nth-child(3) {
+    grid-column:
+      1 / -1;
+
+    min-height: 78px;
+
+    flex-direction: row;
+
+    align-items: center;
+
+    gap: 12px;
+  }
+
+
+  /* =======================================================
+     QUICK ACTION
+  ======================================================= */
 
   .quick-card {
     min-height: auto;
+
+    display: flex;
 
     flex-direction: column;
 
     align-items: stretch;
 
-    gap: 14px;
+    gap: 15px;
 
     margin-top: 14px;
 
-    padding: 17px;
+    padding: 18px;
 
     border-radius: 14px;
+
+    box-shadow:
+      0 5px 18px
+      rgba(24, 66, 96, 0.05);
   }
 
   .quick-card h3 {
@@ -833,21 +1073,49 @@ body {
   }
 
   .quick-card p {
+    margin-top: 6px;
+
     font-size: 11px;
+
+    line-height: 1.5;
   }
+
+
+  /* =======================================================
+     BUTTON TAMBAH SURAT
+  ======================================================= */
 
   .btn-primary {
     width: 100%;
 
-    height: 40px;
+    min-width: 0;
 
-    font-size: 11px;
+    height: 42px;
+
+    border-radius: 9px;
+
+    background:
+      linear-gradient(
+        135deg,
+        #315f87,
+        #39769f
+      );
+
+    font-size: 12px;
+
+    box-shadow:
+      0 4px 10px
+      rgba(49, 95, 135, 0.16);
   }
 
 
-  /* SECTION */
+  /* =======================================================
+     SECTION HEADER
+  ======================================================= */
 
   .section-header {
+    display: flex;
+
     flex-direction: column;
 
     align-items: flex-start;
@@ -875,21 +1143,39 @@ body {
 @media (max-width: 400px) {
 
   .dashboard {
-    padding: 12px;
+    padding: 11px;
   }
 
   .welcome-card {
-    min-height: 95px;
+    min-height: 105px;
 
-    padding: 13px 14px;
+    padding: 17px;
+  }
+
+  .welcome-label {
+    font-size: 6px;
   }
 
   .welcome-card h2 {
-    font-size: 16px;
+    font-size: 17px;
+  }
+
+  .statistics {
+    gap: 8px;
   }
 
   .stat-card {
-    padding: 13px;
+    min-height: 98px;
+
+    padding: 12px;
+  }
+
+  .stat-card strong {
+    font-size: 19px;
+  }
+
+  .quick-card {
+    padding: 15px;
   }
 
 }
