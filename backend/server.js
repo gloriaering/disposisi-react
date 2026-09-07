@@ -18,43 +18,47 @@ const allowedOrigins = [
   "https://disposisi-disnakertransulut.vercel.app",
 ];
 
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      // Izinkan request tanpa origin
-      // Contoh: Postman atau server-to-server
-      if (!origin) {
-        return callback(null, true);
-      }
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Request tanpa origin
+    // Contoh: Postman / server-to-server
+    if (!origin) {
+      return callback(null, true);
+    }
 
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
 
-      console.log("CORS DITOLAK:", origin);
+    console.log("CORS DITOLAK:", origin);
 
-      return callback(
-        new Error("Origin tidak diizinkan oleh CORS")
-      );
-    },
+    return callback(null, false);
+  },
 
-    methods: [
-      "GET",
-      "POST",
-      "PUT",
-      "PATCH",
-      "DELETE",
-      "OPTIONS",
-    ],
+  methods: [
+    "GET",
+    "POST",
+    "PUT",
+    "PATCH",
+    "DELETE",
+    "OPTIONS",
+  ],
 
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization",
-    ],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+  ],
 
-    credentials: true,
-  })
-);
+  credentials: true,
+
+  optionsSuccessStatus: 204,
+};
+
+// Pasang CORS
+app.use(cors(corsOptions));
+
+// Tangani preflight OPTIONS
+app.options("*", cors(corsOptions));
 
 // =========================================================
 // MIDDLEWARE
@@ -69,7 +73,8 @@ app.use(express.json());
 app.get("/", (req, res) => {
   res.json({
     success: true,
-    message: "Backend Disposisi Surat berhasil berjalan",
+    message:
+      "Backend Disposisi Surat berhasil berjalan",
   });
 });
 
@@ -79,20 +84,34 @@ app.get("/", (req, res) => {
 
 const connectMongoDB = async () => {
   try {
-    // Kalau sudah terhubung, tidak perlu connect lagi
-    if (mongoose.connection.readyState === 1) {
+    if (
+      mongoose.connection.readyState === 1
+    ) {
       return;
     }
 
-    await mongoose.connect(process.env.MONGODB_URI);
+    await mongoose.connect(
+      process.env.MONGODB_URI
+    );
 
-    console.log("=================================");
-    console.log("MongoDB Atlas BERHASIL TERHUBUNG");
-    console.log("Database:", mongoose.connection.name);
-    console.log("=================================");
-
+    console.log(
+      "================================="
+    );
+    console.log(
+      "MongoDB Atlas BERHASIL TERHUBUNG"
+    );
+    console.log(
+      "Database:",
+      mongoose.connection.name
+    );
+    console.log(
+      "================================="
+    );
   } catch (error) {
-    console.error("GAGAL TERHUBUNG KE MONGODB:");
+    console.error(
+      "GAGAL TERHUBUNG KE MONGODB:"
+    );
+
     console.error(error.message);
 
     throw error;
@@ -106,11 +125,18 @@ const connectMongoDB = async () => {
 app.use(async (req, res, next) => {
   try {
     await connectMongoDB();
+
     next();
   } catch (error) {
+    console.error(
+      "DATABASE ERROR:",
+      error.message
+    );
+
     res.status(500).json({
       success: false,
-      message: "Gagal terhubung ke database",
+      message:
+        "Gagal terhubung ke database",
     });
   }
 });
@@ -119,64 +145,90 @@ app.use(async (req, res, next) => {
 // TEST STATUS DATABASE
 // =========================================================
 
-app.get("/api/status-db", (req, res) => {
-  const status = mongoose.connection.readyState;
+app.get(
+  "/api/status-db",
+  (req, res) => {
+    const status =
+      mongoose.connection.readyState;
 
-  const statusDatabase = {
-    0: "DISCONNECTED",
-    1: "CONNECTED",
-    2: "CONNECTING",
-    3: "DISCONNECTING",
-  };
+    const statusDatabase = {
+      0: "DISCONNECTED",
+      1: "CONNECTED",
+      2: "CONNECTING",
+      3: "DISCONNECTING",
+    };
 
-  res.json({
-    success: status === 1,
-    database_status: statusDatabase[status],
-    readyState: status,
-  });
-});
+    res.json({
+      success: status === 1,
+      database_status:
+        statusDatabase[status],
+      readyState: status,
+    });
+  }
+);
 
 // =========================================================
 // TEST MONGODB
 // =========================================================
 
-app.get("/api/test-mongodb", (req, res) => {
-  res.json({
-    success: mongoose.connection.readyState === 1,
-    message: "BERHASIL TERHUBUNG KE MONGODB ATLAS",
-    database: mongoose.connection.name,
-  });
-});
+app.get(
+  "/api/test-mongodb",
+  (req, res) => {
+    res.json({
+      success:
+        mongoose.connection
+          .readyState === 1,
+
+      message:
+        "BERHASIL TERHUBUNG KE MONGODB ATLAS",
+
+      database:
+        mongoose.connection.name,
+    });
+  }
+);
 
 // =========================================================
 // ROUTE AUTH / LOGIN
 // =========================================================
 
-app.use("/api/auth", authRoutes);
+app.use(
+  "/api/auth",
+  authRoutes
+);
 
 // =========================================================
 // ROUTE SURAT
 // =========================================================
 
-app.use("/api/surat", suratRoutes);
+app.use(
+  "/api/surat",
+  suratRoutes
+);
 
 // =========================================================
 // JALANKAN SERVER LOCAL
 // =========================================================
 
-const PORT = process.env.PORT || 5000;
+const PORT =
+  process.env.PORT || 5000;
 
 if (require.main === module) {
   connectMongoDB()
     .then(() => {
-      app.listen(PORT, () => {
-        console.log(
-          `Server berjalan di http://localhost:${PORT}`
-        );
-      });
+      app.listen(
+        PORT,
+        () => {
+          console.log(
+            `Server berjalan di http://localhost:${PORT}`
+          );
+        }
+      );
     })
     .catch(() => {
-      console.log("Server tidak dapat dijalankan.");
+      console.log(
+        "Server tidak dapat dijalankan."
+      );
     });
 }
 
