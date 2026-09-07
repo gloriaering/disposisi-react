@@ -8,7 +8,7 @@ function RiwayatSurat() {
 
   const API_URL =
     import.meta.env.VITE_API_URL ||
-    "http://localhost:5000";
+    "https://disposisi-react-8vdu.vercel.app";
 
   const [suratList, setSuratList] = useState([]);
   const [loading, setLoading] = useState(true);
