@@ -5,11 +5,6 @@ import logoSulut from "../assets/images/logo-sulut.png";
 
 /* =========================================================
    FORMAT TANGGAL LOKAL
-   Bisa membaca:
-   - YYYY-MM-DD
-   - YYYY-MM-DDTHH:mm:ss
-   - Date dari MongoDB
-   - format tanggal lainnya
 ========================================================= */
 
 function parseDateLocal(value) {
@@ -17,7 +12,6 @@ function parseDateLocal(value) {
 
   const text = String(value).trim();
 
-  // Format YYYY-MM-DD
   const match = text.match(/^(\d{4})-(\d{2})-(\d{2})/);
 
   if (match) {
@@ -36,7 +30,6 @@ function parseDateLocal(value) {
     }
   }
 
-  // Coba format Date biasa
   const date = new Date(value);
 
   if (!Number.isNaN(date.getTime())) {
@@ -48,10 +41,6 @@ function parseDateLocal(value) {
 
 /* =========================================================
    FORMAT TANGGAL SURAT
-   Contoh:
-   2026-08-28
-   menjadi:
-   28/08/2026
 ========================================================= */
 
 function formatTanggal(value) {
@@ -78,10 +67,6 @@ function formatTanggal(value) {
 
 /* =========================================================
    FORMAT TANGGAL DITERIMA
-   Contoh:
-   2026-08-28
-   menjadi:
-   28 Agustus -
 ========================================================= */
 
 function formatTanggalDiterima(value) {
@@ -131,10 +116,6 @@ function formatTahun(value) {
 
 /* =========================================================
    FORMAT JAM
-   Contoh:
-   14:30
-   menjadi:
-   14.30
 ========================================================= */
 
 function formatJam(value) {
@@ -216,19 +197,71 @@ export default function CetakSurat() {
 
   /* =======================================================
      AMBIL DATA SURAT
+     SUDAH MENGIRIM TOKEN LOGIN
   ======================================================= */
 
   useEffect(() => {
     const fetchSurat = async () => {
+      const token = localStorage.getItem("token");
+
+      /* ================================================
+         CEK TOKEN
+      ================================================ */
+
+      if (!token) {
+        setLoading(false);
+        setError(
+          "Akses ditolak. Silakan login terlebih dahulu."
+        );
+        return;
+      }
+
       try {
         setLoading(true);
         setError("");
 
         const response = await fetch(
-          `https://disposisi-react-8vdu.vercel.app/api/surat/${id}`
+          `https://disposisi-react-8vdu.vercel.app/api/surat/${id}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
 
         const result = await response.json();
+
+        console.log(
+          "STATUS CETAK:",
+          response.status
+        );
+
+        console.log(
+          "HASIL DATA CETAK:",
+          result
+        );
+
+        /* ================================================
+           TOKEN TIDAK VALID / EXPIRED
+        ================================================ */
+
+        if (
+          response.status === 401 ||
+          response.status === 403
+        ) {
+          setError(
+            "Akses ditolak. Silakan login terlebih dahulu."
+          );
+
+          setSurat(null);
+
+          return;
+        }
+
+        /* ================================================
+           ERROR LAIN
+        ================================================ */
 
         if (!response.ok) {
           throw new Error(
@@ -237,11 +270,19 @@ export default function CetakSurat() {
           );
         }
 
+        /* ================================================
+           DATA TIDAK ADA
+        ================================================ */
+
         if (!result.data) {
           throw new Error(
             "Data surat tidak tersedia."
           );
         }
+
+        /* ================================================
+           DEBUG
+        ================================================ */
 
         console.log(
           "DATA SURAT DARI DATABASE:",
@@ -263,6 +304,10 @@ export default function CetakSurat() {
           result.data.jam_diterima
         );
 
+        /* ================================================
+           SIMPAN DATA
+        ================================================ */
+
         setSurat(result.data);
 
       } catch (error) {
@@ -282,6 +327,10 @@ export default function CetakSurat() {
         setLoading(false);
       }
     };
+
+    /* ================================================
+       CEK ID
+    ================================================ */
 
     if (id) {
       fetchSurat();
@@ -310,6 +359,7 @@ export default function CetakSurat() {
     return (
       <div className="not-found">
         <div className="not-found-box">
+
           <h2>
             Memuat data surat...
           </h2>
@@ -318,6 +368,7 @@ export default function CetakSurat() {
             Sedang mengambil data surat
             dari database.
           </p>
+
         </div>
       </div>
     );
@@ -330,6 +381,7 @@ export default function CetakSurat() {
   if (!surat) {
     return (
       <div className="not-found">
+
         <div className="not-found-box">
 
           <h2>
@@ -349,6 +401,7 @@ export default function CetakSurat() {
           </Link>
 
         </div>
+
       </div>
     );
   }
