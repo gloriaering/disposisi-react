@@ -7,10 +7,13 @@ import "../assets/css/Dashboard.css";
 function Dashboard() {
   const navigate = useNavigate();
 
+  // =========================================================
   // URL BACKEND
+  // =========================================================
+
   const API_URL =
     import.meta.env.VITE_API_URL ||
-    "http://localhost:5000";
+    "https://disposisi-react-8vdu.vercel.app";
 
   /* =========================================================
      MENU MOBILE
@@ -111,7 +114,16 @@ function Dashboard() {
         return;
       }
 
+      // DEBUG
+      console.log(
+        "Mengambil data surat dari:",
+        `${API_URL}/api/surat`
+      );
+
+      // =====================================================
       // FETCH DATA SURAT
+      // =====================================================
+
       const response = await fetch(
         `${API_URL}/api/surat`,
         {
@@ -124,9 +136,22 @@ function Dashboard() {
         }
       );
 
+      console.log(
+        "STATUS DATA SURAT:",
+        response.status
+      );
+
       const result = await response.json();
 
+      console.log(
+        "HASIL DATA SURAT:",
+        result
+      );
+
+      // =====================================================
       // TOKEN TIDAK VALID
+      // =====================================================
+
       if (
         response.status === 401 ||
         response.status === 403
@@ -140,7 +165,10 @@ function Dashboard() {
         return;
       }
 
+      // =====================================================
       // ERROR SERVER
+      // =====================================================
+
       if (!response.ok) {
         throw new Error(
           result.message ||
@@ -148,15 +176,24 @@ function Dashboard() {
         );
       }
 
+      // =====================================================
       // AMBIL DATA SURAT
+      // =====================================================
+
       const surat = Array.isArray(result.data)
         ? result.data
         : [];
 
+      // =====================================================
       // TOTAL SURAT
+      // =====================================================
+
       setTotalSurat(surat.length);
 
+      // =====================================================
       // TANGGAL HARI INI
+      // =====================================================
+
       const sekarang = new Date();
 
       const tahunHariIni =
@@ -173,7 +210,10 @@ function Dashboard() {
       const hariIni =
         `${tahunHariIni}-${bulanHariIni}-${tanggalHariIni}`;
 
+      // =====================================================
       // HITUNG SURAT HARI INI
+      // =====================================================
+
       const jumlahHariIni = surat.filter(
         (item) => {
           const tanggal =
