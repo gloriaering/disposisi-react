@@ -597,7 +597,7 @@ router.get("/:id", async (req, res) => {
 
 router.post(
   "/",
-  upload.array("arsip_surat", 10),
+  upload.array("arsip_surat", 1),
   async (req, res) => {
     try {
 

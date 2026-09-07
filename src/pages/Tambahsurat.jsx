@@ -1,29 +1,18 @@
-import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import logoSulut from "../assets/images/logo-sulut.png";
-import "../assets/css/TambahSurat.css";
-import CameraCapture from "../components/CameraCapture";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { jsPDF } from "jspdf";
 
-// =========================================================
-// URL BACKEND ONLINE
-// =========================================================
+import "./TambahSurat.css";
 
 const API_URL = "https://disposisi-react-8vdu.vercel.app";
-
-// =========================================================
-// URL SCANNER BRIDGE DI KOMPUTER
-// EPSON L3210 USB
-// =========================================================
-
 const SCANNER_URL = "http://127.0.0.1:5050";
 
-function TambahSurat() {
+const TambahSurat = () => {
   const navigate = useNavigate();
 
-  // =========================================================
-  // FORM DATA
-  // =========================================================
-
+  // =========================
+  // DATA FORM
+  // =========================
   const [formData, setFormData] = useState({
     nomor_surat: "",
     asal_surat: "",
@@ -34,114 +23,35 @@ function TambahSurat() {
     perihal: "",
   });
 
-  const [loading, setLoading] = useState(false);
-  const [scanning, setScanning] = useState(false);
-  const [error, setError] = useState("");
-
-  // =========================================================
-  // BANYAK FILE
-  // =========================================================
-
+  // =========================
+  // FILE HASIL SCAN
+  // =========================
   const [scanSurat, setScanSurat] = useState([]);
 
-  // =========================================================
-  // PREVIEW HASIL SCAN
-  // =========================================================
+  // =========================
+  // PDF HASIL GABUNGAN
+  // =========================
+  const [pdfPreview, setPdfPreview] = useState("");
+  const [pdfFile, setPdfFile] = useState(null);
 
-  const [previewUrls, setPreviewUrls] = useState([]);
+  const [loadingScan, setLoadingScan] = useState(false);
+  const [loadingPDF, setLoadingPDF] = useState(false);
+  const [loadingSave, setLoadingSave] = useState(false);
 
-  // =========================================================
-  // HAMBURGER MENU
-  // =========================================================
-
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  // =========================================================
-  // KAMERA
-  // =========================================================
-
-  const [showCamera, setShowCamera] = useState(false);
-
-  // =========================================================
-  // TANGGAL & JAM OTOMATIS WITA
-  // =========================================================
-
+  // =========================
+  // CLEANUP PDF BLOB
+  // =========================
   useEffect(() => {
-    const updateWaktuIndonesia = () => {
-      const sekarang = new Date();
-
-      const parts = new Intl.DateTimeFormat("en-CA", {
-        timeZone: "Asia/Makassar",
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-      })
-        .formatToParts(sekarang)
-        .reduce((acc, part) => {
-          if (part.type !== "literal") {
-            acc[part.type] = part.value;
-          }
-
-          return acc;
-        }, {});
-
-      const tanggalIndonesia =
-        `${parts.year}-${parts.month}-${parts.day}`;
-
-      const formatterJam = new Intl.DateTimeFormat("en-GB", {
-        timeZone: "Asia/Makassar",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      });
-
-      const jamIndonesia = formatterJam.format(sekarang);
-
-      setFormData((prev) => ({
-        ...prev,
-        tanggal_diterima: tanggalIndonesia,
-        jam_diterima: jamIndonesia,
-      }));
-    };
-
-    updateWaktuIndonesia();
-
-    const interval = setInterval(
-      updateWaktuIndonesia,
-      60000
-    );
-
-    return () => clearInterval(interval);
-  }, []);
-
-  // =========================================================
-  // BUAT PREVIEW UNTUK FILE
-  // =========================================================
-
-  useEffect(() => {
-    const urls = scanSurat.map((file) => {
-      if (file?.type?.startsWith("image/")) {
-        return URL.createObjectURL(file);
-      }
-
-      return null;
-    });
-
-    setPreviewUrls(urls);
-
     return () => {
-      urls.forEach((url) => {
-        if (url) {
-          URL.revokeObjectURL(url);
-        }
-      });
+      if (pdfPreview) {
+        URL.revokeObjectURL(pdfPreview);
+      }
     };
-  }, [scanSurat]);
+  }, [pdfPreview]);
 
-  // =========================================================
+  // =========================
   // HANDLE INPUT
-  // =========================================================
-
+  // =========================
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -151,41 +61,9 @@ function TambahSurat() {
     }));
   };
 
-  // =========================================================
-  // HANDLE TANGGAL SURAT
-  // =========================================================
-
-  const handleTanggalSuratChange = (e) => {
-    let value = e.target.value.replace(/\D/g, "");
-
-    if (value.length > 8) {
-      value = value.slice(0, 8);
-    }
-
-    if (value.length > 2) {
-      value =
-        value.slice(0, 2) +
-        "-" +
-        value.slice(2);
-    }
-
-    if (value.length > 5) {
-      value =
-        value.slice(0, 5) +
-        "-" +
-        value.slice(5);
-    }
-
-    setFormData((prev) => ({
-      ...prev,
-      tanggal_surat: value,
-    }));
-  };
-
-  // =========================================================
-  // FILE YANG DIIZINKAN
-  // =========================================================
-
+  // =========================
+  // FORMAT FILE
+  // =========================
   const validFileTypes = [
     "application/pdf",
     "image/jpeg",
@@ -194,399 +72,582 @@ function TambahSurat() {
     "image/webp",
   ];
 
-  // =========================================================
-  // VALIDASI SATU FILE
-  // =========================================================
+  // =========================
+  // FILE → DATA URL
+  // =========================
+  const fileToDataURL = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
 
-  const validateFile = (file) => {
-    if (!file) {
-      return false;
-    }
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error("Gagal membaca file."));
 
-    if (!validFileTypes.includes(file.type)) {
-      setError(
-        `${file.name} tidak didukung. Gunakan PDF, JPG, JPEG, PNG, atau WEBP.`
-      );
-
-      return false;
-    }
-
-    if (file.size > 20 * 1024 * 1024) {
-      setError(
-        `${file.name} terlalu besar. Maksimal ukuran setiap file adalah 20 MB.`
-      );
-
-      return false;
-    }
-
-    return true;
+      reader.readAsDataURL(file);
+    });
   };
 
-  // =========================================================
-  // SCAN DOKUMEN EPSON L3210
-  // =========================================================
+  // =========================
+  // IMAGE → JPEG
+  // =========================
+  const imageFileToJpeg = (file) => {
+    return new Promise((resolve, reject) => {
+      const image = new Image();
 
+      image.onload = () => {
+        try {
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+
+          canvas.width = image.naturalWidth;
+          canvas.height = image.naturalHeight;
+
+          // Background putih
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+          ctx.drawImage(
+            image,
+            0,
+            0,
+            canvas.width,
+            canvas.height
+          );
+
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) {
+                reject(
+                  new Error("Gagal mengubah gambar menjadi JPEG.")
+                );
+                return;
+              }
+
+              resolve(blob);
+            },
+            "image/jpeg",
+            0.9
+          );
+        } catch (error) {
+          reject(error);
+        }
+      };
+
+      image.onerror = () => {
+        reject(new Error("Gagal membaca gambar hasil scan."));
+      };
+
+      fileToDataURL(file)
+        .then((dataURL) => {
+          image.src = dataURL;
+        })
+        .catch(reject);
+    });
+  };
+
+  // =========================
+  // SCAN DOKUMEN
+  // =========================
   const handleScanDocument = async () => {
-    setError("");
-
-    // =======================================================
-    // CEK JUMLAH FILE
-    // =======================================================
-
-    if (scanSurat.length >= 20) {
-      setError(
-        "Maksimal hanya dapat memasukkan 20 file."
-      );
-
-      return;
-    }
+    if (loadingScan) return;
 
     try {
-      setScanning(true);
+      setLoadingScan(true);
 
-      console.log(
-        "======================================"
-      );
+      console.log("=================================");
+      console.log("MEMULAI SCAN DOKUMEN");
+      console.log("=================================");
 
-      console.log(
-        "MEMULAI SCAN DOKUMEN"
-      );
+      // Cek scanner bridge
+      const bridgeCheck = await fetch(`${SCANNER_URL}/`);
 
-      console.log(
-        "SCANNER:",
-        "EPSON L3210"
-      );
-
-      console.log(
-        "SCANNER BRIDGE:",
-        SCANNER_URL
-      );
-
-      console.log(
-        "======================================"
-      );
-
-      // =====================================================
-      // CEK SCANNER BRIDGE
-      // =====================================================
-
-      try {
-        const checkResponse = await fetch(
-          `${SCANNER_URL}/`,
-          {
-            method: "GET",
-          }
-        );
-
-        if (!checkResponse.ok) {
-          throw new Error(
-            "Scanner Bridge tidak merespons."
-          );
-        }
-      } catch (bridgeError) {
-        console.error(
-          "Scanner Bridge tidak dapat diakses:",
-          bridgeError
-        );
-
+      if (!bridgeCheck.ok) {
         throw new Error(
-          "Scanner Bridge belum berjalan. Jalankan scanner-bridge terlebih dahulu di komputer yang terhubung ke Epson L3210."
+          "Scanner Bridge tidak dapat diakses."
         );
       }
 
-      // =====================================================
-      // MINTA SCAN
-      // =====================================================
-
-      const response = await fetch(
-        `${SCANNER_URL}/scan`,
-        {
-          method: "POST",
-
-          headers: {
-            "Content-Type": "application/json",
-          },
-
-          body: JSON.stringify({
-            nama_file:
-              `scan_${Date.now()}.jpg`,
-          }),
-        }
-      );
-
-      // =====================================================
-      // JIKA SCAN GAGAL
-      // =====================================================
+      // Jalankan scan
+      const response = await fetch(`${SCANNER_URL}/scan`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          nama_file: `scan_${Date.now()}.jpg`,
+        }),
+      });
 
       if (!response.ok) {
-        let message =
-          "Gagal melakukan scan dokumen.";
+        let errorMessage = "Scanner gagal melakukan scan.";
 
         try {
-          const result =
-            await response.json();
+          const errorData = await response.json();
 
-          if (result.message) {
-            message = result.message;
+          if (errorData?.message) {
+            errorMessage = errorData.message;
           }
         } catch {
-          // Tidak masalah jika response bukan JSON
+          // Abaikan jika response bukan JSON
         }
 
-        throw new Error(message);
+        throw new Error(errorMessage);
       }
 
-      // =====================================================
-      // AMBIL HASIL SCAN SEBAGAI BLOB
-      // =====================================================
-
-      const blob =
-        await response.blob();
+      const blob = await response.blob();
 
       if (!blob || blob.size === 0) {
         throw new Error(
-          "Scanner tidak menghasilkan file."
+          "Hasil scan kosong."
         );
       }
 
-      // =====================================================
-      // UBAH BLOB MENJADI FILE
-      // =====================================================
+      const fileName = `scan_${Date.now()}.jpg`;
 
-      const fileName =
-        `scan_${Date.now()}.jpg`;
-
-      const scannedFile =
-        new File(
-          [blob],
-          fileName,
-          {
-            type: "image/jpeg",
-            lastModified: Date.now(),
-          }
-        );
-
-      // =====================================================
-      // VALIDASI HASIL SCAN
-      // =====================================================
-
-      if (!validateFile(scannedFile)) {
-        return;
-      }
-
-      // =====================================================
-      // MASUKKAN HASIL SCAN KE DAFTAR
-      // =====================================================
-
-      setScanSurat((prev) => {
-        if (prev.length >= 20) {
-          setError(
-            "Maksimal hanya dapat memasukkan 20 file."
-          );
-
-          return prev;
+      const file = new File(
+        [blob],
+        fileName,
+        {
+          type: "image/jpeg",
         }
+      );
 
-        return [
-          ...prev,
-          scannedFile,
-        ];
-      });
+      // Tambahkan scan baru
+      setScanSurat((prev) => [
+        ...prev,
+        file,
+      ]);
+
+      // Kalau ada PDF preview lama,
+      // hapus karena jumlah halaman berubah
+      if (pdfPreview) {
+        URL.revokeObjectURL(pdfPreview);
+        setPdfPreview("");
+      }
+
+      setPdfFile(null);
 
       console.log(
         "SCAN BERHASIL:",
-        scannedFile.name
+        file.name
       );
 
-      console.log(
-        "UKURAN:",
-        scannedFile.size
+      alert(
+        `Scan berhasil!\n\nHalaman ke-${scanSurat.length + 1} berhasil ditambahkan.`
       );
-
     } catch (error) {
       console.error(
-        "GAGAL SCAN:",
+        "Gagal scan:",
         error
       );
 
-      setError(
+      alert(
         error.message ||
-        "Gagal melakukan scan dokumen."
+          "Gagal melakukan scan."
       );
-
     } finally {
-      setScanning(false);
+      setLoadingScan(false);
     }
   };
 
-  // =========================================================
-  // HASIL FOTO DARI KAMERA
-  // =========================================================
-
-  const handleCameraCapture = (file) => {
-    setError("");
-
-    if (!validateFile(file)) {
-      return;
-    }
-
-    setScanSurat((prev) => {
-      if (prev.length >= 20) {
-        setError(
-          "Maksimal hanya dapat mengupload 20 file."
-        );
-
-        return prev;
-      }
-
-      return [
-        ...prev,
-        file,
-      ];
-    });
-
-    setShowCamera(false);
-  };
-
-  // =========================================================
-  // HAPUS SATU FILE
-  // =========================================================
-
-  const handleRemoveFile = (index) => {
+  // =========================
+  // HAPUS SATU HASIL SCAN
+  // =========================
+  const handleRemoveScan = (index) => {
     setScanSurat((prev) =>
       prev.filter(
         (_, i) => i !== index
       )
     );
+
+    // Reset PDF preview
+    if (pdfPreview) {
+      URL.revokeObjectURL(pdfPreview);
+    }
+
+    setPdfPreview("");
+    setPdfFile(null);
   };
 
-  // =========================================================
-  // CEK JENIS FILE
-  // =========================================================
+  // =========================
+  // BUAT PDF
+  // =========================
+  const createPDF = async () => {
+    if (scanSurat.length === 0) {
+      throw new Error(
+        "Belum ada hasil scan."
+      );
+    }
 
-  const isImage = (file) => {
-    return file?.type?.startsWith(
-      "image/"
+    // Kalau hanya satu file dan file tersebut PDF
+    if (
+      scanSurat.length === 1 &&
+      scanSurat[0].type === "application/pdf"
+    ) {
+      return new File(
+        [scanSurat[0]],
+        `surat_${Date.now()}.pdf`,
+        {
+          type: "application/pdf",
+        }
+      );
+    }
+
+    // Pastikan semua adalah gambar
+    const hasPDF = scanSurat.some(
+      (file) =>
+        file.type === "application/pdf"
+    );
+
+    if (hasPDF) {
+      throw new Error(
+        "Untuk menggabungkan beberapa halaman, gunakan hasil scan gambar saja."
+      );
+    }
+
+    const pdf = new jsPDF({
+      unit: "mm",
+      format: "a4",
+      orientation: "portrait",
+    });
+
+    for (
+      let i = 0;
+      i < scanSurat.length;
+      i++
+    ) {
+      const file = scanSurat[i];
+
+      console.log(
+        `Memasukkan halaman ${i + 1} ke PDF...`
+      );
+
+      const jpegBlob =
+        await imageFileToJpeg(file);
+
+      const dataURL =
+        await fileToDataURL(
+          new File(
+            [jpegBlob],
+            `page_${i + 1}.jpg`,
+            {
+              type: "image/jpeg",
+            }
+          )
+        );
+
+      const image = new Image();
+
+      await new Promise(
+        (resolve, reject) => {
+          image.onload = resolve;
+          image.onerror = () =>
+            reject(
+              new Error(
+                `Gagal membaca halaman ${i + 1}.`
+              )
+            );
+
+          image.src = dataURL;
+        }
+      );
+
+      const pageWidth = 210;
+      const pageHeight = 297;
+
+      const margin = 5;
+
+      const maxWidth =
+        pageWidth - margin * 2;
+
+      const maxHeight =
+        pageHeight - margin * 2;
+
+      const imageWidth =
+        image.naturalWidth;
+
+      const imageHeight =
+        image.naturalHeight;
+
+      const ratio =
+        imageWidth / imageHeight;
+
+      let finalWidth = maxWidth;
+      let finalHeight =
+        finalWidth / ratio;
+
+      if (
+        finalHeight > maxHeight
+      ) {
+        finalHeight = maxHeight;
+        finalWidth =
+          finalHeight * ratio;
+      }
+
+      const x =
+        (pageWidth - finalWidth) / 2;
+
+      const y =
+        (pageHeight - finalHeight) / 2;
+
+      if (i > 0) {
+        pdf.addPage();
+      }
+
+      pdf.addImage(
+        dataURL,
+        "JPEG",
+        x,
+        y,
+        finalWidth,
+        finalHeight
+      );
+    }
+
+    const pdfBlob =
+      pdf.output("blob");
+
+    return new File(
+      [pdfBlob],
+      `surat_${Date.now()}.pdf`,
+      {
+        type: "application/pdf",
+      }
     );
   };
 
-  const isPDF = (file) => {
-    return (
-      file?.type ===
-      "application/pdf"
-    );
+  // =========================
+  // BUAT PDF + PREVIEW
+  // =========================
+  const handleCreatePDF = async () => {
+    if (loadingPDF) return;
+
+    try {
+      setLoadingPDF(true);
+
+      if (scanSurat.length === 0) {
+        alert(
+          "Silakan scan surat terlebih dahulu."
+        );
+        return;
+      }
+
+      console.log(
+        "Membuat PDF dari",
+        scanSurat.length,
+        "halaman..."
+      );
+
+      const resultPDF =
+        await createPDF();
+
+      if (!resultPDF) {
+        throw new Error(
+          "PDF gagal dibuat."
+        );
+      }
+
+      // Hapus preview lama
+      if (pdfPreview) {
+        URL.revokeObjectURL(pdfPreview);
+      }
+
+      // Buat URL untuk preview
+      const previewURL =
+        URL.createObjectURL(
+          resultPDF
+        );
+
+      setPdfFile(resultPDF);
+      setPdfPreview(previewURL);
+
+      console.log(
+        "PDF BERHASIL DIBUAT:",
+        resultPDF.name
+      );
+
+      alert(
+        `PDF berhasil dibuat!\n\n${scanSurat.length} halaman digabung menjadi 1 PDF.`
+      );
+    } catch (error) {
+      console.error(
+        "Gagal membuat PDF:",
+        error
+      );
+
+      alert(
+        error.message ||
+          "Gagal membuat PDF."
+      );
+    } finally {
+      setLoadingPDF(false);
+    }
   };
 
-  // =========================================================
+  // =========================
   // SIMPAN SURAT
-  // =========================================================
-
+  // =========================
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    setError("");
-
-    // =====================================================
-    // CEK FORM
-    // =====================================================
-
-    if (
-      !formData.nomor_surat.trim() ||
-      !formData.asal_surat.trim() ||
-      !formData.tanggal_surat.trim() ||
-      !formData.nomor_agenda.trim() ||
-      !formData.tanggal_diterima ||
-      !formData.jam_diterima ||
-      !formData.perihal.trim()
-    ) {
-      setError(
-        "Semua field bertanda * wajib diisi."
-      );
-
-      return;
-    }
-
-    // =====================================================
-    // CEK FILE
-    // =====================================================
-
-    if (scanSurat.length === 0) {
-      setError(
-        "Minimal satu scan surat wajib dilakukan."
-      );
-
-      return;
-    }
-
-    if (scanSurat.length > 20) {
-      setError(
-        "Maksimal hanya dapat mengupload 20 file."
-      );
-
-      return;
-    }
-
-    for (const file of scanSurat) {
-      if (!validateFile(file)) {
-        return;
-      }
-    }
-
-    // =====================================================
-    // MULAI SIMPAN
-    // =====================================================
+    if (loadingSave) return;
 
     try {
-      setLoading(true);
+      // =========================
+      // VALIDASI
+      // =========================
+      if (
+        !formData.nomor_surat.trim()
+      ) {
+        alert(
+          "Nomor surat wajib diisi."
+        );
+        return;
+      }
 
-      // ===================================================
-      // AMBIL TOKEN LOGIN
-      // ===================================================
+      if (
+        !formData.asal_surat.trim()
+      ) {
+        alert(
+          "Asal surat wajib diisi."
+        );
+        return;
+      }
 
+      if (
+        !formData.tanggal_surat
+      ) {
+        alert(
+          "Tanggal surat wajib diisi."
+        );
+        return;
+      }
+
+      if (
+        !formData.nomor_agenda.trim()
+      ) {
+        alert(
+          "Nomor agenda wajib diisi."
+        );
+        return;
+      }
+
+      if (
+        !formData.tanggal_diterima
+      ) {
+        alert(
+          "Tanggal diterima wajib diisi."
+        );
+        return;
+      }
+
+      if (
+        !formData.jam_diterima
+      ) {
+        alert(
+          "Jam diterima wajib diisi."
+        );
+        return;
+      }
+
+      if (
+        !formData.perihal.trim()
+      ) {
+        alert(
+          "Perihal wajib diisi."
+        );
+        return;
+      }
+
+      if (scanSurat.length === 0) {
+        alert(
+          "Silakan scan surat terlebih dahulu."
+        );
+        return;
+      }
+
+      // =========================
+      // TOKEN
+      // =========================
       const token =
         localStorage.getItem(
           "token"
         );
 
-      // ===================================================
-      // JIKA TOKEN TIDAK ADA
-      // ===================================================
-
       if (!token) {
-        setError(
+        alert(
           "Sesi login tidak ditemukan. Silakan login kembali."
         );
 
         navigate("/login");
+        return;
+      }
+
+      // =========================
+      // KALAU PDF BELUM DIBUAT
+      // =========================
+      let finalPDF = pdfFile;
+
+      if (!finalPDF) {
+        const konfirmasi = window.confirm(
+          "PDF belum dibuat.\n\nBuat PDF sekarang?"
+        );
+
+        if (!konfirmasi) {
+          return;
+        }
+
+        setLoadingSave(true);
+
+        finalPDF =
+          await createPDF();
+
+        const previewURL =
+          URL.createObjectURL(
+            finalPDF
+          );
+
+        if (pdfPreview) {
+          URL.revokeObjectURL(
+            pdfPreview
+          );
+        }
+
+        setPdfPreview(previewURL);
+        setPdfFile(finalPDF);
+
+        alert(
+          "PDF berhasil dibuat dan sekarang ditampilkan sebagai preview.\n\nSilakan periksa PDF lalu klik Simpan Surat lagi."
+        );
 
         return;
       }
 
-      // ===================================================
-      // BUAT FORMDATA
-      // ===================================================
+      setLoadingSave(true);
 
+      // =========================
+      // FORMDATA
+      // =========================
       const data =
         new FormData();
 
       data.append(
         "nomor_surat",
-        formData.nomor_surat.trim()
+        formData.nomor_surat
       );
 
       data.append(
         "asal_surat",
-        formData.asal_surat.trim()
+        formData.asal_surat
       );
 
       data.append(
         "tanggal_surat",
-        formData.tanggal_surat.trim()
+        formData.tanggal_surat
       );
 
       data.append(
         "nomor_agenda",
-        formData.nomor_agenda.trim()
+        formData.nomor_agenda
       );
 
       data.append(
@@ -601,75 +662,61 @@ function TambahSurat() {
 
       data.append(
         "perihal",
-        formData.perihal.trim()
+        formData.perihal
       );
 
+      // =========================
+      // PENTING:
+      // HANYA 1 PDF YANG DIKIRIM
+      // =========================
       data.append(
-        "sifat_surat",
-        ""
+        "arsip_surat",
+        finalPDF
       );
-
-      data.append(
-        "diteruskan_kepada",
-        JSON.stringify([])
-      );
-
-      data.append(
-        "dengan_hormat_harap",
-        JSON.stringify([])
-      );
-
-      data.append(
-        "catatan",
-        ""
-      );
-
-      // ===================================================
-      // MASUKKAN SEMUA FILE
-      // ===================================================
-
-      scanSurat.forEach((file) => {
-        data.append(
-          "arsip_surat",
-          file
-        );
-      });
-
-      // ===================================================
-      // KIRIM KE BACKEND
-      // ===================================================
 
       console.log(
-        "Mengirim surat ke:",
-        `${API_URL}/api/surat`
+        "Mengirim 1 PDF ke backend:",
+        finalPDF.name,
+        finalPDF.size
       );
 
+      // =========================
+      // POST BACKEND
+      // =========================
       const response =
         await fetch(
           `${API_URL}/api/surat`,
           {
             method: "POST",
-
             headers: {
-              Authorization:
-                `Bearer ${token}`,
+              Authorization: `Bearer ${token}`,
             },
-
             body: data,
           }
         );
 
-      // ===================================================
-      // AMBIL HASIL RESPONSE
-      // ===================================================
+      console.log(
+        "STATUS SIMPAN:",
+        response.status
+      );
 
-      const result =
-        await response.json();
+      let result;
 
-      // ===================================================
-      // TOKEN EXPIRED / TIDAK VALID
-      // ===================================================
+      try {
+        result =
+          await response.json();
+      } catch {
+        result = {};
+      }
 
+      console.log(
+        "HASIL SIMPAN:",
+        result
+      );
+
+      // =========================
+      // TOKEN EXPIRED
+      // =========================
       if (
         response.status === 401 ||
         response.status === 403
@@ -677,412 +724,189 @@ function TambahSurat() {
         localStorage.removeItem(
           "token"
         );
-
         localStorage.removeItem(
           "user"
         );
 
-        localStorage.removeItem(
-          "bidang"
-        );
-
-        setError(
+        alert(
           "Sesi login sudah berakhir. Silakan login kembali."
         );
 
         navigate("/login");
-
         return;
       }
 
-      // ===================================================
-      // ERROR LAIN
-      // ===================================================
-
+      // =========================
+      // ERROR
+      // =========================
       if (!response.ok) {
         throw new Error(
           result.message ||
-          "Gagal menyimpan surat."
+            "Gagal menyimpan surat."
         );
       }
 
-      // ===================================================
+      // =========================
       // BERHASIL
-      // ===================================================
-
+      // =========================
       alert(
-        `✓ Surat berhasil disimpan dengan ${scanSurat.length} file.`
+        `Surat berhasil disimpan!\n\n${scanSurat.length} hasil scan telah digabung menjadi 1 PDF.`
       );
 
       navigate("/surat");
-
     } catch (error) {
       console.error(
         "Gagal menyimpan surat:",
         error
       );
 
-      setError(
+      alert(
         error.message ||
-        "Gagal menyimpan surat. Pastikan backend sedang berjalan."
+          "Terjadi kesalahan saat menyimpan surat."
       );
-
     } finally {
-      setLoading(false);
+      setLoadingSave(false);
     }
   };
 
-  // =========================================================
-  // TAMPILAN
-  // =========================================================
-
+  // =========================
+  // RENDER
+  // =========================
   return (
-    <div className="tambah-page">
+    <div className="tambah-container">
+      <div className="tambah-header">
+        <h1>Tambah Surat Masuk</h1>
 
-      {/* ===================================================
-          MOBILE MENU BUTTON
-      =================================================== */}
+        <button
+          type="button"
+          className="btn-kembali"
+          onClick={() =>
+            navigate("/surat")
+          }
+        >
+          ← Kembali
+        </button>
+      </div>
 
-      <button
-        type="button"
-        className="tambah-mobile-menu-btn"
-        onClick={() =>
-          setMenuOpen(!menuOpen)
-        }
-        aria-label="Buka menu"
+      <form
+        className="tambah-form"
+        onSubmit={handleSubmit}
       >
-        ☰
-      </button>
-
-      {/* ===================================================
-          SIDEBAR
-      =================================================== */}
-
-      <aside
-        className={`tambah-sidebar ${
-          menuOpen
-            ? "menu-open"
-            : ""
-        }`}
-      >
-
-        <div className="tambah-brand">
-
-          <div className="tambah-brand-logo">
-
-            <img
-              src={logoSulut}
-              alt="Logo Sulawesi Utara"
-            />
-
-          </div>
-
-          <div className="tambah-brand-text">
-
-            <h2>
-              DISNAKERTRANS
-            </h2>
-
-            <span>
-              Sulawesi Utara
-            </span>
-
-          </div>
-
-        </div>
-
-        {/* =================================================
-            MENU
-        ================================================= */}
-
-        <nav className="tambah-menu">
-
-          <p className="tambah-menu-title">
-            MENU UTAMA
-          </p>
-
-          <Link
-            to="/"
-            className="tambah-menu-item"
-            onClick={() =>
-              setMenuOpen(false)
-            }
-          >
-            <span>⌂</span>
-            Dashboard
-          </Link>
-
-          <Link
-            to="/surat"
-            className="tambah-menu-item active"
-            onClick={() =>
-              setMenuOpen(false)
-            }
-          >
-            <span>▣</span>
-            Surat Masuk
-          </Link>
-
-          <Link
-            to="/riwayat"
-            className="tambah-menu-item"
-            onClick={() =>
-              setMenuOpen(false)
-            }
-          >
-            <span>↶</span>
-            Riwayat Surat
-          </Link>
-
-        </nav>
-
-      </aside>
-
-      {/* ===================================================
-          MAIN
-      =================================================== */}
-
-      <main className="tambah-main">
-
-        {/* =================================================
-            TOPBAR
-        ================================================= */}
-
-        <header className="tambah-topbar">
-
-          <div className="tambah-topbar-left">
-
-            <h1>
-              Tambah Surat
-            </h1>
-
-            <p>
-              Sistem Informasi Disposisi Surat
-            </p>
-
-          </div>
-
-        </header>
-
-        {/* =================================================
-            CONTENT
-        ================================================= */}
-
-        <section className="tambah-content">
-
-          {/* =================================================
-              PAGE HEADER
-          ================================================= */}
-
-          <div className="tambah-page-header">
-
-            <div className="tambah-page-title">
-
-              <span>
-                DATA ADMINISTRASI
-              </span>
-
-              <h2>
-                Tambah Surat Masuk
-              </h2>
-
-              <p>
-                Masukkan data surat masuk ke dalam sistem.
-              </p>
-
-            </div>
-
-            <Link
-              to="/surat"
-              className="tambah-btn-back"
-            >
-              ← Kembali ke Surat Masuk
-            </Link>
-
-          </div>
-
-          {/* =================================================
-              ERROR
-          ================================================= */}
-
-          {error && (
-            <div className="tambah-error">
-              {error}
-            </div>
-          )}
-
-          {/* =================================================
-              FORM
-          ================================================= */}
-
-          <form
-            className="tambah-form-card"
-            onSubmit={handleSubmit}
-          >
-
-            {/* =================================================
-                FORM TOP
-            ================================================= */}
-
-            <div className="tambah-form-top">
-
-              <div>
-
-                <h3>
-                  Informasi Surat
-                </h3>
-
-                <p>
-                  Lengkapi informasi surat dengan benar.
-                </p>
-
-              </div>
-
-            </div>
-
-            {/* =================================================
-                FORM GRID
-            ================================================= */}
-
-            <div className="tambah-form-grid">
-
-              {/* SURAT DARI */}
-
-              <div className="tambah-form-group">
-
-                <label>
-                  Surat Dari <b>*</b>
-                </label>
-
-                <input
-                  type="text"
-                  name="asal_surat"
-                  value={
-                    formData.asal_surat
-                  }
-                  onChange={
-                    handleChange
-                  }
-                  placeholder="Contoh: Dinas Pendidikan"
-                  autoComplete="off"
-                />
-
-              </div>
-
-              {/* TANGGAL DITERIMA */}
-
-              <div className="tambah-form-group">
-
-                <label>
-                  Tanggal Diterima <b>*</b>
-                </label>
-
-                <input
-                  type="text"
-                  value={
-                    formData.tanggal_diterima
-                  }
-                  readOnly
-                />
-
-              </div>
-
-              {/* NOMOR SURAT */}
-
-              <div className="tambah-form-group">
-
-                <label>
-                  Nomor Surat <b>*</b>
-                </label>
-
-                <input
-                  type="text"
-                  name="nomor_surat"
-                  value={
-                    formData.nomor_surat
-                  }
-                  onChange={
-                    handleChange
-                  }
-                  placeholder="Contoh: 005/123/DISNAKERTRANS"
-                />
-
-              </div>
-
-              {/* NOMOR AGENDA */}
-
-              <div className="tambah-form-group">
-
-                <label>
-                  Nomor Agenda <b>*</b>
-                </label>
-
-                <input
-                  type="text"
-                  name="nomor_agenda"
-                  value={
-                    formData.nomor_agenda
-                  }
-                  onChange={
-                    handleChange
-                  }
-                  placeholder="Contoh: 001"
-                />
-
-              </div>
-
-              {/* TANGGAL SURAT */}
-
-              <div className="tambah-form-group">
-
-                <label>
-                  Tanggal Surat <b>*</b>
-                </label>
-
-                <input
-                  type="text"
-                  name="tanggal_surat"
-                  value={
-                    formData.tanggal_surat
-                  }
-                  onChange={
-                    handleTanggalSuratChange
-                  }
-                  placeholder="Contoh: 28-08-2026"
-                  maxLength={10}
-                  inputMode="numeric"
-                />
-
-              </div>
-
-              {/* JAM DITERIMA */}
-
-              <div className="tambah-form-group">
-
-                <label>
-                  Jam Diterima <b>*</b>
-                </label>
-
-                <input
-                  type="time"
-                  value={
-                    formData.jam_diterima
-                  }
-                  readOnly
-                />
-
-              </div>
-
-            </div>
-
-            {/* =================================================
-                PERIHAL
-            ================================================= */}
-
-            <div className="tambah-form-group tambah-full">
-
+        {/* =========================
+            DATA SURAT
+        ========================= */}
+        <div className="form-section">
+          <h2>Data Surat</h2>
+
+          <div className="form-grid">
+            <div className="form-group">
               <label>
-                Perihal <b>*</b>
+                Nomor Surat
+              </label>
+
+              <input
+                type="text"
+                name="nomor_surat"
+                value={
+                  formData.nomor_surat
+                }
+                onChange={
+                  handleChange
+                }
+                placeholder="Masukkan nomor surat"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>
+                Asal Surat
+              </label>
+
+              <input
+                type="text"
+                name="asal_surat"
+                value={
+                  formData.asal_surat
+                }
+                onChange={
+                  handleChange
+                }
+                placeholder="Masukkan asal surat"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>
+                Tanggal Surat
+              </label>
+
+              <input
+                type="date"
+                name="tanggal_surat"
+                value={
+                  formData.tanggal_surat
+                }
+                onChange={
+                  handleChange
+                }
+              />
+            </div>
+
+            <div className="form-group">
+              <label>
+                Nomor Agenda
+              </label>
+
+              <input
+                type="text"
+                name="nomor_agenda"
+                value={
+                  formData.nomor_agenda
+                }
+                onChange={
+                  handleChange
+                }
+                placeholder="Masukkan nomor agenda"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>
+                Tanggal Diterima
+              </label>
+
+              <input
+                type="date"
+                name="tanggal_diterima"
+                value={
+                  formData.tanggal_diterima
+                }
+                onChange={
+                  handleChange
+                }
+              />
+            </div>
+
+            <div className="form-group">
+              <label>
+                Jam Diterima
+              </label>
+
+              <input
+                type="time"
+                name="jam_diterima"
+                value={
+                  formData.jam_diterima
+                }
+                onChange={
+                  handleChange
+                }
+              />
+            </div>
+
+            <div className="form-group full-width">
+              <label>
+                Perihal
               </label>
 
               <textarea
@@ -1096,377 +920,394 @@ function TambahSurat() {
                 placeholder="Masukkan perihal surat"
                 rows="4"
               />
-
             </div>
+          </div>
+        </div>
 
-            {/* =================================================
-                SCAN SURAT
-            ================================================= */}
+        {/* =========================
+            SCAN SURAT
+        ========================= */}
+        <div className="form-section">
+          <h2>Scan Surat</h2>
 
-            <div className="tambah-form-group tambah-full">
+          <p className="scan-info">
+            Scanner:{" "}
+            <strong>
+              Epson L3210
+            </strong>
+          </p>
 
-              <label>
-                Scan Surat <b>*</b>
-              </label>
+          <button
+            type="button"
+            className="btn-scan"
+            onClick={
+              handleScanDocument
+            }
+            disabled={loadingScan}
+          >
+            {loadingScan
+              ? "⏳ Sedang Scan..."
+              : "📠 Scan Surat"}
+          </button>
 
-              {/* =================================================
-                  TOMBOL SCAN
-              ================================================= */}
+          {/* =========================
+              PREVIEW HASIL SCAN
+          ========================= */}
+          {scanSurat.length >
+            0 && (
+            <div className="scan-preview-section">
+              <h3>
+                Hasil Scan (
+                {scanSurat.length} halaman)
+              </h3>
 
-              <button
-                type="button"
-                onClick={
-                  handleScanDocument
-                }
-                disabled={
-                  scanning ||
-                  scanSurat.length >= 20
-                }
-                className="tambah-btn-scan"
-                style={{
-                  width: "100%",
-                  minHeight: "52px",
-                  padding: "12px 18px",
-                  border: "none",
-                  borderRadius: "10px",
-                  background:
-                    scanning
-                      ? "#999"
-                      : "#2563eb",
-                  color: "#fff",
-                  fontSize: "16px",
-                  fontWeight: "700",
-                  cursor:
-                    scanning ||
-                    scanSurat.length >= 20
-                      ? "not-allowed"
-                      : "pointer",
-                  transition:
-                    "0.2s",
-                }}
-              >
-                {scanning
-                  ? "⏳ Sedang Memindai..."
-                  : "🖨️ Scan Dokumen"}
-              </button>
+              <div className="scan-preview-grid">
+                {scanSurat.map(
+                  (
+                    file,
+                    index
+                  ) => {
+                    const preview =
+                      URL.createObjectURL(
+                        file
+                      );
 
-              {/* =================================================
-                  PREVIEW HASIL SCAN
-              ================================================= */}
-
-              {scanSurat.length > 0 && (
-                <div
-                  style={{
-                    marginTop: "18px",
-                    display: "grid",
-                    gap: "18px",
-                  }}
-                >
-
-                  <div
-                    style={{
-                      fontSize: "16px",
-                      fontWeight: "700",
-                    }}
-                  >
-                    🖼️ Hasil Scan
-                  </div>
-
-                  {scanSurat.map(
-                    (file, index) => (
-
+                    return (
                       <div
+                        className="scan-preview-card"
                         key={`${file.name}-${index}`}
-                        style={{
-                          border:
-                            "1px solid #ddd",
-                          borderRadius:
-                            "12px",
-                          padding: "15px",
-                          background:
-                            "#fafafa",
-                        }}
                       >
-
-                        {/* =====================================
-                            PREVIEW GAMBAR
-                        ====================================== */}
-
-                        {isImage(file) &&
-                          previewUrls[index] && (
-
-                            <div
-                              style={{
-                                width:
-                                  "100%",
-                                display:
-                                  "flex",
-                                justifyContent:
-                                  "center",
-                                marginBottom:
-                                  "15px",
-                                background:
-                                  "#f1f1f1",
-                                borderRadius:
-                                  "10px",
-                                padding:
-                                  "10px",
-                                boxSizing:
-                                  "border-box",
-                              }}
-                            >
-
-                              <img
-                                src={
-                                  previewUrls[index]
-                                }
-                                alt={`Hasil scan ${index + 1}`}
-                                style={{
-                                  display:
-                                    "block",
-                                  maxWidth:
-                                    "100%",
-                                  width:
-                                    "auto",
-                                  maxHeight:
-                                    "600px",
-                                  objectFit:
-                                    "contain",
-                                  borderRadius:
-                                    "6px",
-                                }}
-                              />
-
-                            </div>
-
-                          )}
-
-                        {/* =====================================
-                            PREVIEW PDF
-                        ====================================== */}
-
-                        {isPDF(file) && (
-
-                          <div
-                            style={{
-                              padding:
-                                "20px",
-                              textAlign:
-                                "center",
-                              background:
-                                "#f1f1f1",
-                              borderRadius:
-                                "10px",
-                              marginBottom:
-                                "15px",
-                            }}
-                          >
-                            📄 File PDF
-                            <br />
-                            <small>
-                              PDF akan disimpan bersama surat.
-                            </small>
-                          </div>
-
-                        )}
-
-                        {/* =====================================
-                            INFO FILE
-                        ====================================== */}
-
-                        <div
-                          style={{
-                            display:
-                              "flex",
-                            alignItems:
-                              "center",
-                            justifyContent:
-                              "space-between",
-                            gap: "10px",
-                            flexWrap:
-                              "wrap",
-                          }}
-                        >
-
-                          <div>
-
-                            <strong>
-                              {isPDF(file)
-                                ? "📄"
-                                : isImage(file)
-                                ? "🖨️"
-                                : "📁"}{" "}
-                              File {index + 1}
-                            </strong>
-
-                            <div
-                              style={{
-                                marginTop:
-                                  "4px",
-                              }}
-                            >
-                              {file.name}
-                            </div>
-
-                            <div
-                              style={{
-                                fontSize:
-                                  "12px",
-                                color:
-                                  "#666",
-                                marginTop:
-                                  "3px",
-                              }}
-                            >
-                              {(
-                                file.size /
-                                1024 /
-                                1024
-                              ).toFixed(2)}{" "}
-                              MB
-                            </div>
-
-                          </div>
+                        <div className="scan-preview-header">
+                          <strong>
+                            Halaman{" "}
+                            {index + 1}
+                          </strong>
 
                           <button
                             type="button"
+                            className="btn-remove-scan"
                             onClick={() =>
-                              handleRemoveFile(
+                              handleRemoveScan(
                                 index
                               )
                             }
-                            style={{
-                              padding:
-                                "8px 12px",
-                              border:
-                                "none",
-                              borderRadius:
-                                "7px",
-                              cursor:
-                                "pointer",
-                            }}
                           >
-                            🗑️ Hapus
+                            ✕
                           </button>
-
                         </div>
 
+                        <img
+                          src={preview}
+                          alt={`Hasil scan halaman ${
+                            index + 1
+                          }`}
+                          className="scan-preview-image"
+                          onLoad={() =>
+                            URL.revokeObjectURL(
+                              preview
+                            )
+                          }
+                        />
                       </div>
-
-                    )
-                  )}
-
-                </div>
-              )}
-
-              {/* =================================================
-                  KAMERA
-              ================================================= */}
-
-              <button
-                type="button"
-                onClick={() =>
-                  setShowCamera(true)
-                }
-                className="tambah-btn-camera"
-                style={{
-                  marginTop: "10px",
-                  padding: "10px 15px",
-                  cursor: "pointer",
-                }}
-              >
-                📷 Ambil Foto dengan Kamera
-              </button>
-
-              {/* =================================================
-                  JUMLAH FILE
-              ================================================= */}
-
-              <div
-                style={{
-                  marginTop: "15px",
-                  fontWeight: "600",
-                }}
-              >
-                File hasil scan:{" "}
-                {scanSurat.length} / 20
+                    );
+                  }
+                )}
               </div>
 
-              {/* =================================================
-                  INFO
-              ================================================= */}
-
-              <small
-                className="tambah-scan-info"
-                style={{
-                  display: "block",
-                  marginTop: "12px",
-                }}
-              >
-                Klik 🖨️ Scan Dokumen untuk
-                memindai surat menggunakan
-                Epson L3210. Untuk dokumen
-                beberapa halaman, lakukan
-                scan satu halaman lalu klik
-                Scan Dokumen lagi.
-                Maksimal 20 file.
-              </small>
-
+              {/* =========================
+                  BUAT PDF
+              ========================= */}
+              <div className="pdf-action-area">
+                <button
+                  type="button"
+                  className="btn-create-pdf"
+                  onClick={
+                    handleCreatePDF
+                  }
+                  disabled={
+                    loadingPDF
+                  }
+                >
+                  {loadingPDF
+                    ? "⏳ Membuat PDF..."
+                    : "📄 Buat PDF & Preview"}
+                </button>
+              </div>
             </div>
+          )}
 
-            {/* =================================================
-                BUTTON
-            ================================================= */}
+          {/* =========================
+              PDF PREVIEW
+          ========================= */}
+          {pdfPreview && (
+            <div className="pdf-preview-section">
+              <div className="pdf-preview-header">
+                <div>
+                  <h3>
+                    Preview PDF
+                  </h3>
 
-            <div className="tambah-form-actions">
+                  <p>
+                    {scanSurat.length} halaman
+                    sudah digabung menjadi
+                    satu PDF.
+                  </p>
+                </div>
 
-              <Link
-                to="/surat"
-                className="tambah-btn-cancel"
-              >
-                Batal
-              </Link>
+                <span className="pdf-status">
+                  ✓ PDF Siap
+                </span>
+              </div>
 
-              <button
-                type="submit"
-                className="tambah-btn-save"
-                disabled={
-                  loading ||
-                  scanning
-                }
-              >
-                {loading
-                  ? "Menyimpan..."
-                  : `✓ Simpan Surat (${scanSurat.length} File)`}
-              </button>
+              <div className="pdf-viewer">
+                <iframe
+                  src={pdfPreview}
+                  title="Preview PDF Surat"
+                />
+              </div>
 
+              <div className="pdf-info">
+                <span>
+                  📄{" "}
+                  {pdfFile?.name ||
+                    "surat.pdf"}
+                </span>
+
+                <span>
+                  {pdfFile
+                    ? `${(
+                        pdfFile.size /
+                        1024
+                      ).toFixed(1)} KB`
+                    : ""}
+                </span>
+              </div>
+
+              <p className="pdf-note">
+                Periksa PDF di atas terlebih
+                dahulu. Jika semua halaman
+                sudah benar, klik{" "}
+                <strong>
+                  "Simpan Surat"
+                </strong>
+                .
+              </p>
             </div>
+          )}
+        </div>
 
-          </form>
+        {/* =========================
+            TOMBOL SIMPAN
+        ========================= */}
+        <div className="form-actions">
+          <button
+            type="button"
+            className="btn-batal"
+            onClick={() =>
+              navigate("/surat")
+            }
+            disabled={loadingSave}
+          >
+            Batal
+          </button>
 
-        </section>
+          <button
+            type="submit"
+            className="btn-simpan"
+            disabled={loadingSave}
+          >
+            {loadingSave
+              ? "⏳ Menyimpan..."
+              : "💾 Simpan Surat"}
+          </button>
+        </div>
+      </form>
 
-      </main>
+      {/* =========================
+          STYLE TAMBAHAN
+      ========================= */}
+      <style>{`
+        .scan-info {
+          margin-bottom: 15px;
+          color: #555;
+        }
 
-      {/* =====================================================
-          CAMERA
-      ===================================================== */}
+        .btn-scan {
+          padding: 12px 20px;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          font-weight: 600;
+          margin-bottom: 20px;
+        }
 
-      {showCamera && (
+        .btn-scan:disabled,
+        .btn-create-pdf:disabled,
+        .btn-simpan:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
 
-        <CameraCapture
-          onCapture={
-            handleCameraCapture
+        .scan-preview-section {
+          margin-top: 20px;
+        }
+
+        .scan-preview-section h3 {
+          margin-bottom: 15px;
+        }
+
+        .scan-preview-grid {
+          display: grid;
+          grid-template-columns: repeat(
+            auto-fit,
+            minmax(250px, 1fr)
+          );
+          gap: 20px;
+        }
+
+        .scan-preview-card {
+          border: 1px solid #ddd;
+          border-radius: 10px;
+          overflow: hidden;
+          background: #fff;
+        }
+
+        .scan-preview-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 10px 12px;
+          background: #f5f5f5;
+        }
+
+        .btn-remove-scan {
+          border: none;
+          background: transparent;
+          color: #d00;
+          font-size: 18px;
+          font-weight: bold;
+          cursor: pointer;
+        }
+
+        .scan-preview-image {
+          display: block;
+          width: 100%;
+          max-height: 500px;
+          object-fit: contain;
+          background: #eee;
+        }
+
+        .pdf-action-area {
+          margin-top: 25px;
+          text-align: center;
+        }
+
+        .btn-create-pdf {
+          padding: 13px 22px;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          font-weight: 700;
+        }
+
+        .pdf-preview-section {
+          margin-top: 30px;
+          padding: 20px;
+          border: 1px solid #ddd;
+          border-radius: 12px;
+          background: #fafafa;
+        }
+
+        .pdf-preview-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 15px;
+          margin-bottom: 15px;
+        }
+
+        .pdf-preview-header h3 {
+          margin: 0 0 5px;
+        }
+
+        .pdf-preview-header p {
+          margin: 0;
+          color: #666;
+        }
+
+        .pdf-status {
+          padding: 7px 12px;
+          border-radius: 20px;
+          background: #e8f7e8;
+          color: #238523;
+          font-weight: 700;
+          white-space: nowrap;
+        }
+
+        .pdf-viewer {
+          width: 100%;
+          height: 700px;
+          border: 1px solid #ccc;
+          border-radius: 8px;
+          overflow: hidden;
+          background: #525659;
+        }
+
+        .pdf-viewer iframe {
+          width: 100%;
+          height: 100%;
+          border: none;
+        }
+
+        .pdf-info {
+          display: flex;
+          justify-content: space-between;
+          gap: 10px;
+          margin-top: 10px;
+          font-size: 14px;
+          color: #555;
+        }
+
+        .pdf-note {
+          margin-top: 15px;
+          padding: 12px;
+          border-radius: 8px;
+          background: #fff;
+          border: 1px solid #ddd;
+          color: #555;
+        }
+
+        @media (max-width: 650px) {
+          .scan-preview-grid {
+            grid-template-columns: 1fr;
           }
-          onClose={() =>
-            setShowCamera(false)
+
+          .pdf-preview-section {
+            padding: 12px;
           }
-        />
 
-      )}
+          .pdf-preview-header {
+            flex-direction: column;
+            align-items: flex-start;
+          }
 
+          .pdf-viewer {
+            height: 500px;
+          }
+
+          .pdf-info {
+            flex-direction: column;
+          }
+        }
+
+        @media (max-width: 400px) {
+          .pdf-viewer {
+            height: 450px;
+          }
+        }
+      `}</style>
     </div>
   );
-}
+};
 
 export default TambahSurat;
