@@ -10,6 +10,13 @@ import CameraCapture from "../components/CameraCapture";
 
 const API_URL = "https://disposisi-react-8vdu.vercel.app";
 
+// =========================================================
+// URL SCANNER BRIDGE DI KOMPUTER
+// HP OFFICEJET 7612 USB
+// =========================================================
+
+const SCANNER_URL = "http://127.0.0.1:5050";
+
 function TambahSurat() {
   const navigate = useNavigate();
 
@@ -28,6 +35,7 @@ function TambahSurat() {
   });
 
   const [loading, setLoading] = useState(false);
+  const [scanning, setScanning] = useState(false);
   const [error, setError] = useState("");
 
   // =========================================================
@@ -185,46 +193,208 @@ function TambahSurat() {
   };
 
   // =========================================================
-  // PILIH BANYAK FILE
+  // SCAN DOKUMEN DARI HP OFFICEJET 7612
   // =========================================================
 
-  const handleScanChange = (e) => {
-    const files = Array.from(
-      e.target.files || []
-    );
-
+  const handleScanDocument = async () => {
     setError("");
 
-    if (files.length === 0) {
+    // =======================================================
+    // CEK JUMLAH FILE
+    // =======================================================
+
+    if (scanSurat.length >= 20) {
+      setError(
+        "Maksimal hanya dapat memasukkan 20 file."
+      );
+
       return;
     }
 
-    const fileValid = [];
+    try {
+      setScanning(true);
 
-    for (const file of files) {
-      if (validateFile(file)) {
-        fileValid.push(file);
-      }
-    }
+      console.log(
+        "======================================"
+      );
 
-    setScanSurat((prev) => {
-      const gabungan = [
-        ...prev,
-        ...fileValid,
-      ];
+      console.log(
+        "MEMULAI SCAN DOKUMEN"
+      );
 
-      if (gabungan.length > 20) {
-        setError(
-          "Maksimal hanya dapat mengupload 20 file."
+      console.log(
+        "SCANNER:",
+        "HP OfficeJet 7612"
+      );
+
+      console.log(
+        "SCANNER BRIDGE:",
+        SCANNER_URL
+      );
+
+      console.log(
+        "======================================"
+      );
+
+      // =====================================================
+      // CEK SCANNER BRIDGE
+      // =====================================================
+
+      try {
+        const checkResponse = await fetch(
+          `${SCANNER_URL}/`,
+          {
+            method: "GET",
+          }
         );
 
-        return gabungan.slice(0, 20);
+        if (!checkResponse.ok) {
+          throw new Error(
+            "Scanner Bridge tidak merespons."
+          );
+        }
+
+      } catch (bridgeError) {
+
+        console.error(
+          "Scanner Bridge tidak dapat diakses:",
+          bridgeError
+        );
+
+        throw new Error(
+          "Scanner Bridge belum berjalan. Jalankan scanner-bridge terlebih dahulu di komputer yang terhubung ke HP OfficeJet 7612."
+        );
       }
 
-      return gabungan;
-    });
+      // =====================================================
+      // MINTA SCAN
+      // =====================================================
 
-    e.target.value = "";
+      const response = await fetch(
+        `${SCANNER_URL}/scan`,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json",
+          },
+
+          body: JSON.stringify({
+            nama_file:
+              `scan_${Date.now()}.jpg`,
+          }),
+        }
+      );
+
+      // =====================================================
+      // JIKA SCAN GAGAL
+      // =====================================================
+
+      if (!response.ok) {
+
+        let message =
+          "Gagal melakukan scan dokumen.";
+
+        try {
+          const result =
+            await response.json();
+
+          if (result.message) {
+            message = result.message;
+          }
+
+        } catch {
+          // Tidak masalah jika response bukan JSON
+        }
+
+        throw new Error(message);
+      }
+
+      // =====================================================
+      // AMBIL HASIL SCAN SEBAGAI BLOB
+      // =====================================================
+
+      const blob =
+        await response.blob();
+
+      if (!blob || blob.size === 0) {
+        throw new Error(
+          "Scanner tidak menghasilkan file."
+        );
+      }
+
+      // =====================================================
+      // UBAH BLOB MENJADI FILE
+      // =====================================================
+
+      const fileName =
+        `scan_${Date.now()}.jpg`;
+
+      const scannedFile =
+        new File(
+          [blob],
+          fileName,
+          {
+            type: "image/jpeg",
+            lastModified: Date.now(),
+          }
+        );
+
+      // =====================================================
+      // VALIDASI HASIL SCAN
+      // =====================================================
+
+      if (!validateFile(scannedFile)) {
+        return;
+      }
+
+      // =====================================================
+      // MASUKKAN HASIL SCAN KE DAFTAR
+      // =====================================================
+
+      setScanSurat((prev) => {
+
+        if (prev.length >= 20) {
+
+          setError(
+            "Maksimal hanya dapat memasukkan 20 file."
+          );
+
+          return prev;
+        }
+
+        return [
+          ...prev,
+          scannedFile,
+        ];
+      });
+
+      console.log(
+        "SCAN BERHASIL:",
+        scannedFile.name
+      );
+
+      console.log(
+        "UKURAN:",
+        scannedFile.size
+      );
+
+    } catch (error) {
+
+      console.error(
+        "GAGAL SCAN:",
+        error
+      );
+
+      setError(
+        error.message ||
+        "Gagal melakukan scan dokumen."
+      );
+
+    } finally {
+
+      setScanning(false);
+    }
   };
 
   // =========================================================
@@ -239,7 +409,9 @@ function TambahSurat() {
     }
 
     setScanSurat((prev) => {
+
       if (prev.length >= 20) {
+
         setError(
           "Maksimal hanya dapat mengupload 20 file."
         );
@@ -262,7 +434,9 @@ function TambahSurat() {
 
   const handleRemoveFile = (index) => {
     setScanSurat((prev) =>
-      prev.filter((_, i) => i !== index)
+      prev.filter(
+        (_, i) => i !== index
+      )
     );
   };
 
@@ -271,11 +445,16 @@ function TambahSurat() {
   // =========================================================
 
   const isImage = (file) => {
-    return file?.type?.startsWith("image/");
+    return file?.type?.startsWith(
+      "image/"
+    );
   };
 
   const isPDF = (file) => {
-    return file?.type === "application/pdf";
+    return (
+      file?.type ===
+      "application/pdf"
+    );
   };
 
   // =========================================================
@@ -312,14 +491,16 @@ function TambahSurat() {
     // =====================================================
 
     if (scanSurat.length === 0) {
+
       setError(
-        "Minimal satu scan surat wajib dipilih atau difoto."
+        "Minimal satu scan surat wajib dilakukan."
       );
 
       return;
     }
 
     if (scanSurat.length > 20) {
+
       setError(
         "Maksimal hanya dapat mengupload 20 file."
       );
@@ -328,6 +509,7 @@ function TambahSurat() {
     }
 
     for (const file of scanSurat) {
+
       if (!validateFile(file)) {
         return;
       }
@@ -338,19 +520,24 @@ function TambahSurat() {
     // =====================================================
 
     try {
+
       setLoading(true);
 
       // ===================================================
       // AMBIL TOKEN LOGIN
       // ===================================================
 
-      const token = localStorage.getItem("token");
+      const token =
+        localStorage.getItem(
+          "token"
+        );
 
       // ===================================================
       // JIKA TOKEN TIDAK ADA
       // ===================================================
 
       if (!token) {
+
         setError(
           "Sesi login tidak ditemukan. Silakan login kembali."
         );
@@ -364,7 +551,8 @@ function TambahSurat() {
       // BUAT FORMDATA
       // ===================================================
 
-      const data = new FormData();
+      const data =
+        new FormData();
 
       data.append(
         "nomor_surat",
@@ -426,6 +614,7 @@ function TambahSurat() {
       // ===================================================
 
       scanSurat.forEach((file) => {
+
         data.append(
           "arsip_surat",
           file
@@ -434,27 +623,34 @@ function TambahSurat() {
 
       // ===================================================
       // KIRIM KE BACKEND
-      // TOKEN WAJIB DIKIRIM
       // ===================================================
 
-      const response = await fetch(
-        `${API_URL}/api/surat`,
-        {
-          method: "POST",
-
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-
-          body: data,
-        }
+      console.log(
+        "Mengirim surat ke:",
+        `${API_URL}/api/surat`
       );
+
+      const response =
+        await fetch(
+          `${API_URL}/api/surat`,
+          {
+            method: "POST",
+
+            headers: {
+              Authorization:
+                `Bearer ${token}`,
+            },
+
+            body: data,
+          }
+        );
 
       // ===================================================
       // AMBIL HASIL RESPONSE
       // ===================================================
 
-      const result = await response.json();
+      const result =
+        await response.json();
 
       // ===================================================
       // TOKEN EXPIRED / TIDAK VALID
@@ -464,9 +660,18 @@ function TambahSurat() {
         response.status === 401 ||
         response.status === 403
       ) {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        localStorage.removeItem("bidang");
+
+        localStorage.removeItem(
+          "token"
+        );
+
+        localStorage.removeItem(
+          "user"
+        );
+
+        localStorage.removeItem(
+          "bidang"
+        );
 
         setError(
           "Sesi login sudah berakhir. Silakan login kembali."
@@ -482,6 +687,7 @@ function TambahSurat() {
       // ===================================================
 
       if (!response.ok) {
+
         throw new Error(
           result.message ||
           "Gagal menyimpan surat."
@@ -499,6 +705,7 @@ function TambahSurat() {
       navigate("/surat");
 
     } catch (error) {
+
       console.error(
         "Gagal menyimpan surat:",
         error
@@ -510,6 +717,7 @@ function TambahSurat() {
       );
 
     } finally {
+
       setLoading(false);
     }
   };
@@ -542,7 +750,9 @@ function TambahSurat() {
 
       <aside
         className={`tambah-sidebar ${
-          menuOpen ? "menu-open" : ""
+          menuOpen
+            ? "menu-open"
+            : ""
         }`}
       >
 
@@ -737,8 +947,12 @@ function TambahSurat() {
                 <input
                   type="text"
                   name="asal_surat"
-                  value={formData.asal_surat}
-                  onChange={handleChange}
+                  value={
+                    formData.asal_surat
+                  }
+                  onChange={
+                    handleChange
+                  }
                   placeholder="Contoh: Dinas Pendidikan"
                   autoComplete="off"
                 />
@@ -774,8 +988,12 @@ function TambahSurat() {
                 <input
                   type="text"
                   name="nomor_surat"
-                  value={formData.nomor_surat}
-                  onChange={handleChange}
+                  value={
+                    formData.nomor_surat
+                  }
+                  onChange={
+                    handleChange
+                  }
                   placeholder="Contoh: 005/123/DISNAKERTRANS"
                 />
 
@@ -792,8 +1010,12 @@ function TambahSurat() {
                 <input
                   type="text"
                   name="nomor_agenda"
-                  value={formData.nomor_agenda}
-                  onChange={handleChange}
+                  value={
+                    formData.nomor_agenda
+                  }
+                  onChange={
+                    handleChange
+                  }
                   placeholder="Contoh: 001"
                 />
 
@@ -855,8 +1077,12 @@ function TambahSurat() {
 
               <textarea
                 name="perihal"
-                value={formData.perihal}
-                onChange={handleChange}
+                value={
+                  formData.perihal
+                }
+                onChange={
+                  handleChange
+                }
                 placeholder="Masukkan perihal surat"
                 rows="4"
               />
@@ -869,20 +1095,50 @@ function TambahSurat() {
 
             <div className="tambah-form-group tambah-full">
 
-              <label htmlFor="arsip_surat">
+              <label>
                 Scan Surat <b>*</b>
               </label>
 
-              <input
-                id="arsip_surat"
-                type="file"
-                multiple
-                accept=".pdf,.jpg,.jpeg,.png,.webp"
-                className="tambah-scan-input"
-                onChange={
-                  handleScanChange
+              {/* =================================================
+                  TOMBOL SCAN
+              ================================================= */}
+
+              <button
+                type="button"
+                onClick={
+                  handleScanDocument
                 }
-              />
+                disabled={
+                  scanning ||
+                  scanSurat.length >= 20
+                }
+                className="tambah-btn-scan"
+                style={{
+                  width: "100%",
+                  minHeight: "52px",
+                  padding: "12px 18px",
+                  border: "none",
+                  borderRadius: "10px",
+                  background:
+                    scanning
+                      ? "#999"
+                      : "#2563eb",
+                  color: "#fff",
+                  fontSize: "16px",
+                  fontWeight: "700",
+                  cursor:
+                    scanning ||
+                    scanSurat.length >= 20
+                      ? "not-allowed"
+                      : "pointer",
+                  transition:
+                    "0.2s",
+                }}
+              >
+                {scanning
+                  ? "⏳ Sedang Memindai..."
+                  : "🖨️ Scan Dokumen"}
+              </button>
 
               {/* =================================================
                   KAMERA
@@ -913,7 +1169,7 @@ function TambahSurat() {
                   fontWeight: "600",
                 }}
               >
-                File dipilih:{" "}
+                File hasil scan:{" "}
                 {scanSurat.length} / 20
               </div>
 
@@ -938,10 +1194,13 @@ function TambahSurat() {
                         key={`${file.name}-${index}`}
                         style={{
                           padding: "12px",
-                          border: "1px solid #ddd",
-                          borderRadius: "8px",
+                          border:
+                            "1px solid #ddd",
+                          borderRadius:
+                            "8px",
                           display: "flex",
-                          alignItems: "center",
+                          alignItems:
+                            "center",
                           justifyContent:
                             "space-between",
                           gap: "10px",
@@ -955,7 +1214,7 @@ function TambahSurat() {
                             {isPDF(file)
                               ? "📄"
                               : isImage(file)
-                              ? "🖼️"
+                              ? "🖨️"
                               : "📁"}{" "}
 
                             File {index + 1}
@@ -968,8 +1227,10 @@ function TambahSurat() {
 
                           <div
                             style={{
-                              fontSize: "12px",
-                              color: "#666",
+                              fontSize:
+                                "12px",
+                              color:
+                                "#666",
                             }}
                           >
                             {(
@@ -1003,7 +1264,7 @@ function TambahSurat() {
               )}
 
               {/* =================================================
-                  INFO FILE
+                  INFO
               ================================================= */}
 
               <small
@@ -1013,8 +1274,13 @@ function TambahSurat() {
                   marginTop: "12px",
                 }}
               >
-                Upload PDF, JPG, JPEG, PNG, atau WEBP.
-                Maksimal 20 file dan maksimal 20 MB setiap file.
+                Klik 🖨️ Scan Dokumen untuk
+                memindai surat menggunakan
+                HP OfficeJet 7612. Untuk
+                dokumen beberapa halaman,
+                lakukan scan satu halaman
+                lalu klik Scan Dokumen lagi.
+                Maksimal 20 file.
               </small>
 
             </div>
@@ -1035,7 +1301,10 @@ function TambahSurat() {
               <button
                 type="submit"
                 className="tambah-btn-save"
-                disabled={loading}
+                disabled={
+                  loading ||
+                  scanning
+                }
               >
                 {loading
                   ? "Menyimpan..."
