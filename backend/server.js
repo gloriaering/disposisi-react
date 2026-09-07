@@ -10,10 +10,55 @@ const authRoutes = require("./routes/authRoutes");
 const app = express();
 
 // =========================================================
-// MIDDLEWARE
+// CORS
 // =========================================================
 
-app.use(cors());
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://disposisi-disnakertransulut.vercel.app",
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Izinkan request tanpa origin
+      // Contoh: Postman atau server-to-server
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      console.log("CORS DITOLAK:", origin);
+
+      return callback(
+        new Error("Origin tidak diizinkan oleh CORS")
+      );
+    },
+
+    methods: [
+      "GET",
+      "POST",
+      "PUT",
+      "PATCH",
+      "DELETE",
+      "OPTIONS",
+    ],
+
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+    ],
+
+    credentials: true,
+  })
+);
+
+// =========================================================
+// MIDDLEWARE
+// =========================================================
 
 app.use(express.json());
 
@@ -75,7 +120,6 @@ app.use(async (req, res, next) => {
 // =========================================================
 
 app.get("/api/status-db", (req, res) => {
-
   const status = mongoose.connection.readyState;
 
   const statusDatabase = {
@@ -90,7 +134,6 @@ app.get("/api/status-db", (req, res) => {
     database_status: statusDatabase[status],
     readyState: status,
   });
-
 });
 
 // =========================================================
@@ -98,13 +141,11 @@ app.get("/api/status-db", (req, res) => {
 // =========================================================
 
 app.get("/api/test-mongodb", (req, res) => {
-
   res.json({
     success: mongoose.connection.readyState === 1,
     message: "BERHASIL TERHUBUNG KE MONGODB ATLAS",
     database: mongoose.connection.name,
   });
-
 });
 
 // =========================================================
@@ -113,7 +154,6 @@ app.get("/api/test-mongodb", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 
-
 // =========================================================
 // ROUTE SURAT
 // =========================================================
@@ -121,27 +161,23 @@ app.use("/api/auth", authRoutes);
 app.use("/api/surat", suratRoutes);
 
 // =========================================================
-// JALANKAN SERVER DI LOCALHOST SAJA
+// JALANKAN SERVER LOCAL
 // =========================================================
 
 const PORT = process.env.PORT || 5000;
 
 if (require.main === module) {
-
   connectMongoDB()
     .then(() => {
-
       app.listen(PORT, () => {
         console.log(
           `Server berjalan di http://localhost:${PORT}`
         );
       });
-
     })
     .catch(() => {
       console.log("Server tidak dapat dijalankan.");
     });
-
 }
 
 // =========================================================

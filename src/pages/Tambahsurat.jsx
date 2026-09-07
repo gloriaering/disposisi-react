@@ -12,7 +12,7 @@ const API_URL = "https://disposisi-react-8vdu.vercel.app";
 
 // =========================================================
 // URL SCANNER BRIDGE DI KOMPUTER
-// HP OFFICEJET 7612 USB
+// EPSON L3210 USB
 // =========================================================
 
 const SCANNER_URL = "http://127.0.0.1:5050";
@@ -43,6 +43,12 @@ function TambahSurat() {
   // =========================================================
 
   const [scanSurat, setScanSurat] = useState([]);
+
+  // =========================================================
+  // PREVIEW HASIL SCAN
+  // =========================================================
+
+  const [previewUrls, setPreviewUrls] = useState([]);
 
   // =========================================================
   // HAMBURGER MENU
@@ -107,6 +113,30 @@ function TambahSurat() {
 
     return () => clearInterval(interval);
   }, []);
+
+  // =========================================================
+  // BUAT PREVIEW UNTUK FILE
+  // =========================================================
+
+  useEffect(() => {
+    const urls = scanSurat.map((file) => {
+      if (file?.type?.startsWith("image/")) {
+        return URL.createObjectURL(file);
+      }
+
+      return null;
+    });
+
+    setPreviewUrls(urls);
+
+    return () => {
+      urls.forEach((url) => {
+        if (url) {
+          URL.revokeObjectURL(url);
+        }
+      });
+    };
+  }, [scanSurat]);
 
   // =========================================================
   // HANDLE INPUT
@@ -193,7 +223,7 @@ function TambahSurat() {
   };
 
   // =========================================================
-  // SCAN DOKUMEN DARI HP OFFICEJET 7612
+  // SCAN DOKUMEN EPSON L3210
   // =========================================================
 
   const handleScanDocument = async () => {
@@ -224,7 +254,7 @@ function TambahSurat() {
 
       console.log(
         "SCANNER:",
-        "HP OfficeJet 7612"
+        "EPSON L3210"
       );
 
       console.log(
@@ -253,16 +283,14 @@ function TambahSurat() {
             "Scanner Bridge tidak merespons."
           );
         }
-
       } catch (bridgeError) {
-
         console.error(
           "Scanner Bridge tidak dapat diakses:",
           bridgeError
         );
 
         throw new Error(
-          "Scanner Bridge belum berjalan. Jalankan scanner-bridge terlebih dahulu di komputer yang terhubung ke HP OfficeJet 7612."
+          "Scanner Bridge belum berjalan. Jalankan scanner-bridge terlebih dahulu di komputer yang terhubung ke Epson L3210."
         );
       }
 
@@ -291,7 +319,6 @@ function TambahSurat() {
       // =====================================================
 
       if (!response.ok) {
-
         let message =
           "Gagal melakukan scan dokumen.";
 
@@ -302,7 +329,6 @@ function TambahSurat() {
           if (result.message) {
             message = result.message;
           }
-
         } catch {
           // Tidak masalah jika response bukan JSON
         }
@@ -353,9 +379,7 @@ function TambahSurat() {
       // =====================================================
 
       setScanSurat((prev) => {
-
         if (prev.length >= 20) {
-
           setError(
             "Maksimal hanya dapat memasukkan 20 file."
           );
@@ -380,7 +404,6 @@ function TambahSurat() {
       );
 
     } catch (error) {
-
       console.error(
         "GAGAL SCAN:",
         error
@@ -392,7 +415,6 @@ function TambahSurat() {
       );
 
     } finally {
-
       setScanning(false);
     }
   };
@@ -409,9 +431,7 @@ function TambahSurat() {
     }
 
     setScanSurat((prev) => {
-
       if (prev.length >= 20) {
-
         setError(
           "Maksimal hanya dapat mengupload 20 file."
         );
@@ -491,7 +511,6 @@ function TambahSurat() {
     // =====================================================
 
     if (scanSurat.length === 0) {
-
       setError(
         "Minimal satu scan surat wajib dilakukan."
       );
@@ -500,7 +519,6 @@ function TambahSurat() {
     }
 
     if (scanSurat.length > 20) {
-
       setError(
         "Maksimal hanya dapat mengupload 20 file."
       );
@@ -509,7 +527,6 @@ function TambahSurat() {
     }
 
     for (const file of scanSurat) {
-
       if (!validateFile(file)) {
         return;
       }
@@ -520,7 +537,6 @@ function TambahSurat() {
     // =====================================================
 
     try {
-
       setLoading(true);
 
       // ===================================================
@@ -537,7 +553,6 @@ function TambahSurat() {
       // ===================================================
 
       if (!token) {
-
         setError(
           "Sesi login tidak ditemukan. Silakan login kembali."
         );
@@ -614,7 +629,6 @@ function TambahSurat() {
       // ===================================================
 
       scanSurat.forEach((file) => {
-
         data.append(
           "arsip_surat",
           file
@@ -660,7 +674,6 @@ function TambahSurat() {
         response.status === 401 ||
         response.status === 403
       ) {
-
         localStorage.removeItem(
           "token"
         );
@@ -687,7 +700,6 @@ function TambahSurat() {
       // ===================================================
 
       if (!response.ok) {
-
         throw new Error(
           result.message ||
           "Gagal menyimpan surat."
@@ -705,7 +717,6 @@ function TambahSurat() {
       navigate("/surat");
 
     } catch (error) {
-
       console.error(
         "Gagal menyimpan surat:",
         error
@@ -717,7 +728,6 @@ function TambahSurat() {
       );
 
     } finally {
-
       setLoading(false);
     }
   };
@@ -1141,6 +1151,215 @@ function TambahSurat() {
               </button>
 
               {/* =================================================
+                  PREVIEW HASIL SCAN
+              ================================================= */}
+
+              {scanSurat.length > 0 && (
+                <div
+                  style={{
+                    marginTop: "18px",
+                    display: "grid",
+                    gap: "18px",
+                  }}
+                >
+
+                  <div
+                    style={{
+                      fontSize: "16px",
+                      fontWeight: "700",
+                    }}
+                  >
+                    🖼️ Hasil Scan
+                  </div>
+
+                  {scanSurat.map(
+                    (file, index) => (
+
+                      <div
+                        key={`${file.name}-${index}`}
+                        style={{
+                          border:
+                            "1px solid #ddd",
+                          borderRadius:
+                            "12px",
+                          padding: "15px",
+                          background:
+                            "#fafafa",
+                        }}
+                      >
+
+                        {/* =====================================
+                            PREVIEW GAMBAR
+                        ====================================== */}
+
+                        {isImage(file) &&
+                          previewUrls[index] && (
+
+                            <div
+                              style={{
+                                width:
+                                  "100%",
+                                display:
+                                  "flex",
+                                justifyContent:
+                                  "center",
+                                marginBottom:
+                                  "15px",
+                                background:
+                                  "#f1f1f1",
+                                borderRadius:
+                                  "10px",
+                                padding:
+                                  "10px",
+                                boxSizing:
+                                  "border-box",
+                              }}
+                            >
+
+                              <img
+                                src={
+                                  previewUrls[index]
+                                }
+                                alt={`Hasil scan ${index + 1}`}
+                                style={{
+                                  display:
+                                    "block",
+                                  maxWidth:
+                                    "100%",
+                                  width:
+                                    "auto",
+                                  maxHeight:
+                                    "600px",
+                                  objectFit:
+                                    "contain",
+                                  borderRadius:
+                                    "6px",
+                                }}
+                              />
+
+                            </div>
+
+                          )}
+
+                        {/* =====================================
+                            PREVIEW PDF
+                        ====================================== */}
+
+                        {isPDF(file) && (
+
+                          <div
+                            style={{
+                              padding:
+                                "20px",
+                              textAlign:
+                                "center",
+                              background:
+                                "#f1f1f1",
+                              borderRadius:
+                                "10px",
+                              marginBottom:
+                                "15px",
+                            }}
+                          >
+                            📄 File PDF
+                            <br />
+                            <small>
+                              PDF akan disimpan bersama surat.
+                            </small>
+                          </div>
+
+                        )}
+
+                        {/* =====================================
+                            INFO FILE
+                        ====================================== */}
+
+                        <div
+                          style={{
+                            display:
+                              "flex",
+                            alignItems:
+                              "center",
+                            justifyContent:
+                              "space-between",
+                            gap: "10px",
+                            flexWrap:
+                              "wrap",
+                          }}
+                        >
+
+                          <div>
+
+                            <strong>
+                              {isPDF(file)
+                                ? "📄"
+                                : isImage(file)
+                                ? "🖨️"
+                                : "📁"}{" "}
+                              File {index + 1}
+                            </strong>
+
+                            <div
+                              style={{
+                                marginTop:
+                                  "4px",
+                              }}
+                            >
+                              {file.name}
+                            </div>
+
+                            <div
+                              style={{
+                                fontSize:
+                                  "12px",
+                                color:
+                                  "#666",
+                                marginTop:
+                                  "3px",
+                              }}
+                            >
+                              {(
+                                file.size /
+                                1024 /
+                                1024
+                              ).toFixed(2)}{" "}
+                              MB
+                            </div>
+
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleRemoveFile(
+                                index
+                              )
+                            }
+                            style={{
+                              padding:
+                                "8px 12px",
+                              border:
+                                "none",
+                              borderRadius:
+                                "7px",
+                              cursor:
+                                "pointer",
+                            }}
+                          >
+                            🗑️ Hapus
+                          </button>
+
+                        </div>
+
+                      </div>
+
+                    )
+                  )}
+
+                </div>
+              )}
+
+              {/* =================================================
                   KAMERA
               ================================================= */}
 
@@ -1174,96 +1393,6 @@ function TambahSurat() {
               </div>
 
               {/* =================================================
-                  DAFTAR FILE
-              ================================================= */}
-
-              {scanSurat.length > 0 && (
-
-                <div
-                  style={{
-                    marginTop: "15px",
-                    display: "grid",
-                    gap: "10px",
-                  }}
-                >
-
-                  {scanSurat.map(
-                    (file, index) => (
-
-                      <div
-                        key={`${file.name}-${index}`}
-                        style={{
-                          padding: "12px",
-                          border:
-                            "1px solid #ddd",
-                          borderRadius:
-                            "8px",
-                          display: "flex",
-                          alignItems:
-                            "center",
-                          justifyContent:
-                            "space-between",
-                          gap: "10px",
-                        }}
-                      >
-
-                        <div>
-
-                          <strong>
-
-                            {isPDF(file)
-                              ? "📄"
-                              : isImage(file)
-                              ? "🖨️"
-                              : "📁"}{" "}
-
-                            File {index + 1}
-
-                          </strong>
-
-                          <div>
-                            {file.name}
-                          </div>
-
-                          <div
-                            style={{
-                              fontSize:
-                                "12px",
-                              color:
-                                "#666",
-                            }}
-                          >
-                            {(
-                              file.size /
-                              1024 /
-                              1024
-                            ).toFixed(2)}{" "}
-                            MB
-                          </div>
-
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            handleRemoveFile(
-                              index
-                            )
-                          }
-                        >
-                          🗑️ Hapus
-                        </button>
-
-                      </div>
-
-                    )
-                  )}
-
-                </div>
-
-              )}
-
-              {/* =================================================
                   INFO
               ================================================= */}
 
@@ -1276,10 +1405,10 @@ function TambahSurat() {
               >
                 Klik 🖨️ Scan Dokumen untuk
                 memindai surat menggunakan
-                HP OfficeJet 7612. Untuk
-                dokumen beberapa halaman,
-                lakukan scan satu halaman
-                lalu klik Scan Dokumen lagi.
+                Epson L3210. Untuk dokumen
+                beberapa halaman, lakukan
+                scan satu halaman lalu klik
+                Scan Dokumen lagi.
                 Maksimal 20 file.
               </small>
 
