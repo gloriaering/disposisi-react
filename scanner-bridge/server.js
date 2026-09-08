@@ -7,16 +7,74 @@ const app = express();
 
 const PORT = 5050;
 
-// =========================================================
-// MIDDLEWARE
-// =========================================================
+/* =========================================================
+   PRIVATE NETWORK ACCESS
+========================================================= */
 
-app.use(cors());
+app.use((req, res, next) => {
+  res.header(
+    "Access-Control-Allow-Private-Network",
+    "true"
+  );
+
+  next();
+});
+
+/* =========================================================
+   CORS
+========================================================= */
+
+const allowedOrigins = [
+  "https://disposisi-disnakertransulut.vercel.app",
+  "http://localhost:5173",
+];
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Request tanpa origin
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    console.log("=================================");
+    console.log("CORS DITOLAK");
+    console.log("Origin:", origin);
+    console.log("=================================");
+
+    return callback(
+      new Error("Origin tidak diizinkan oleh CORS")
+    );
+  },
+
+  methods: [
+    "GET",
+    "POST",
+    "OPTIONS",
+  ],
+
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+  ],
+
+  optionsSuccessStatus: 204,
+};
+
+app.use(cors(corsOptions));
+
+/* =========================================================
+   BODY PARSER
+========================================================= */
+
 app.use(express.json());
 
-// =========================================================
-// TEST SCANNER BRIDGE
-// =========================================================
+/* =========================================================
+   TEST SCANNER BRIDGE
+========================================================= */
 
 app.get("/", (req, res) => {
   res.json({
@@ -25,9 +83,9 @@ app.get("/", (req, res) => {
   });
 });
 
-// =========================================================
-// SCAN DOKUMEN
-// =========================================================
+/* =========================================================
+   SCAN DOKUMEN
+========================================================= */
 
 app.post("/scan", (req, res) => {
   const scriptPath = path.join(__dirname, "scan.ps1");
@@ -53,31 +111,34 @@ app.post("/scan", (req, res) => {
   let output = "";
   let errorOutput = "";
 
-  // =======================================================
-  // HASIL OUTPUT POWERSHELL
-  // =======================================================
+  /* =======================================================
+     HASIL OUTPUT POWERSHELL
+  ======================================================= */
 
   powershell.stdout.on("data", (data) => {
     output += data.toString();
   });
 
-  // =======================================================
-  // ERROR POWERSHELL
-  // =======================================================
+  /* =======================================================
+     ERROR POWERSHELL
+  ======================================================= */
 
   powershell.stderr.on("data", (data) => {
     errorOutput += data.toString();
   });
 
-  // =======================================================
-  // POWERSHELL SELESAI
-  // =======================================================
+  /* =======================================================
+     POWERSHELL SELESAI
+  ======================================================= */
 
   powershell.on("close", (code) => {
     console.log("PowerShell selesai.");
     console.log("Kode:", code);
 
-    // Jika scan gagal
+    /* =====================================================
+       SCAN GAGAL
+    ===================================================== */
+
     if (code !== 0) {
       console.error("ERROR SCANNER:", errorOutput);
 
@@ -89,10 +150,12 @@ app.post("/scan", (req, res) => {
       });
     }
 
-    // Lokasi file hasil scan
+    /* =====================================================
+       HASIL FILE SCAN
+    ===================================================== */
+
     const filePath = output.trim();
 
-    // Kalau tidak ada file
     if (!filePath) {
       return res.status(500).json({
         success: false,
@@ -102,9 +165,9 @@ app.post("/scan", (req, res) => {
 
     console.log("HASIL SCAN:", filePath);
 
-    // =====================================================
-    // KIRIM FILE HASIL SCAN KE FRONTEND
-    // =====================================================
+    /* =====================================================
+       KIRIM FILE KE FRONTEND
+    ===================================================== */
 
     res.sendFile(filePath, (error) => {
       if (error) {
@@ -125,9 +188,27 @@ app.post("/scan", (req, res) => {
   });
 });
 
-// =========================================================
-// JALANKAN SCANNER BRIDGE
-// =========================================================
+/* =========================================================
+   ERROR HANDLER
+========================================================= */
+
+app.use((err, req, res, next) => {
+  console.error("=================================");
+  console.error("SERVER ERROR");
+  console.error(err.message);
+  console.error("=================================");
+
+  res.status(500).json({
+    success: false,
+    message:
+      err.message ||
+      "Terjadi kesalahan pada Scanner Bridge.",
+  });
+});
+
+/* =========================================================
+   JALANKAN SCANNER BRIDGE
+========================================================= */
 
 app.listen(PORT, "127.0.0.1", () => {
   console.log("=================================");

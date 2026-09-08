@@ -99,9 +99,7 @@ const TambahSurat = () => {
       };
 
       reader.onerror = () => {
-        reject(
-          new Error("Gagal membaca file.")
-        );
+        reject(new Error("Gagal membaca file."));
       };
 
       reader.readAsDataURL(file);
@@ -117,17 +115,13 @@ const TambahSurat = () => {
 
       image.onload = () => {
         try {
-          const canvas =
-            document.createElement("canvas");
+          const canvas = document.createElement("canvas");
 
-          const ctx =
-            canvas.getContext("2d");
+          const ctx = canvas.getContext("2d");
 
           if (!ctx) {
             reject(
-              new Error(
-                "Canvas browser tidak tersedia."
-              )
+              new Error("Canvas browser tidak tersedia.")
             );
             return;
           }
@@ -201,23 +195,14 @@ const TambahSurat = () => {
     try {
       setLoadingScan(true);
 
-      console.log(
-        "================================="
-      );
-
-      console.log(
-        "MEMULAI SCAN DOKUMEN"
-      );
-
-      console.log(
-        "================================="
-      );
+      console.log("=================================");
+      console.log("MEMULAI SCAN DOKUMEN");
+      console.log("=================================");
 
       // -----------------------------------------------------
       // CEK SCANNER BRIDGE
       // -----------------------------------------------------
-      const bridgeCheck =
-        await fetch(`${SCANNER_URL}/`);
+      const bridgeCheck = await fetch(`${SCANNER_URL}/`);
 
       if (!bridgeCheck.ok) {
         throw new Error(
@@ -225,33 +210,27 @@ const TambahSurat = () => {
         );
       }
 
-      const bridgeData =
-        await bridgeCheck.json();
+      const bridgeData = await bridgeCheck.json();
 
-      console.log(
-        "SCANNER BRIDGE:",
-        bridgeData
-      );
+      console.log("SCANNER BRIDGE:", bridgeData);
 
       // -----------------------------------------------------
       // JALANKAN SCAN
       // -----------------------------------------------------
-      const response =
-        await fetch(
-          `${SCANNER_URL}/scan`,
-          {
-            method: "POST",
+      const response = await fetch(
+        `${SCANNER_URL}/scan`,
+        {
+          method: "POST",
 
-            headers: {
-              "Content-Type":
-                "application/json",
-            },
+          headers: {
+            "Content-Type": "application/json",
+          },
 
-            body: JSON.stringify({
-              nama_file: `scan_${Date.now()}.jpg`,
-            }),
-          }
-        );
+          body: JSON.stringify({
+            nama_file: `scan_${Date.now()}.jpg`,
+          }),
+        }
+      );
 
       console.log(
         "STATUS SCANNER:",
@@ -263,27 +242,22 @@ const TambahSurat = () => {
           "Scanner gagal melakukan scan.";
 
         try {
-          const errorData =
-            await response.json();
+          const errorData = await response.json();
 
           if (errorData?.message) {
-            errorMessage =
-              errorData.message;
+            errorMessage = errorData.message;
           }
         } catch {
           // Response bukan JSON
         }
 
-        throw new Error(
-          errorMessage
-        );
+        throw new Error(errorMessage);
       }
 
       // -----------------------------------------------------
       // AMBIL HASIL SCAN
       // -----------------------------------------------------
-      const blob =
-        await response.blob();
+      const blob = await response.blob();
 
       console.log(
         "UKURAN HASIL SCAN:",
@@ -295,13 +269,8 @@ const TambahSurat = () => {
         blob.type
       );
 
-      if (
-        !blob ||
-        blob.size === 0
-      ) {
-        throw new Error(
-          "Hasil scan kosong."
-        );
+      if (!blob || blob.size === 0) {
+        throw new Error("Hasil scan kosong.");
       }
 
       // -----------------------------------------------------
@@ -310,14 +279,13 @@ const TambahSurat = () => {
       const fileName =
         `scan_${Date.now()}.jpg`;
 
-      const file =
-        new File(
-          [blob],
-          fileName,
-          {
-            type: "image/jpeg",
-          }
-        );
+      const file = new File(
+        [blob],
+        fileName,
+        {
+          type: "image/jpeg",
+        }
+      );
 
       // -----------------------------------------------------
       // TAMBAHKAN KE DAFTAR SCAN
@@ -344,9 +312,7 @@ const TambahSurat = () => {
       // PDF LAMA TIDAK BERLAKU LAGI
       // -----------------------------------------------------
       if (pdfPreview) {
-        URL.revokeObjectURL(
-          pdfPreview
-        );
+        URL.revokeObjectURL(pdfPreview);
       }
 
       setPdfPreview("");
@@ -360,13 +326,8 @@ const TambahSurat = () => {
         "================================="
       );
 
-      console.error(
-        "GAGAL SCAN:"
-      );
-
-      console.error(
-        error
-      );
+      console.error("GAGAL SCAN:");
+      console.error(error);
 
       console.error(
         "================================="
@@ -393,9 +354,7 @@ const TambahSurat = () => {
 
     // PDF harus dibuat ulang
     if (pdfPreview) {
-      URL.revokeObjectURL(
-        pdfPreview
-      );
+      URL.revokeObjectURL(pdfPreview);
     }
 
     setPdfPreview("");
@@ -448,13 +407,12 @@ const TambahSurat = () => {
     // -----------------------------------------------------
     // BUAT PDF A4
     // -----------------------------------------------------
-    const pdf =
-      new jsPDF({
-        unit: "mm",
-        format: "a4",
-        orientation: "portrait",
-        compress: true,
-      });
+    const pdf = new jsPDF({
+      unit: "mm",
+      format: "a4",
+      orientation: "portrait",
+      compress: true,
+    });
 
     // -----------------------------------------------------
     // MASUKKAN SETIAP HASIL SCAN
@@ -464,8 +422,7 @@ const TambahSurat = () => {
       i < scanSurat.length;
       i++
     ) {
-      const file =
-        scanSurat[i];
+      const file = scanSurat[i];
 
       console.log(
         `Memasukkan halaman ${i + 1} ke PDF...`
@@ -496,8 +453,7 @@ const TambahSurat = () => {
       // ---------------------------------------------------
       // BACA UKURAN GAMBAR
       // ---------------------------------------------------
-      const image =
-        new Image();
+      const image = new Image();
 
       await new Promise(
         (resolve, reject) => {
@@ -520,14 +476,9 @@ const TambahSurat = () => {
       // ---------------------------------------------------
       // UKURAN A4
       // ---------------------------------------------------
-      const pageWidth =
-        210;
-
-      const pageHeight =
-        297;
-
-      const margin =
-        5;
+      const pageWidth = 210;
+      const pageHeight = 297;
+      const margin = 5;
 
       const maxWidth =
         pageWidth -
@@ -623,9 +574,7 @@ const TambahSurat = () => {
     // HASIL PDF
     // -----------------------------------------------------
     const pdfBlob =
-      pdf.output(
-        "blob"
-      );
+      pdf.output("blob");
 
     if (
       !pdfBlob ||
@@ -781,7 +730,7 @@ const TambahSurat = () => {
           !formData.asal_surat.trim()
         ) {
           alert(
-            "Asal surat wajib diisi."
+            "Surat Dari wajib diisi."
           );
           return;
         }
@@ -853,9 +802,7 @@ const TambahSurat = () => {
             "Sesi login tidak ditemukan. Silakan login kembali."
           );
 
-          navigate(
-            "/login"
-          );
+          navigate("/login");
 
           return;
         }
@@ -876,9 +823,7 @@ const TambahSurat = () => {
             return;
           }
 
-          setLoadingSave(
-            true
-          );
+          setLoadingSave(true);
 
           finalPDF =
             await createPDF();
@@ -915,9 +860,7 @@ const TambahSurat = () => {
         // ---------------------------------------------------
         // MULAI SIMPAN
         // ---------------------------------------------------
-        setLoadingSave(
-          true
-        );
+        setLoadingSave(true);
 
         // ---------------------------------------------------
         // FORMDATA
@@ -1055,9 +998,7 @@ const TambahSurat = () => {
             "Sesi login sudah berakhir. Silakan login kembali."
           );
 
-          navigate(
-            "/login"
-          );
+          navigate("/login");
 
           return;
         }
@@ -1079,9 +1020,7 @@ const TambahSurat = () => {
           `Surat berhasil disimpan!\n\n${scanSurat.length} halaman hasil scan telah digabung menjadi 1 PDF.`
         );
 
-        navigate(
-          "/surat"
-        );
+        navigate("/surat");
       } catch (error) {
         console.error(
           "================================="
@@ -1091,9 +1030,7 @@ const TambahSurat = () => {
           "GAGAL MENYIMPAN SURAT"
         );
 
-        console.error(
-          error
-        );
+        console.error(error);
 
         console.error(
           "================================="
@@ -1104,9 +1041,7 @@ const TambahSurat = () => {
             "Terjadi kesalahan saat menyimpan surat."
         );
       } finally {
-        setLoadingSave(
-          false
-        );
+        setLoadingSave(false);
       }
     };
 
@@ -1158,6 +1093,51 @@ const TambahSurat = () => {
 
           <div className="form-grid">
 
+            {/* =================================================
+                KOLOM KIRI
+            ================================================= */}
+
+            {/* SURAT DARI */}
+            <div className="form-group">
+
+              <label>
+                Surat Dari
+              </label>
+
+              <input
+                type="text"
+                name="asal_surat"
+                value={
+                  formData.asal_surat
+                }
+                onChange={
+                  handleChange
+                }
+                placeholder="Masukkan asal surat"
+              />
+
+            </div>
+
+            {/* TANGGAL DITERIMA */}
+            <div className="form-group">
+
+              <label>
+                Tanggal Diterima
+              </label>
+
+              <input
+                type="date"
+                name="tanggal_diterima"
+                value={
+                  formData.tanggal_diterima
+                }
+                onChange={
+                  handleChange
+                }
+              />
+
+            </div>
+
             {/* NOMOR SURAT */}
             <div className="form-group">
 
@@ -1175,47 +1155,6 @@ const TambahSurat = () => {
                   handleChange
                 }
                 placeholder="Masukkan nomor surat"
-              />
-
-            </div>
-
-            {/* ASAL SURAT */}
-            <div className="form-group">
-
-              <label>
-                Asal Surat
-              </label>
-
-              <input
-                type="text"
-                name="asal_surat"
-                value={
-                  formData.asal_surat
-                }
-                onChange={
-                  handleChange
-                }
-                placeholder="Masukkan asal surat"
-              />
-
-            </div>
-
-            {/* TANGGAL SURAT */}
-            <div className="form-group">
-
-              <label>
-                Tanggal Surat
-              </label>
-
-              <input
-                type="date"
-                name="tanggal_surat"
-                value={
-                  formData.tanggal_surat
-                }
-                onChange={
-                  handleChange
-                }
               />
 
             </div>
@@ -1241,18 +1180,18 @@ const TambahSurat = () => {
 
             </div>
 
-            {/* TANGGAL DITERIMA */}
+            {/* TANGGAL SURAT */}
             <div className="form-group">
 
               <label>
-                Tanggal Diterima
+                Tanggal Surat
               </label>
 
               <input
                 type="date"
-                name="tanggal_diterima"
+                name="tanggal_surat"
                 value={
-                  formData.tanggal_diterima
+                  formData.tanggal_surat
                 }
                 onChange={
                   handleChange
@@ -1281,7 +1220,10 @@ const TambahSurat = () => {
 
             </div>
 
-            {/* PERIHAL */}
+            {/* =================================================
+                PERIHAL - FULL WIDTH
+            ================================================= */}
+
             <div className="form-group full-width">
 
               <label>
