@@ -20,13 +20,12 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // Izinkan request tanpa origin
-    // Contoh: Postman / server-to-server
+    // Request tanpa origin
     if (!origin) {
       return callback(null, true);
     }
 
-    // Izinkan frontend yang terdaftar
+    // Frontend yang diizinkan
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
@@ -61,15 +60,10 @@ const corsOptions = {
 };
 
 /* =========================================================
-   MIDDLEWARE CORS
+   CORS MIDDLEWARE
 ========================================================= */
 
 app.use(cors(corsOptions));
-
-/*
-  Pastikan request OPTIONS / preflight ditangani.
-*/
-app.options("*", cors(corsOptions));
 
 /* =========================================================
    BODY PARSER
@@ -191,7 +185,8 @@ app.use((err, req, res, next) => {
 
   res.status(500).json({
     success: false,
-    message: err.message || "Terjadi kesalahan pada server.",
+    message:
+      err.message || "Terjadi kesalahan pada server.",
   });
 });
 
