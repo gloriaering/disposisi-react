@@ -10,14 +10,27 @@ html,
 body {
   margin: 0;
   padding: 0;
+
   font-family: Arial, Helvetica, sans-serif;
+
   background: #eef3f8;
   color: #172b3a;
 }
 
+body {
+  overflow-x: hidden;
+}
+
 .app {
   min-height: 100vh;
-  background: #eef3f8;
+
+  background:
+    linear-gradient(
+      135deg,
+      #f4f8fc 0%,
+      #eef4f8 50%,
+      #eaf2f7 100%
+    );
 }
 
 
@@ -27,6 +40,7 @@ body {
 
 .sidebar {
   position: fixed;
+
   left: 0;
   top: 0;
 
@@ -40,6 +54,11 @@ body {
       circle at 15% 5%,
       rgba(69, 150, 255, 0.18),
       transparent 25%
+    ),
+    radial-gradient(
+      circle at 90% 90%,
+      rgba(52, 170, 225, 0.10),
+      transparent 28%
     ),
     linear-gradient(
       160deg,
@@ -55,7 +74,7 @@ body {
   overflow: hidden;
 
   box-shadow:
-    8px 0 35px rgba(4, 25, 48, 0.16);
+    8px 0 35px rgba(4, 25, 48, 0.14);
 }
 
 .sidebar::before {
@@ -107,13 +126,14 @@ body {
   z-index: 2;
 
   display: flex;
+
   align-items: center;
 
   gap: 13px;
 
   padding: 0 20px;
 
-  margin-bottom: 58px;
+  margin-bottom: 55px;
 }
 
 .brand-logo {
@@ -123,6 +143,7 @@ body {
   flex-shrink: 0;
 
   display: flex;
+
   align-items: center;
   justify-content: center;
 }
@@ -145,6 +166,7 @@ body {
   color: #ffffff;
 
   font-size: 14px;
+
   line-height: 1.25;
 
   font-weight: 700;
@@ -179,12 +201,12 @@ body {
 
   flex-direction: column;
 
-  gap: 8px;
+  gap: 7px;
 }
 
 .menu-title {
   margin:
-    0 0 9px 21px;
+    0 0 10px 21px;
 
   color:
     rgba(197, 224, 248, 0.48);
@@ -240,6 +262,10 @@ body {
 
   color:
     rgba(203, 228, 249, 0.65);
+
+  transition:
+    color 0.22s ease,
+    transform 0.22s ease;
 }
 
 .menu-item:hover {
@@ -252,11 +278,18 @@ body {
     translateX(3px);
 }
 
+.menu-item:hover span {
+  color: #75caff;
+
+  transform:
+    scale(1.05);
+}
+
 .menu-item.active {
   background:
     linear-gradient(
       90deg,
-      rgba(73, 159, 238, 0.22),
+      rgba(73, 159, 238, 0.23),
       rgba(73, 159, 238, 0.07)
     );
 
@@ -304,8 +337,13 @@ body {
   background:
     radial-gradient(
       circle at 90% 0%,
-      rgba(65, 150, 255, 0.13),
+      rgba(65, 150, 255, 0.11),
       transparent 24%
+    ),
+    radial-gradient(
+      circle at 15% 80%,
+      rgba(72, 178, 221, 0.045),
+      transparent 25%
     ),
     linear-gradient(
       135deg,
@@ -336,17 +374,17 @@ body {
   padding: 0 34px;
 
   background:
-    rgba(255, 255, 255, 0.88);
+    rgba(255, 255, 255, 0.90);
 
   backdrop-filter:
     blur(14px);
 
   border-bottom:
-    1px solid rgba(207, 220, 232, 0.75);
+    1px solid rgba(207, 220, 232, 0.70);
 
   box-shadow:
     0 5px 25px
-    rgba(15, 48, 77, 0.045);
+    rgba(15, 48, 77, 0.035);
 }
 
 .topbar-left {
@@ -365,6 +403,8 @@ body {
   font-size: 23px;
 
   font-weight: 700;
+
+  letter-spacing: -0.25px;
 }
 
 .topbar p {
@@ -394,7 +434,7 @@ body {
 
   cursor: pointer;
 
-  padding: 5px 10px;
+  padding: 5px;
 }
 
 
@@ -454,8 +494,21 @@ body {
   color: #ffffff;
 
   box-shadow:
-    0 18px 38px
-    rgba(11, 55, 88, 0.17);
+    0 16px 35px
+    rgba(11, 55, 88, 0.15);
+
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.welcome-card:hover {
+  transform:
+    translateY(-2px);
+
+  box-shadow:
+    0 20px 40px
+    rgba(11, 55, 88, 0.18);
 }
 
 .welcome-card > div {
@@ -479,6 +532,10 @@ body {
     0 5px 5px 0;
 
   background: #61c9ff;
+
+  box-shadow:
+    0 0 15px
+    rgba(97, 201, 255, 0.35);
 }
 
 .welcome-label {
@@ -541,21 +598,61 @@ body {
 
   border:
     1px solid
-    rgba(210, 223, 234, 0.9);
+    rgba(210, 223, 234, 0.85);
 
   border-radius: 18px;
 
   background:
-    rgba(255, 255, 255, 0.91);
+    rgba(255, 255, 255, 0.94);
 
   box-shadow:
     0 8px 25px
-    rgba(24, 66, 96, 0.055);
+    rgba(24, 66, 96, 0.045);
 
   overflow: hidden;
+
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease,
+    border-color 0.22s ease;
+}
+
+.stat-card::after {
+  content: "";
+
+  position: absolute;
+
+  right: -35px;
+  top: -35px;
+
+  width: 100px;
+  height: 100px;
+
+  border-radius: 50%;
+
+  background:
+    rgba(77, 175, 224, 0.045);
+
+  pointer-events: none;
+}
+
+.stat-card:hover {
+  transform:
+    translateY(-3px);
+
+  box-shadow:
+    0 13px 30px
+    rgba(24, 66, 96, 0.075);
+
+  border-color:
+    rgba(185, 211, 228, 0.95);
 }
 
 .stat-icon {
+  position: relative;
+
+  z-index: 1;
+
   width: 54px;
   height: 54px;
 
@@ -571,16 +668,24 @@ body {
   background:
     linear-gradient(
       145deg,
-      #e5f5ff,
-      #d5ebf7
+      #e7f6ff,
+      #d7edf8
     );
 
   color: #1677a8;
 
   font-size: 21px;
+
+  box-shadow:
+    inset 0 1px 1px
+    rgba(255, 255, 255, 0.8);
 }
 
 .stat-content {
+  position: relative;
+
+  z-index: 1;
+
   min-width: 0;
 }
 
@@ -602,6 +707,8 @@ body {
   font-size: 25px;
 
   font-weight: 700;
+
+  line-height: 1.1;
 }
 
 
@@ -626,15 +733,29 @@ body {
 
   border-radius: 18px;
 
-  background: #ffffff;
+  background:
+    rgba(255, 255, 255, 0.96);
 
   border:
     1px solid
-    rgba(207, 222, 233, 0.9);
+    rgba(207, 222, 233, 0.85);
 
   box-shadow:
     0 7px 20px
     rgba(24, 66, 96, 0.035);
+
+  transition:
+    box-shadow 0.22s ease,
+    transform 0.22s ease;
+}
+
+.quick-card:hover {
+  transform:
+    translateY(-2px);
+
+  box-shadow:
+    0 11px 27px
+    rgba(24, 66, 96, 0.06);
 }
 
 .quick-card h3 {
@@ -643,6 +764,8 @@ body {
   color: #153c5a;
 
   font-size: 17px;
+
+  font-weight: 700;
 }
 
 .quick-card p {
@@ -651,6 +774,8 @@ body {
   color: #7c8e9d;
 
   font-size: 12px;
+
+  line-height: 1.5;
 }
 
 
@@ -688,18 +813,31 @@ body {
 
   font-weight: 600;
 
+  box-shadow:
+    0 5px 12px
+    rgba(49, 95, 135, 0.12);
+
   transition:
     transform 0.2s ease,
-    box-shadow 0.2s ease;
+    box-shadow 0.2s ease,
+    filter 0.2s ease;
 }
 
 .btn-primary:hover {
   transform:
-    translateY(-1px);
+    translateY(-2px);
 
   box-shadow:
-    0 5px 12px
+    0 8px 17px
     rgba(49, 95, 135, 0.20);
+
+  filter:
+    brightness(1.04);
+}
+
+.btn-primary:active {
+  transform:
+    translateY(0);
 }
 
 
@@ -715,6 +853,8 @@ body {
   justify-content: space-between;
 
   margin-top: 30px;
+
+  padding-bottom: 3px;
 }
 
 .section-header h3 {
@@ -723,6 +863,8 @@ body {
   color: #173b58;
 
   font-size: 16px;
+
+  font-weight: 700;
 }
 
 .section-header p {
@@ -754,6 +896,10 @@ body {
 
   .dashboard {
     padding: 25px;
+  }
+
+  .welcome-card {
+    min-height: 175px;
   }
 
 }
@@ -934,6 +1080,14 @@ body {
       rgba(11, 55, 88, 0.12);
   }
 
+  .welcome-card:hover {
+    transform: none;
+
+    box-shadow:
+      0 10px 25px
+      rgba(11, 55, 88, 0.12);
+  }
+
   .welcome-card > div::before {
     left: -20px;
 
@@ -1004,6 +1158,14 @@ body {
       rgba(24, 66, 96, 0.05);
   }
 
+  .stat-card:hover {
+    transform: none;
+
+    box-shadow:
+      0 5px 18px
+      rgba(24, 66, 96, 0.05);
+  }
+
   .stat-icon {
     width: 38px;
     height: 38px;
@@ -1062,6 +1224,14 @@ body {
     padding: 18px;
 
     border-radius: 14px;
+
+    box-shadow:
+      0 5px 18px
+      rgba(24, 66, 96, 0.05);
+  }
+
+  .quick-card:hover {
+    transform: none;
 
     box-shadow:
       0 5px 18px
@@ -1176,6 +1346,23 @@ body {
 
   .quick-card {
     padding: 15px;
+  }
+
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .menu-item,
+  .stat-card,
+  .welcome-card,
+  .quick-card,
+  .btn-primary {
+    transition: none;
   }
 
 }

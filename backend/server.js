@@ -9,9 +9,9 @@ const authRoutes = require("./routes/authRoutes");
 
 const app = express();
 
-// =========================================================
-// CORS
-// =========================================================
+/* =========================================================
+   CORS
+========================================================= */
 
 const allowedOrigins = [
   "http://localhost:5173",
@@ -20,19 +20,25 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // Request tanpa origin
+    // Izinkan request tanpa origin
     // Contoh: Postman / server-to-server
     if (!origin) {
       return callback(null, true);
     }
 
+    // Izinkan frontend yang terdaftar
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
 
-    console.log("CORS DITOLAK:", origin);
+    console.log("=================================");
+    console.log("CORS DITOLAK");
+    console.log("Origin:", origin);
+    console.log("=================================");
 
-    return callback(null, false);
+    return callback(
+      new Error("Origin tidak diizinkan oleh CORS")
+    );
   },
 
   methods: [
@@ -54,186 +60,166 @@ const corsOptions = {
   optionsSuccessStatus: 204,
 };
 
-// Pasang CORS
+/* =========================================================
+   MIDDLEWARE CORS
+========================================================= */
+
 app.use(cors(corsOptions));
 
-// Tangani preflight OPTIONS
+/*
+  Pastikan request OPTIONS / preflight ditangani.
+*/
 app.options("*", cors(corsOptions));
 
-// =========================================================
-// MIDDLEWARE
-// =========================================================
+/* =========================================================
+   BODY PARSER
+========================================================= */
 
 app.use(express.json());
 
-// =========================================================
-// ROUTE UTAMA
-// =========================================================
+/* =========================================================
+   ROOT
+========================================================= */
 
 app.get("/", (req, res) => {
   res.json({
     success: true,
-    message:
-      "Backend Disposisi Surat berhasil berjalan",
+    message: "Backend Disposisi Surat berhasil berjalan",
   });
 });
 
-// =========================================================
-// KONEKSI MONGODB
-// =========================================================
+/* =========================================================
+   MONGODB
+========================================================= */
 
 const connectMongoDB = async () => {
   try {
-    if (
-      mongoose.connection.readyState === 1
-    ) {
+    if (mongoose.connection.readyState === 1) {
       return;
     }
 
-    await mongoose.connect(
-      process.env.MONGODB_URI
-    );
+    if (!process.env.MONGODB_URI) {
+      throw new Error("MONGODB_URI belum diatur.");
+    }
 
-    console.log(
-      "================================="
-    );
-    console.log(
-      "MongoDB Atlas BERHASIL TERHUBUNG"
-    );
-    console.log(
-      "Database:",
-      mongoose.connection.name
-    );
-    console.log(
-      "================================="
-    );
+    await mongoose.connect(process.env.MONGODB_URI);
+
+    console.log("=================================");
+    console.log("MongoDB Atlas BERHASIL TERHUBUNG");
+    console.log("Database:", mongoose.connection.name);
+    console.log("=================================");
   } catch (error) {
-    console.error(
-      "GAGAL TERHUBUNG KE MONGODB:"
-    );
-
+    console.error("GAGAL TERHUBUNG KE MONGODB:");
     console.error(error.message);
 
     throw error;
   }
 };
 
-// =========================================================
-// MIDDLEWARE KONEK DATABASE
-// =========================================================
+/* =========================================================
+   DATABASE MIDDLEWARE
+========================================================= */
 
 app.use(async (req, res, next) => {
   try {
     await connectMongoDB();
-
     next();
   } catch (error) {
-    console.error(
-      "DATABASE ERROR:",
-      error.message
-    );
+    console.error("DATABASE ERROR:", error.message);
 
     res.status(500).json({
       success: false,
-      message:
-        "Gagal terhubung ke database",
+      message: "Gagal terhubung ke database",
     });
   }
 });
 
-// =========================================================
-// TEST STATUS DATABASE
-// =========================================================
+/* =========================================================
+   STATUS DATABASE
+========================================================= */
 
-app.get(
-  "/api/status-db",
-  (req, res) => {
-    const status =
-      mongoose.connection.readyState;
+app.get("/api/status-db", (req, res) => {
+  const status = mongoose.connection.readyState;
 
-    const statusDatabase = {
-      0: "DISCONNECTED",
-      1: "CONNECTED",
-      2: "CONNECTING",
-      3: "DISCONNECTING",
-    };
+  const statusDatabase = {
+    0: "DISCONNECTED",
+    1: "CONNECTED",
+    2: "CONNECTING",
+    3: "DISCONNECTING",
+  };
 
-    res.json({
-      success: status === 1,
-      database_status:
-        statusDatabase[status],
-      readyState: status,
-    });
-  }
-);
+  res.json({
+    success: status === 1,
+    database_status: statusDatabase[status],
+    readyState: status,
+  });
+});
 
-// =========================================================
-// TEST MONGODB
-// =========================================================
+/* =========================================================
+   TEST MONGODB
+========================================================= */
 
-app.get(
-  "/api/test-mongodb",
-  (req, res) => {
-    res.json({
-      success:
-        mongoose.connection
-          .readyState === 1,
+app.get("/api/test-mongodb", (req, res) => {
+  res.json({
+    success: mongoose.connection.readyState === 1,
+    message: "BERHASIL TERHUBUNG KE MONGODB ATLAS",
+    database: mongoose.connection.name,
+  });
+});
 
-      message:
-        "BERHASIL TERHUBUNG KE MONGODB ATLAS",
+/* =========================================================
+   AUTH ROUTES
+========================================================= */
 
-      database:
-        mongoose.connection.name,
-    });
-  }
-);
+app.use("/api/auth", authRoutes);
 
-// =========================================================
-// ROUTE AUTH / LOGIN
-// =========================================================
+/* =========================================================
+   SURAT ROUTES
+========================================================= */
 
-app.use(
-  "/api/auth",
-  authRoutes
-);
+app.use("/api/surat", suratRoutes);
 
-// =========================================================
-// ROUTE SURAT
-// =========================================================
+/* =========================================================
+   ERROR HANDLER
+========================================================= */
 
-app.use(
-  "/api/surat",
-  suratRoutes
-);
+app.use((err, req, res, next) => {
+  console.error("=================================");
+  console.error("SERVER ERROR");
+  console.error(err.message);
+  console.error("=================================");
 
-// =========================================================
-// JALANKAN SERVER LOCAL
-// =========================================================
+  res.status(500).json({
+    success: false,
+    message: err.message || "Terjadi kesalahan pada server.",
+  });
+});
 
-const PORT =
-  process.env.PORT || 5000;
+/* =========================================================
+   SERVER
+========================================================= */
+
+const PORT = process.env.PORT || 5000;
 
 if (require.main === module) {
   connectMongoDB()
     .then(() => {
-      app.listen(
-        PORT,
-        () => {
-          console.log(
-            `Server berjalan di http://localhost:${PORT}`
-          );
-        }
-      );
+      app.listen(PORT, () => {
+        console.log("=================================");
+        console.log(
+          `Server berjalan di http://localhost:${PORT}`
+        );
+        console.log("=================================");
+      });
     })
-    .catch(() => {
-      console.log(
-        "Server tidak dapat dijalankan."
-      );
+    .catch((error) => {
+      console.error("Server tidak dapat dijalankan.");
+      console.error(error.message);
     });
 }
 
-// =========================================================
-// EXPORT UNTUK VERCEL
-// =========================================================
+/* =========================================================
+   EXPORT
+========================================================= */
 
 module.exports = app;

@@ -1,9 +1,24 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const API_URL =
-  import.meta.env.VITE_API_URL ||
-  "https://disposisi-react-8vdu.vercel.app";
+// =====================================================
+// API URL
+// =====================================================
+// Jika website dibuka dari localhost,
+// gunakan backend lokal.
+//
+// Jika website dibuka dari Vercel,
+// gunakan VITE_API_URL atau backend Vercel.
+// =====================================================
+
+const isLocalhost =
+  window.location.hostname === "localhost" ||
+  window.location.hostname === "127.0.0.1";
+
+const API_URL = isLocalhost
+  ? "http://localhost:5000"
+  : import.meta.env.VITE_API_URL ||
+    "https://disposisi-react-8vdu.vercel.app";
 
 function Login() {
   const navigate = useNavigate();

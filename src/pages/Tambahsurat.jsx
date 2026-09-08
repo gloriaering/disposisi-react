@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { jsPDF } from "jspdf";
 
-import "./TambahSurat.css";
+import "../assets/css/TambahSurat.css";
 
 const API_URL = "https://disposisi-react-8vdu.vercel.app";
 const SCANNER_URL = "http://127.0.0.1:5050";
@@ -10,9 +10,9 @@ const SCANNER_URL = "http://127.0.0.1:5050";
 const TambahSurat = () => {
   const navigate = useNavigate();
 
-  // =========================
+  // =========================================================
   // DATA FORM
-  // =========================
+  // =========================================================
   const [formData, setFormData] = useState({
     nomor_surat: "",
     asal_surat: "",
@@ -23,24 +23,50 @@ const TambahSurat = () => {
     perihal: "",
   });
 
-  // =========================
-  // FILE HASIL SCAN
-  // =========================
+  // =========================================================
+  // HASIL SCAN
+  // =========================================================
   const [scanSurat, setScanSurat] = useState([]);
 
-  // =========================
+  // =========================================================
+  // PREVIEW GAMBAR SCAN
+  // =========================================================
+  const [scanPreviews, setScanPreviews] = useState([]);
+
+  // =========================================================
   // PDF HASIL GABUNGAN
-  // =========================
+  // =========================================================
   const [pdfPreview, setPdfPreview] = useState("");
   const [pdfFile, setPdfFile] = useState(null);
 
+  // =========================================================
+  // LOADING
+  // =========================================================
   const [loadingScan, setLoadingScan] = useState(false);
   const [loadingPDF, setLoadingPDF] = useState(false);
   const [loadingSave, setLoadingSave] = useState(false);
 
-  // =========================
-  // CLEANUP PDF BLOB
-  // =========================
+  // =========================================================
+  // UPDATE PREVIEW GAMBAR SETIAP HASIL SCAN BERUBAH
+  // =========================================================
+  useEffect(() => {
+    const newPreviews = scanSurat.map((file) => ({
+      file,
+      url: URL.createObjectURL(file),
+    }));
+
+    setScanPreviews(newPreviews);
+
+    return () => {
+      newPreviews.forEach((item) => {
+        URL.revokeObjectURL(item.url);
+      });
+    };
+  }, [scanSurat]);
+
+  // =========================================================
+  // CLEANUP PDF PREVIEW
+  // =========================================================
   useEffect(() => {
     return () => {
       if (pdfPreview) {
@@ -49,9 +75,9 @@ const TambahSurat = () => {
     };
   }, [pdfPreview]);
 
-  // =========================
+  // =========================================================
   // HANDLE INPUT
-  // =========================
+  // =========================================================
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -61,49 +87,63 @@ const TambahSurat = () => {
     }));
   };
 
-  // =========================
-  // FORMAT FILE
-  // =========================
-  const validFileTypes = [
-    "application/pdf",
-    "image/jpeg",
-    "image/jpg",
-    "image/png",
-    "image/webp",
-  ];
-
-  // =========================
+  // =========================================================
   // FILE → DATA URL
-  // =========================
+  // =========================================================
   const fileToDataURL = (file) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
 
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = () => reject(new Error("Gagal membaca file."));
+      reader.onload = () => {
+        resolve(reader.result);
+      };
+
+      reader.onerror = () => {
+        reject(
+          new Error("Gagal membaca file.")
+        );
+      };
 
       reader.readAsDataURL(file);
     });
   };
 
-  // =========================
+  // =========================================================
   // IMAGE → JPEG
-  // =========================
+  // =========================================================
   const imageFileToJpeg = (file) => {
     return new Promise((resolve, reject) => {
       const image = new Image();
 
       image.onload = () => {
         try {
-          const canvas = document.createElement("canvas");
-          const ctx = canvas.getContext("2d");
+          const canvas =
+            document.createElement("canvas");
+
+          const ctx =
+            canvas.getContext("2d");
+
+          if (!ctx) {
+            reject(
+              new Error(
+                "Canvas browser tidak tersedia."
+              )
+            );
+            return;
+          }
 
           canvas.width = image.naturalWidth;
           canvas.height = image.naturalHeight;
 
           // Background putih
           ctx.fillStyle = "#ffffff";
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+          ctx.fillRect(
+            0,
+            0,
+            canvas.width,
+            canvas.height
+          );
 
           ctx.drawImage(
             image,
@@ -117,7 +157,9 @@ const TambahSurat = () => {
             (blob) => {
               if (!blob) {
                 reject(
-                  new Error("Gagal mengubah gambar menjadi JPEG.")
+                  new Error(
+                    "Gagal mengubah gambar menjadi JPEG."
+                  )
                 );
                 return;
               }
@@ -133,7 +175,11 @@ const TambahSurat = () => {
       };
 
       image.onerror = () => {
-        reject(new Error("Gagal membaca gambar hasil scan."));
+        reject(
+          new Error(
+            "Gagal membaca gambar hasil scan."
+          )
+        );
       };
 
       fileToDataURL(file)
@@ -144,21 +190,34 @@ const TambahSurat = () => {
     });
   };
 
-  // =========================
+  // =========================================================
   // SCAN DOKUMEN
-  // =========================
+  // =========================================================
   const handleScanDocument = async () => {
-    if (loadingScan) return;
+    if (loadingScan) {
+      return;
+    }
 
     try {
       setLoadingScan(true);
 
-      console.log("=================================");
-      console.log("MEMULAI SCAN DOKUMEN");
-      console.log("=================================");
+      console.log(
+        "================================="
+      );
 
-      // Cek scanner bridge
-      const bridgeCheck = await fetch(`${SCANNER_URL}/`);
+      console.log(
+        "MEMULAI SCAN DOKUMEN"
+      );
+
+      console.log(
+        "================================="
+      );
+
+      // -----------------------------------------------------
+      // CEK SCANNER BRIDGE
+      // -----------------------------------------------------
+      const bridgeCheck =
+        await fetch(`${SCANNER_URL}/`);
 
       if (!bridgeCheck.ok) {
         throw new Error(
@@ -166,78 +225,151 @@ const TambahSurat = () => {
         );
       }
 
-      // Jalankan scan
-      const response = await fetch(`${SCANNER_URL}/scan`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          nama_file: `scan_${Date.now()}.jpg`,
-        }),
-      });
+      const bridgeData =
+        await bridgeCheck.json();
+
+      console.log(
+        "SCANNER BRIDGE:",
+        bridgeData
+      );
+
+      // -----------------------------------------------------
+      // JALANKAN SCAN
+      // -----------------------------------------------------
+      const response =
+        await fetch(
+          `${SCANNER_URL}/scan`,
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body: JSON.stringify({
+              nama_file: `scan_${Date.now()}.jpg`,
+            }),
+          }
+        );
+
+      console.log(
+        "STATUS SCANNER:",
+        response.status
+      );
 
       if (!response.ok) {
-        let errorMessage = "Scanner gagal melakukan scan.";
+        let errorMessage =
+          "Scanner gagal melakukan scan.";
 
         try {
-          const errorData = await response.json();
+          const errorData =
+            await response.json();
 
           if (errorData?.message) {
-            errorMessage = errorData.message;
+            errorMessage =
+              errorData.message;
           }
         } catch {
-          // Abaikan jika response bukan JSON
+          // Response bukan JSON
         }
 
-        throw new Error(errorMessage);
+        throw new Error(
+          errorMessage
+        );
       }
 
-      const blob = await response.blob();
+      // -----------------------------------------------------
+      // AMBIL HASIL SCAN
+      // -----------------------------------------------------
+      const blob =
+        await response.blob();
 
-      if (!blob || blob.size === 0) {
+      console.log(
+        "UKURAN HASIL SCAN:",
+        blob.size
+      );
+
+      console.log(
+        "TIPE HASIL SCAN:",
+        blob.type
+      );
+
+      if (
+        !blob ||
+        blob.size === 0
+      ) {
         throw new Error(
           "Hasil scan kosong."
         );
       }
 
-      const fileName = `scan_${Date.now()}.jpg`;
+      // -----------------------------------------------------
+      // BUAT FILE JPG
+      // -----------------------------------------------------
+      const fileName =
+        `scan_${Date.now()}.jpg`;
 
-      const file = new File(
-        [blob],
-        fileName,
-        {
-          type: "image/jpeg",
-        }
-      );
+      const file =
+        new File(
+          [blob],
+          fileName,
+          {
+            type: "image/jpeg",
+          }
+        );
 
-      // Tambahkan scan baru
-      setScanSurat((prev) => [
-        ...prev,
-        file,
-      ]);
+      // -----------------------------------------------------
+      // TAMBAHKAN KE DAFTAR SCAN
+      // -----------------------------------------------------
+      setScanSurat((prev) => {
+        const halamanBerikutnya =
+          prev.length + 1;
 
-      // Kalau ada PDF preview lama,
-      // hapus karena jumlah halaman berubah
+        console.log(
+          `SCAN BERHASIL: halaman ${halamanBerikutnya}`
+        );
+
+        alert(
+          `Scan berhasil!\n\nHalaman ke-${halamanBerikutnya} berhasil ditambahkan.`
+        );
+
+        return [
+          ...prev,
+          file,
+        ];
+      });
+
+      // -----------------------------------------------------
+      // PDF LAMA TIDAK BERLAKU LAGI
+      // -----------------------------------------------------
       if (pdfPreview) {
-        URL.revokeObjectURL(pdfPreview);
-        setPdfPreview("");
+        URL.revokeObjectURL(
+          pdfPreview
+        );
       }
 
+      setPdfPreview("");
       setPdfFile(null);
 
       console.log(
-        "SCAN BERHASIL:",
-        file.name
-      );
-
-      alert(
-        `Scan berhasil!\n\nHalaman ke-${scanSurat.length + 1} berhasil ditambahkan.`
+        "Scan berhasil ditambahkan."
       );
     } catch (error) {
       console.error(
-        "Gagal scan:",
+        "================================="
+      );
+
+      console.error(
+        "GAGAL SCAN:"
+      );
+
+      console.error(
         error
+      );
+
+      console.error(
+        "================================="
       );
 
       alert(
@@ -249,9 +381,9 @@ const TambahSurat = () => {
     }
   };
 
-  // =========================
+  // =========================================================
   // HAPUS SATU HASIL SCAN
-  // =========================
+  // =========================================================
   const handleRemoveScan = (index) => {
     setScanSurat((prev) =>
       prev.filter(
@@ -259,18 +391,20 @@ const TambahSurat = () => {
       )
     );
 
-    // Reset PDF preview
+    // PDF harus dibuat ulang
     if (pdfPreview) {
-      URL.revokeObjectURL(pdfPreview);
+      URL.revokeObjectURL(
+        pdfPreview
+      );
     }
 
     setPdfPreview("");
     setPdfFile(null);
   };
 
-  // =========================
+  // =========================================================
   // BUAT PDF
-  // =========================
+  // =========================================================
   const createPDF = async () => {
     if (scanSurat.length === 0) {
       throw new Error(
@@ -278,10 +412,13 @@ const TambahSurat = () => {
       );
     }
 
-    // Kalau hanya satu file dan file tersebut PDF
+    // -----------------------------------------------------
+    // JIKA 1 FILE SUDAH PDF
+    // -----------------------------------------------------
     if (
       scanSurat.length === 1 &&
-      scanSurat[0].type === "application/pdf"
+      scanSurat[0].type ===
+        "application/pdf"
     ) {
       return new File(
         [scanSurat[0]],
@@ -292,11 +429,15 @@ const TambahSurat = () => {
       );
     }
 
-    // Pastikan semua adalah gambar
-    const hasPDF = scanSurat.some(
-      (file) =>
-        file.type === "application/pdf"
-    );
+    // -----------------------------------------------------
+    // CEK APAKAH ADA PDF DI ANTARA HASIL SCAN
+    // -----------------------------------------------------
+    const hasPDF =
+      scanSurat.some(
+        (file) =>
+          file.type ===
+          "application/pdf"
+      );
 
     if (hasPDF) {
       throw new Error(
@@ -304,478 +445,685 @@ const TambahSurat = () => {
       );
     }
 
-    const pdf = new jsPDF({
-      unit: "mm",
-      format: "a4",
-      orientation: "portrait",
-    });
+    // -----------------------------------------------------
+    // BUAT PDF A4
+    // -----------------------------------------------------
+    const pdf =
+      new jsPDF({
+        unit: "mm",
+        format: "a4",
+        orientation: "portrait",
+        compress: true,
+      });
 
+    // -----------------------------------------------------
+    // MASUKKAN SETIAP HASIL SCAN
+    // -----------------------------------------------------
     for (
       let i = 0;
       i < scanSurat.length;
       i++
     ) {
-      const file = scanSurat[i];
+      const file =
+        scanSurat[i];
 
       console.log(
         `Memasukkan halaman ${i + 1} ke PDF...`
       );
 
+      // ---------------------------------------------------
+      // UBAH GAMBAR KE JPEG
+      // ---------------------------------------------------
       const jpegBlob =
-        await imageFileToJpeg(file);
+        await imageFileToJpeg(
+          file
+        );
+
+      const jpegFile =
+        new File(
+          [jpegBlob],
+          `page_${i + 1}.jpg`,
+          {
+            type: "image/jpeg",
+          }
+        );
 
       const dataURL =
         await fileToDataURL(
-          new File(
-            [jpegBlob],
-            `page_${i + 1}.jpg`,
-            {
-              type: "image/jpeg",
-            }
-          )
+          jpegFile
         );
 
-      const image = new Image();
+      // ---------------------------------------------------
+      // BACA UKURAN GAMBAR
+      // ---------------------------------------------------
+      const image =
+        new Image();
 
       await new Promise(
         (resolve, reject) => {
-          image.onload = resolve;
-          image.onerror = () =>
-            reject(
-              new Error(
-                `Gagal membaca halaman ${i + 1}.`
-              )
-            );
+          image.onload =
+            resolve;
 
-          image.src = dataURL;
+          image.onerror =
+            () =>
+              reject(
+                new Error(
+                  `Gagal membaca halaman ${i + 1}.`
+                )
+              );
+
+          image.src =
+            dataURL;
         }
       );
 
-      const pageWidth = 210;
-      const pageHeight = 297;
+      // ---------------------------------------------------
+      // UKURAN A4
+      // ---------------------------------------------------
+      const pageWidth =
+        210;
 
-      const margin = 5;
+      const pageHeight =
+        297;
+
+      const margin =
+        5;
 
       const maxWidth =
-        pageWidth - margin * 2;
+        pageWidth -
+        margin * 2;
 
       const maxHeight =
-        pageHeight - margin * 2;
+        pageHeight -
+        margin * 2;
 
+      // ---------------------------------------------------
+      // UKURAN ASLI
+      // ---------------------------------------------------
       const imageWidth =
         image.naturalWidth;
 
       const imageHeight =
         image.naturalHeight;
 
-      const ratio =
-        imageWidth / imageHeight;
+      if (
+        imageWidth <= 0 ||
+        imageHeight <= 0
+      ) {
+        throw new Error(
+          `Ukuran halaman ${i + 1} tidak valid.`
+        );
+      }
 
-      let finalWidth = maxWidth;
+      const ratio =
+        imageWidth /
+        imageHeight;
+
+      // ---------------------------------------------------
+      // SESUAIKAN DENGAN A4
+      // ---------------------------------------------------
+      let finalWidth =
+        maxWidth;
+
       let finalHeight =
-        finalWidth / ratio;
+        finalWidth /
+        ratio;
 
       if (
-        finalHeight > maxHeight
+        finalHeight >
+        maxHeight
       ) {
-        finalHeight = maxHeight;
+        finalHeight =
+          maxHeight;
+
         finalWidth =
-          finalHeight * ratio;
+          finalHeight *
+          ratio;
       }
 
+      // ---------------------------------------------------
+      // POSISI TENGAH
+      // ---------------------------------------------------
       const x =
-        (pageWidth - finalWidth) / 2;
+        (pageWidth -
+          finalWidth) /
+        2;
 
       const y =
-        (pageHeight - finalHeight) / 2;
+        (pageHeight -
+          finalHeight) /
+        2;
 
+      // ---------------------------------------------------
+      // HALAMAN BARU
+      // ---------------------------------------------------
       if (i > 0) {
-        pdf.addPage();
+        pdf.addPage(
+          "a4",
+          "portrait"
+        );
       }
 
+      // ---------------------------------------------------
+      // MASUKKAN GAMBAR
+      // ---------------------------------------------------
       pdf.addImage(
         dataURL,
         "JPEG",
         x,
         y,
         finalWidth,
-        finalHeight
+        finalHeight,
+        undefined,
+        "FAST"
       );
     }
 
+    // -----------------------------------------------------
+    // HASIL PDF
+    // -----------------------------------------------------
     const pdfBlob =
-      pdf.output("blob");
-
-    return new File(
-      [pdfBlob],
-      `surat_${Date.now()}.pdf`,
-      {
-        type: "application/pdf",
-      }
-    );
-  };
-
-  // =========================
-  // BUAT PDF + PREVIEW
-  // =========================
-  const handleCreatePDF = async () => {
-    if (loadingPDF) return;
-
-    try {
-      setLoadingPDF(true);
-
-      if (scanSurat.length === 0) {
-        alert(
-          "Silakan scan surat terlebih dahulu."
-        );
-        return;
-      }
-
-      console.log(
-        "Membuat PDF dari",
-        scanSurat.length,
-        "halaman..."
+      pdf.output(
+        "blob"
       );
 
-      const resultPDF =
-        await createPDF();
-
-      if (!resultPDF) {
-        throw new Error(
-          "PDF gagal dibuat."
-        );
-      }
-
-      // Hapus preview lama
-      if (pdfPreview) {
-        URL.revokeObjectURL(pdfPreview);
-      }
-
-      // Buat URL untuk preview
-      const previewURL =
-        URL.createObjectURL(
-          resultPDF
-        );
-
-      setPdfFile(resultPDF);
-      setPdfPreview(previewURL);
-
-      console.log(
-        "PDF BERHASIL DIBUAT:",
-        resultPDF.name
+    if (
+      !pdfBlob ||
+      pdfBlob.size === 0
+    ) {
+      throw new Error(
+        "PDF berhasil diproses tetapi file PDF kosong."
       );
-
-      alert(
-        `PDF berhasil dibuat!\n\n${scanSurat.length} halaman digabung menjadi 1 PDF.`
-      );
-    } catch (error) {
-      console.error(
-        "Gagal membuat PDF:",
-        error
-      );
-
-      alert(
-        error.message ||
-          "Gagal membuat PDF."
-      );
-    } finally {
-      setLoadingPDF(false);
     }
+
+    const finalPDF =
+      new File(
+        [pdfBlob],
+        `surat_${Date.now()}.pdf`,
+        {
+          type: "application/pdf",
+        }
+      );
+
+    console.log(
+      "PDF BERHASIL DIBUAT:",
+      finalPDF.name
+    );
+
+    console.log(
+      "UKURAN PDF:",
+      finalPDF.size
+    );
+
+    return finalPDF;
   };
 
-  // =========================
-  // SIMPAN SURAT
-  // =========================
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (loadingSave) return;
-
-    try {
-      // =========================
-      // VALIDASI
-      // =========================
-      if (
-        !formData.nomor_surat.trim()
-      ) {
-        alert(
-          "Nomor surat wajib diisi."
-        );
+  // =========================================================
+  // BUAT PDF + PREVIEW
+  // =========================================================
+  const handleCreatePDF =
+    async () => {
+      if (loadingPDF) {
         return;
       }
 
-      if (
-        !formData.asal_surat.trim()
-      ) {
-        alert(
-          "Asal surat wajib diisi."
-        );
-        return;
-      }
+      try {
+        setLoadingPDF(true);
 
-      if (
-        !formData.tanggal_surat
-      ) {
-        alert(
-          "Tanggal surat wajib diisi."
-        );
-        return;
-      }
+        if (
+          scanSurat.length === 0
+        ) {
+          alert(
+            "Silakan scan surat terlebih dahulu."
+          );
 
-      if (
-        !formData.nomor_agenda.trim()
-      ) {
-        alert(
-          "Nomor agenda wajib diisi."
-        );
-        return;
-      }
-
-      if (
-        !formData.tanggal_diterima
-      ) {
-        alert(
-          "Tanggal diterima wajib diisi."
-        );
-        return;
-      }
-
-      if (
-        !formData.jam_diterima
-      ) {
-        alert(
-          "Jam diterima wajib diisi."
-        );
-        return;
-      }
-
-      if (
-        !formData.perihal.trim()
-      ) {
-        alert(
-          "Perihal wajib diisi."
-        );
-        return;
-      }
-
-      if (scanSurat.length === 0) {
-        alert(
-          "Silakan scan surat terlebih dahulu."
-        );
-        return;
-      }
-
-      // =========================
-      // TOKEN
-      // =========================
-      const token =
-        localStorage.getItem(
-          "token"
-        );
-
-      if (!token) {
-        alert(
-          "Sesi login tidak ditemukan. Silakan login kembali."
-        );
-
-        navigate("/login");
-        return;
-      }
-
-      // =========================
-      // KALAU PDF BELUM DIBUAT
-      // =========================
-      let finalPDF = pdfFile;
-
-      if (!finalPDF) {
-        const konfirmasi = window.confirm(
-          "PDF belum dibuat.\n\nBuat PDF sekarang?"
-        );
-
-        if (!konfirmasi) {
           return;
         }
 
-        setLoadingSave(true);
+        console.log(
+          "================================="
+        );
 
-        finalPDF =
+        console.log(
+          "MEMBUAT PDF"
+        );
+
+        console.log(
+          "Jumlah halaman:",
+          scanSurat.length
+        );
+
+        console.log(
+          "================================="
+        );
+
+        const resultPDF =
           await createPDF();
 
-        const previewURL =
-          URL.createObjectURL(
-            finalPDF
+        if (!resultPDF) {
+          throw new Error(
+            "PDF gagal dibuat."
           );
+        }
 
+        // ---------------------------------------------------
+        // HAPUS PREVIEW PDF LAMA
+        // ---------------------------------------------------
         if (pdfPreview) {
           URL.revokeObjectURL(
             pdfPreview
           );
         }
 
-        setPdfPreview(previewURL);
-        setPdfFile(finalPDF);
+        // ---------------------------------------------------
+        // BUAT PREVIEW PDF
+        // ---------------------------------------------------
+        const previewURL =
+          URL.createObjectURL(
+            resultPDF
+          );
+
+        setPdfFile(
+          resultPDF
+        );
+
+        setPdfPreview(
+          previewURL
+        );
+
+        console.log(
+          "PDF PREVIEW SIAP"
+        );
 
         alert(
-          "PDF berhasil dibuat dan sekarang ditampilkan sebagai preview.\n\nSilakan periksa PDF lalu klik Simpan Surat lagi."
+          `PDF berhasil dibuat!\n\n${scanSurat.length} halaman telah digabung menjadi 1 PDF.`
+        );
+      } catch (error) {
+        console.error(
+          "Gagal membuat PDF:",
+          error
         );
 
+        alert(
+          error.message ||
+            "Gagal membuat PDF."
+        );
+      } finally {
+        setLoadingPDF(false);
+      }
+    };
+
+  // =========================================================
+  // SIMPAN SURAT
+  // =========================================================
+  const handleSubmit =
+    async (e) => {
+      e.preventDefault();
+
+      if (loadingSave) {
         return;
       }
-
-      setLoadingSave(true);
-
-      // =========================
-      // FORMDATA
-      // =========================
-      const data =
-        new FormData();
-
-      data.append(
-        "nomor_surat",
-        formData.nomor_surat
-      );
-
-      data.append(
-        "asal_surat",
-        formData.asal_surat
-      );
-
-      data.append(
-        "tanggal_surat",
-        formData.tanggal_surat
-      );
-
-      data.append(
-        "nomor_agenda",
-        formData.nomor_agenda
-      );
-
-      data.append(
-        "tanggal_diterima",
-        formData.tanggal_diterima
-      );
-
-      data.append(
-        "jam_diterima",
-        formData.jam_diterima
-      );
-
-      data.append(
-        "perihal",
-        formData.perihal
-      );
-
-      // =========================
-      // PENTING:
-      // HANYA 1 PDF YANG DIKIRIM
-      // =========================
-      data.append(
-        "arsip_surat",
-        finalPDF
-      );
-
-      console.log(
-        "Mengirim 1 PDF ke backend:",
-        finalPDF.name,
-        finalPDF.size
-      );
-
-      // =========================
-      // POST BACKEND
-      // =========================
-      const response =
-        await fetch(
-          `${API_URL}/api/surat`,
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            body: data,
-          }
-        );
-
-      console.log(
-        "STATUS SIMPAN:",
-        response.status
-      );
-
-      let result;
 
       try {
-        result =
-          await response.json();
-      } catch {
-        result = {};
-      }
+        // ---------------------------------------------------
+        // VALIDASI FORM
+        // ---------------------------------------------------
+        if (
+          !formData.nomor_surat.trim()
+        ) {
+          alert(
+            "Nomor surat wajib diisi."
+          );
+          return;
+        }
 
-      console.log(
-        "HASIL SIMPAN:",
-        result
-      );
+        if (
+          !formData.asal_surat.trim()
+        ) {
+          alert(
+            "Asal surat wajib diisi."
+          );
+          return;
+        }
 
-      // =========================
-      // TOKEN EXPIRED
-      // =========================
-      if (
-        response.status === 401 ||
-        response.status === 403
-      ) {
-        localStorage.removeItem(
-          "token"
+        if (
+          !formData.tanggal_surat
+        ) {
+          alert(
+            "Tanggal surat wajib diisi."
+          );
+          return;
+        }
+
+        if (
+          !formData.nomor_agenda.trim()
+        ) {
+          alert(
+            "Nomor agenda wajib diisi."
+          );
+          return;
+        }
+
+        if (
+          !formData.tanggal_diterima
+        ) {
+          alert(
+            "Tanggal diterima wajib diisi."
+          );
+          return;
+        }
+
+        if (
+          !formData.jam_diterima
+        ) {
+          alert(
+            "Jam diterima wajib diisi."
+          );
+          return;
+        }
+
+        if (
+          !formData.perihal.trim()
+        ) {
+          alert(
+            "Perihal wajib diisi."
+          );
+          return;
+        }
+
+        if (
+          scanSurat.length === 0
+        ) {
+          alert(
+            "Silakan scan surat terlebih dahulu."
+          );
+          return;
+        }
+
+        // ---------------------------------------------------
+        // TOKEN LOGIN
+        // ---------------------------------------------------
+        const token =
+          localStorage.getItem(
+            "token"
+          );
+
+        if (!token) {
+          alert(
+            "Sesi login tidak ditemukan. Silakan login kembali."
+          );
+
+          navigate(
+            "/login"
+          );
+
+          return;
+        }
+
+        // ---------------------------------------------------
+        // PDF BELUM DIBUAT
+        // ---------------------------------------------------
+        let finalPDF =
+          pdfFile;
+
+        if (!finalPDF) {
+          const konfirmasi =
+            window.confirm(
+              "PDF belum dibuat.\n\nBuat PDF sekarang?"
+            );
+
+          if (!konfirmasi) {
+            return;
+          }
+
+          setLoadingSave(
+            true
+          );
+
+          finalPDF =
+            await createPDF();
+
+          // -------------------------------------------------
+          // TAMPILKAN PREVIEW
+          // -------------------------------------------------
+          if (pdfPreview) {
+            URL.revokeObjectURL(
+              pdfPreview
+            );
+          }
+
+          const previewURL =
+            URL.createObjectURL(
+              finalPDF
+            );
+
+          setPdfPreview(
+            previewURL
+          );
+
+          setPdfFile(
+            finalPDF
+          );
+
+          alert(
+            "PDF berhasil dibuat dan ditampilkan sebagai preview.\n\nPeriksa PDF terlebih dahulu, kemudian klik 'Simpan Surat' lagi."
+          );
+
+          return;
+        }
+
+        // ---------------------------------------------------
+        // MULAI SIMPAN
+        // ---------------------------------------------------
+        setLoadingSave(
+          true
         );
-        localStorage.removeItem(
-          "user"
+
+        // ---------------------------------------------------
+        // FORMDATA
+        // ---------------------------------------------------
+        const data =
+          new FormData();
+
+        data.append(
+          "nomor_surat",
+          formData.nomor_surat
+        );
+
+        data.append(
+          "asal_surat",
+          formData.asal_surat
+        );
+
+        data.append(
+          "tanggal_surat",
+          formData.tanggal_surat
+        );
+
+        data.append(
+          "nomor_agenda",
+          formData.nomor_agenda
+        );
+
+        data.append(
+          "tanggal_diterima",
+          formData.tanggal_diterima
+        );
+
+        data.append(
+          "jam_diterima",
+          formData.jam_diterima
+        );
+
+        data.append(
+          "perihal",
+          formData.perihal
+        );
+
+        // ---------------------------------------------------
+        // HANYA 1 PDF YANG DIKIRIM
+        // ---------------------------------------------------
+        data.append(
+          "arsip_surat",
+          finalPDF,
+          finalPDF.name
+        );
+
+        console.log(
+          "================================="
+        );
+
+        console.log(
+          "MENGIRIM SURAT KE BACKEND"
+        );
+
+        console.log(
+          "API:",
+          `${API_URL}/api/surat`
+        );
+
+        console.log(
+          "PDF:",
+          finalPDF.name
+        );
+
+        console.log(
+          "UKURAN PDF:",
+          finalPDF.size
+        );
+
+        console.log(
+          "================================="
+        );
+
+        // ---------------------------------------------------
+        // POST BACKEND
+        // ---------------------------------------------------
+        const response =
+          await fetch(
+            `${API_URL}/api/surat`,
+            {
+              method: "POST",
+
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+
+              body: data,
+            }
+          );
+
+        console.log(
+          "STATUS SIMPAN:",
+          response.status
+        );
+
+        // ---------------------------------------------------
+        // BACA RESPONSE
+        // ---------------------------------------------------
+        let result;
+
+        try {
+          result =
+            await response.json();
+        } catch {
+          result = {};
+        }
+
+        console.log(
+          "HASIL SIMPAN:",
+          result
+        );
+
+        // ---------------------------------------------------
+        // TOKEN EXPIRED
+        // ---------------------------------------------------
+        if (
+          response.status === 401 ||
+          response.status === 403
+        ) {
+          localStorage.removeItem(
+            "token"
+          );
+
+          localStorage.removeItem(
+            "user"
+          );
+
+          alert(
+            "Sesi login sudah berakhir. Silakan login kembali."
+          );
+
+          navigate(
+            "/login"
+          );
+
+          return;
+        }
+
+        // ---------------------------------------------------
+        // ERROR BACKEND
+        // ---------------------------------------------------
+        if (!response.ok) {
+          throw new Error(
+            result.message ||
+              `Gagal menyimpan surat. Status: ${response.status}`
+          );
+        }
+
+        // ---------------------------------------------------
+        // BERHASIL
+        // ---------------------------------------------------
+        alert(
+          `Surat berhasil disimpan!\n\n${scanSurat.length} halaman hasil scan telah digabung menjadi 1 PDF.`
+        );
+
+        navigate(
+          "/surat"
+        );
+      } catch (error) {
+        console.error(
+          "================================="
+        );
+
+        console.error(
+          "GAGAL MENYIMPAN SURAT"
+        );
+
+        console.error(
+          error
+        );
+
+        console.error(
+          "================================="
         );
 
         alert(
-          "Sesi login sudah berakhir. Silakan login kembali."
+          error.message ||
+            "Terjadi kesalahan saat menyimpan surat."
         );
-
-        navigate("/login");
-        return;
-      }
-
-      // =========================
-      // ERROR
-      // =========================
-      if (!response.ok) {
-        throw new Error(
-          result.message ||
-            "Gagal menyimpan surat."
+      } finally {
+        setLoadingSave(
+          false
         );
       }
+    };
 
-      // =========================
-      // BERHASIL
-      // =========================
-      alert(
-        `Surat berhasil disimpan!\n\n${scanSurat.length} hasil scan telah digabung menjadi 1 PDF.`
-      );
-
-      navigate("/surat");
-    } catch (error) {
-      console.error(
-        "Gagal menyimpan surat:",
-        error
-      );
-
-      alert(
-        error.message ||
-          "Terjadi kesalahan saat menyimpan surat."
-      );
-    } finally {
-      setLoadingSave(false);
-    }
-  };
-
-  // =========================
+  // =========================================================
   // RENDER
-  // =========================
+  // =========================================================
   return (
     <div className="tambah-container">
+
+      {/* =====================================================
+          HEADER
+      ===================================================== */}
       <div className="tambah-header">
-        <h1>Tambah Surat Masuk</h1>
+
+        <h1>
+          Tambah Surat Masuk
+        </h1>
 
         <button
           type="button"
@@ -786,20 +1134,33 @@ const TambahSurat = () => {
         >
           ← Kembali
         </button>
+
       </div>
 
+      {/* =====================================================
+          FORM
+      ===================================================== */}
       <form
         className="tambah-form"
-        onSubmit={handleSubmit}
+        onSubmit={
+          handleSubmit
+        }
       >
-        {/* =========================
+
+        {/* ===================================================
             DATA SURAT
-        ========================= */}
+        =================================================== */}
         <div className="form-section">
-          <h2>Data Surat</h2>
+
+          <h2>
+            Data Surat
+          </h2>
 
           <div className="form-grid">
+
+            {/* NOMOR SURAT */}
             <div className="form-group">
+
               <label>
                 Nomor Surat
               </label>
@@ -815,9 +1176,12 @@ const TambahSurat = () => {
                 }
                 placeholder="Masukkan nomor surat"
               />
+
             </div>
 
+            {/* ASAL SURAT */}
             <div className="form-group">
+
               <label>
                 Asal Surat
               </label>
@@ -833,9 +1197,12 @@ const TambahSurat = () => {
                 }
                 placeholder="Masukkan asal surat"
               />
+
             </div>
 
+            {/* TANGGAL SURAT */}
             <div className="form-group">
+
               <label>
                 Tanggal Surat
               </label>
@@ -850,9 +1217,12 @@ const TambahSurat = () => {
                   handleChange
                 }
               />
+
             </div>
 
+            {/* NOMOR AGENDA */}
             <div className="form-group">
+
               <label>
                 Nomor Agenda
               </label>
@@ -868,9 +1238,12 @@ const TambahSurat = () => {
                 }
                 placeholder="Masukkan nomor agenda"
               />
+
             </div>
 
+            {/* TANGGAL DITERIMA */}
             <div className="form-group">
+
               <label>
                 Tanggal Diterima
               </label>
@@ -885,9 +1258,12 @@ const TambahSurat = () => {
                   handleChange
                 }
               />
+
             </div>
 
+            {/* JAM DITERIMA */}
             <div className="form-group">
+
               <label>
                 Jam Diterima
               </label>
@@ -902,9 +1278,12 @@ const TambahSurat = () => {
                   handleChange
                 }
               />
+
             </div>
 
+            {/* PERIHAL */}
             <div className="form-group full-width">
+
               <label>
                 Perihal
               </label>
@@ -920,15 +1299,21 @@ const TambahSurat = () => {
                 placeholder="Masukkan perihal surat"
                 rows="4"
               />
+
             </div>
+
           </div>
+
         </div>
 
-        {/* =========================
+        {/* ===================================================
             SCAN SURAT
-        ========================= */}
+        =================================================== */}
         <div className="form-section">
-          <h2>Scan Surat</h2>
+
+          <h2>
+            Scan Surat
+          </h2>
 
           <p className="scan-info">
             Scanner:{" "}
@@ -937,87 +1322,90 @@ const TambahSurat = () => {
             </strong>
           </p>
 
+          {/* TOMBOL SCAN */}
           <button
             type="button"
             className="btn-scan"
             onClick={
               handleScanDocument
             }
-            disabled={loadingScan}
+            disabled={
+              loadingScan
+            }
           >
             {loadingScan
               ? "⏳ Sedang Scan..."
               : "📠 Scan Surat"}
           </button>
 
-          {/* =========================
-              PREVIEW HASIL SCAN
-          ========================= */}
-          {scanSurat.length >
-            0 && (
+          {/* =================================================
+              HASIL SCAN
+          ================================================= */}
+          {scanSurat.length > 0 && (
+
             <div className="scan-preview-section">
+
               <h3>
                 Hasil Scan (
-                {scanSurat.length} halaman)
+                {scanSurat.length}
+                {" "}
+                halaman)
               </h3>
 
               <div className="scan-preview-grid">
-                {scanSurat.map(
+
+                {scanPreviews.map(
                   (
-                    file,
+                    item,
                     index
-                  ) => {
-                    const preview =
-                      URL.createObjectURL(
-                        file
-                      );
+                  ) => (
 
-                    return (
-                      <div
-                        className="scan-preview-card"
-                        key={`${file.name}-${index}`}
-                      >
-                        <div className="scan-preview-header">
-                          <strong>
-                            Halaman{" "}
-                            {index + 1}
-                          </strong>
+                    <div
+                      className="scan-preview-card"
+                      key={`${item.file.name}-${index}`}
+                    >
 
-                          <button
-                            type="button"
-                            className="btn-remove-scan"
-                            onClick={() =>
-                              handleRemoveScan(
-                                index
-                              )
-                            }
-                          >
-                            ✕
-                          </button>
-                        </div>
+                      <div className="scan-preview-header">
 
-                        <img
-                          src={preview}
-                          alt={`Hasil scan halaman ${
-                            index + 1
-                          }`}
-                          className="scan-preview-image"
-                          onLoad={() =>
-                            URL.revokeObjectURL(
-                              preview
+                        <strong>
+                          Halaman{" "}
+                          {index + 1}
+                        </strong>
+
+                        <button
+                          type="button"
+                          className="btn-remove-scan"
+                          onClick={() =>
+                            handleRemoveScan(
+                              index
                             )
                           }
-                        />
+                        >
+                          ✕
+                        </button>
+
                       </div>
-                    );
-                  }
+
+                      <img
+                        src={item.url}
+                        alt={`Hasil scan halaman ${
+                          index + 1
+                        }`}
+                        className="scan-preview-image"
+                      />
+
+                    </div>
+
+                  )
                 )}
+
               </div>
 
-              {/* =========================
+              {/* =================================================
                   BUAT PDF
-              ========================= */}
+              ================================================= */}
               <div className="pdf-action-area">
+
                 <button
                   type="button"
                   className="btn-create-pdf"
@@ -1032,41 +1420,55 @@ const TambahSurat = () => {
                     ? "⏳ Membuat PDF..."
                     : "📄 Buat PDF & Preview"}
                 </button>
+
               </div>
+
             </div>
+
           )}
 
-          {/* =========================
+          {/* =================================================
               PDF PREVIEW
-          ========================= */}
+          ================================================= */}
           {pdfPreview && (
+
             <div className="pdf-preview-section">
+
               <div className="pdf-preview-header">
+
                 <div>
+
                   <h3>
                     Preview PDF
                   </h3>
 
                   <p>
-                    {scanSurat.length} halaman
-                    sudah digabung menjadi
+                    {scanSurat.length}
+                    {" "}
+                    halaman sudah
+                    digabung menjadi
                     satu PDF.
                   </p>
+
                 </div>
 
                 <span className="pdf-status">
                   ✓ PDF Siap
                 </span>
+
               </div>
 
               <div className="pdf-viewer">
+
                 <iframe
                   src={pdfPreview}
                   title="Preview PDF Surat"
                 />
+
               </div>
 
               <div className="pdf-info">
+
                 <span>
                   📄{" "}
                   {pdfFile?.name ||
@@ -1078,35 +1480,47 @@ const TambahSurat = () => {
                     ? `${(
                         pdfFile.size /
                         1024
-                      ).toFixed(1)} KB`
+                      ).toFixed(
+                        1
+                      )} KB`
                     : ""}
                 </span>
+
               </div>
 
               <p className="pdf-note">
-                Periksa PDF di atas terlebih
-                dahulu. Jika semua halaman
+
+                Periksa PDF di atas
+                terlebih dahulu.
+                Jika semua halaman
                 sudah benar, klik{" "}
                 <strong>
                   "Simpan Surat"
                 </strong>
                 .
+
               </p>
+
             </div>
+
           )}
+
         </div>
 
-        {/* =========================
-            TOMBOL SIMPAN
-        ========================= */}
+        {/* ===================================================
+            TOMBOL AKHIR
+        =================================================== */}
         <div className="form-actions">
+
           <button
             type="button"
             className="btn-batal"
             onClick={() =>
               navigate("/surat")
             }
-            disabled={loadingSave}
+            disabled={
+              loadingSave
+            }
           >
             Batal
           </button>
@@ -1114,19 +1528,24 @@ const TambahSurat = () => {
           <button
             type="submit"
             className="btn-simpan"
-            disabled={loadingSave}
+            disabled={
+              loadingSave
+            }
           >
             {loadingSave
               ? "⏳ Menyimpan..."
               : "💾 Simpan Surat"}
           </button>
+
         </div>
+
       </form>
 
-      {/* =========================
+      {/* =====================================================
           STYLE TAMBAHAN
-      ========================= */}
+      ===================================================== */}
       <style>{`
+
         .scan-info {
           margin-bottom: 15px;
           color: #555;
@@ -1278,6 +1697,7 @@ const TambahSurat = () => {
         }
 
         @media (max-width: 650px) {
+
           .scan-preview-grid {
             grid-template-columns: 1fr;
           }
@@ -1298,14 +1718,19 @@ const TambahSurat = () => {
           .pdf-info {
             flex-direction: column;
           }
+
         }
 
         @media (max-width: 400px) {
+
           .pdf-viewer {
             height: 450px;
           }
+
         }
+
       `}</style>
+
     </div>
   );
 };

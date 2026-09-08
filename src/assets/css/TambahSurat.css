@@ -6,304 +6,32 @@
   box-sizing: border-box;
 }
 
-.tambah-page {
-  min-height: 100vh;
-  background: #edf3f8;
-  color: #17344e;
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-
-/* =========================================================
-   TOMBOL HAMBURGER HP
-========================================================= */
-
-.tambah-mobile-menu-btn {
-  display: none;
-}
-
-
-/* =========================================================
-   SIDEBAR
-========================================================= */
-
-.tambah-sidebar {
-  position: fixed;
-  left: 0;
-  top: 0;
-
-  width: 245px;
-  height: 100vh;
-
-  padding: 30px 0;
-
-  background:
-    radial-gradient(
-      circle at 15% 5%,
-      rgba(69, 150, 255, 0.18),
-      transparent 25%
-    ),
-    linear-gradient(
-      160deg,
-      #081b33 0%,
-      #0b2d52 48%,
-      #0c426b 100%
-    );
-
-  color: #ffffff;
-
-  z-index: 100;
-
-  overflow-y: auto;
-  overflow-x: hidden;
-
-  box-shadow:
-    8px 0 35px rgba(4, 25, 48, 0.16);
-
-  transition: left 0.3s ease;
-}
-
-.tambah-sidebar::before {
-  content: "";
-
-  position: absolute;
-
-  width: 380px;
-  height: 380px;
-
-  right: -240px;
-  bottom: -100px;
-
-  border-radius: 50%;
-
-  border: 1px solid rgba(111, 190, 255, 0.13);
-
-  box-shadow:
-    0 0 80px rgba(58, 157, 255, 0.08);
-
-  pointer-events: none;
-}
-
-.tambah-sidebar::after {
-  content: "";
-
-  position: absolute;
-
-  width: 250px;
-  height: 250px;
-
-  left: -160px;
-  bottom: 90px;
-
-  border-radius: 50%;
-
-  background: rgba(75, 165, 255, 0.045);
-
-  pointer-events: none;
-}
-
-
-/* =========================================================
-   BRAND
-========================================================= */
-
-.tambah-brand {
-  position: relative;
-  z-index: 2;
-
-  display: flex;
-  align-items: center;
-
-  gap: 13px;
-
-  padding: 0 20px;
-
-  margin-bottom: 58px;
-}
-
-.tambah-brand-logo {
-  width: 51px;
-  height: 51px;
-
-  flex-shrink: 0;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.tambah-brand-logo img {
-  width: 51px;
-  height: 51px;
-
-  object-fit: contain;
-
-  filter:
-    drop-shadow(
-      0 4px 8px rgba(0, 0, 0, 0.18)
-    );
-}
-
-.tambah-brand-text h2 {
+html,
+body {
   margin: 0;
-
-  color: #ffffff;
-
-  font-size: 14px;
-
-  line-height: 1.25;
-
-  font-weight: 700;
-
-  letter-spacing: 0.3px;
+  padding: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #eef3f8;
+  color: #17344e;
 }
 
-.tambah-brand-text span {
-  display: block;
-
-  margin-top: 5px;
-
-  color: rgba(220, 238, 255, 0.62);
-
-  font-size: 10px;
-
-  line-height: 1.35;
+body {
+  overflow-x: hidden;
 }
 
 
 /* =========================================================
-   MENU
+   HALAMAN UTAMA
 ========================================================= */
 
-.tambah-menu {
-  position: relative;
-  z-index: 2;
-
-  display: flex;
-  flex-direction: column;
-
-  gap: 8px;
-}
-
-.tambah-menu-title {
-  margin: 0 0 9px 21px;
-
-  color: rgba(197, 224, 248, 0.48);
-
-  font-size: 9px;
-
-  font-weight: 700;
-
-  letter-spacing: 1.5px;
-}
-
-.tambah-menu-item {
-  position: relative;
-
-  display: flex;
-  align-items: center;
-
-  gap: 14px;
-
-  height: 48px;
-
-  padding: 0 19px;
-
-  margin-right: 15px;
-
-  border-radius: 0 13px 13px 0;
-
-  color: rgba(226, 240, 252, 0.72);
-
-  text-decoration: none;
-
-  font-size: 13px;
-
-  font-weight: 500;
-
-  transition:
-    background 0.22s ease,
-    color 0.22s ease,
-    transform 0.22s ease;
-}
-
-.tambah-menu-item span {
-  width: 18px;
-
-  flex-shrink: 0;
-
-  text-align: center;
-
-  font-size: 17px;
-
-  color: rgba(203, 228, 249, 0.65);
-}
-
-.tambah-menu-item:hover {
-  background: rgba(91, 176, 255, 0.09);
-
-  color: #ffffff;
-
-  transform: translateX(3px);
-}
-
-.tambah-menu-item.active {
-  background:
-    linear-gradient(
-      90deg,
-      rgba(73, 159, 238, 0.22),
-      rgba(73, 159, 238, 0.07)
-    );
-
-  color: #ffffff;
-
-  font-weight: 600;
-}
-
-.tambah-menu-item.active span {
-  color: #68c4ff;
-}
-
-.tambah-menu-item.active::before {
-  content: "";
-
-  position: absolute;
-
-  left: 0;
-  top: 8px;
-
-  width: 4px;
-  height: 32px;
-
-  border-radius: 0 5px 5px 0;
-
-  background: #58baff;
-
-  box-shadow:
-    0 0 12px rgba(88, 186, 255, 0.55);
-}
-
-
-/* =========================================================
-   MAIN
-========================================================= */
-
-.tambah-main {
-  position: relative;
-
-  margin-left: 245px;
-
+.tambah-container {
   min-height: 100vh;
+  padding: 30px 40px 45px;
 
   background:
     radial-gradient(
       circle at 90% 0%,
-      rgba(65, 150, 255, 0.13),
-      transparent 24%
-    ),
-    radial-gradient(
-      circle at 15% 90%,
-      rgba(76, 173, 216, 0.07),
+      rgba(69, 150, 255, 0.10),
       transparent 25%
     ),
     linear-gradient(
@@ -312,243 +40,143 @@
       #edf3f8 55%,
       #e8f1f7 100%
     );
-
-  overflow: hidden;
 }
 
 
 /* =========================================================
-   TOPBAR
+   HEADER
 ========================================================= */
 
-.tambah-topbar {
-  position: relative;
-  z-index: 5;
+.tambah-header {
+  max-width: 1150px;
 
-  height: 82px;
+  margin: 0 auto 25px;
 
   display: flex;
   align-items: center;
-
-  padding: 0 34px;
-
-  background: rgba(255, 255, 255, 0.88);
-
-  backdrop-filter: blur(14px);
-
-  border-bottom:
-    1px solid rgba(207, 220, 232, 0.75);
-
-  box-shadow:
-    0 5px 25px rgba(15, 48, 77, 0.045);
-}
-
-.tambah-topbar-left h1 {
-  margin: 0;
-
-  color: #102f4d;
-
-  font-size: 23px;
-
-  line-height: 1.2;
-
-  font-weight: 700;
-}
-
-.tambah-topbar-left p {
-  margin: 6px 0 0;
-
-  color: #8292a1;
-
-  font-size: 12px;
-}
-
-
-/* =========================================================
-   CONTENT
-========================================================= */
-
-.tambah-content {
-  position: relative;
-  z-index: 2;
-
-  padding: 32px;
-}
-
-
-/* =========================================================
-   PAGE HEADER
-========================================================= */
-
-.tambah-page-header {
-  display: flex;
-
-  align-items: flex-end;
-
   justify-content: space-between;
 
-  gap: 25px;
-
-  margin-bottom: 25px;
+  gap: 20px;
 }
 
-.tambah-page-title > span {
-  display: block;
-
-  margin-bottom: 8px;
-
-  color: #6e8ba1;
-
-  font-size: 10px;
-
-  font-weight: 700;
-
-  letter-spacing: 1.5px;
-}
-
-.tambah-page-title h2 {
+.tambah-header h1 {
   margin: 0;
 
   color: #123b5b;
 
   font-size: 27px;
-
   line-height: 1.2;
 
   font-weight: 700;
-}
 
-.tambah-page-title p {
-  margin: 8px 0 0;
-
-  color: #7d8e9d;
-
-  font-size: 12px;
+  letter-spacing: -0.4px;
 }
 
 
 /* =========================================================
-   BACK BUTTON
+   TOMBOL KEMBALI
 ========================================================= */
 
-.tambah-btn-back {
+.btn-kembali {
   display: inline-flex;
 
   align-items: center;
   justify-content: center;
 
-  height: 44px;
+  height: 42px;
 
   padding: 0 18px;
 
-  border-radius: 11px;
+  border: 1px solid #d5e2eb;
+
+  border-radius: 10px;
 
   background: #ffffff;
 
-  border: 1px solid #d6e3eb;
+  color: #3d6d86;
 
-  color: #3d708a;
-
-  text-decoration: none;
+  font-family: Arial, Helvetica, sans-serif;
 
   font-size: 12px;
 
   font-weight: 600;
 
+  cursor: pointer;
+
   box-shadow:
-    0 6px 16px rgba(24, 66, 96, 0.06);
+    0 5px 15px
+    rgba(24, 66, 96, 0.055);
 
   transition:
     transform 0.2s ease,
-    background 0.2s ease;
+    background 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
-.tambah-btn-back:hover {
+.btn-kembali:hover {
   transform: translateY(-2px);
 
-  background: #f5fafc;
-}
-
-
-/* =========================================================
-   ERROR
-========================================================= */
-
-.tambah-error {
-  margin-bottom: 20px;
-
-  padding: 13px 16px;
-
-  border: 1px solid #fecdd3;
-
-  border-radius: 11px;
-
-  background: #fff1f2;
-
-  color: #be123c;
-
-  font-size: 12px;
-}
-
-
-/* =========================================================
-   FORM CARD
-========================================================= */
-
-.tambah-form-card {
-  width: 100%;
-
-  overflow: hidden;
-
-  border:
-    1px solid rgba(207, 222, 233, 0.9);
-
-  border-radius: 19px;
-
-  background:
-    rgba(255, 255, 255, 0.95);
+  background: #f7fbfd;
 
   box-shadow:
-    0 10px 30px rgba(24, 66, 96, 0.06);
+    0 8px 18px
+    rgba(24, 66, 96, 0.08);
 }
 
 
 /* =========================================================
-   FORM TOP
+   FORM UTAMA
 ========================================================= */
 
-.tambah-form-top {
+.tambah-form {
+  max-width: 1150px;
+
+  margin: 0 auto;
+
   display: flex;
 
-  align-items: center;
+  flex-direction: column;
 
-  justify-content: space-between;
+  gap: 20px;
+}
 
-  padding: 19px 22px;
 
-  border-bottom:
-    1px solid #e5edf3;
+/* =========================================================
+   SECTION
+========================================================= */
+
+.form-section {
+  width: 100%;
+
+  padding: 25px 27px;
+
+  border:
+    1px solid
+    rgba(207, 222, 233, 0.9);
+
+  border-radius: 18px;
 
   background:
-    rgba(248, 251, 253, 0.88);
+    rgba(255, 255, 255, 0.96);
+
+  box-shadow:
+    0 8px 25px
+    rgba(24, 66, 96, 0.055);
 }
 
-.tambah-form-top h3 {
-  margin: 0;
+.form-section h2 {
+  margin: 0 0 20px;
 
-  color: #294c63;
+  padding-bottom: 14px;
 
-  font-size: 14px;
+  border-bottom:
+    1px solid #e8eef3;
+
+  color: #214b66;
+
+  font-size: 16px;
 
   font-weight: 700;
-}
-
-.tambah-form-top p {
-  margin: 5px 0 0;
-
-  color: #8b9ba8;
-
-  font-size: 10px;
 }
 
 
@@ -556,15 +184,13 @@
    FORM GRID
 ========================================================= */
 
-.tambah-form-grid {
+.form-grid {
   display: grid;
 
   grid-template-columns:
     repeat(2, minmax(0, 1fr));
 
-  gap: 20px 22px;
-
-  padding: 24px 22px 8px;
+  gap: 19px 22px;
 }
 
 
@@ -572,16 +198,20 @@
    FORM GROUP
 ========================================================= */
 
-.tambah-form-group {
+.form-group {
+  min-width: 0;
+
   display: flex;
 
   flex-direction: column;
-
-  min-width: 0;
 }
 
-.tambah-form-group label {
-  margin-bottom: 8px;
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-group label {
+  margin-bottom: 7px;
 
   color: #38566a;
 
@@ -590,16 +220,17 @@
   font-weight: 700;
 }
 
-.tambah-form-group label b {
-  color: #d44d5c;
-}
 
-.tambah-form-group input,
-.tambah-form-group textarea {
+/* =========================================================
+   INPUT
+========================================================= */
+
+.form-group input,
+.form-group textarea {
   width: 100%;
 
   border:
-    1px solid #d6e2ea;
+    1px solid #d5e1e9;
 
   border-radius: 9px;
 
@@ -619,13 +250,13 @@
     background 0.2s ease;
 }
 
-.tambah-form-group input {
-  height: 42px;
+.form-group input {
+  height: 43px;
 
   padding: 0 12px;
 }
 
-.tambah-form-group textarea {
+.form-group textarea {
   min-height: 105px;
 
   padding: 11px 12px;
@@ -635,107 +266,548 @@
   line-height: 1.5;
 }
 
-.tambah-form-group input::placeholder,
-.tambah-form-group textarea::placeholder {
-  color: #a1afb9;
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: #a0adb7;
 }
 
-.tambah-form-group input:focus,
-.tambah-form-group textarea:focus {
-  border-color: #68a9c7;
+.form-group input:hover,
+.form-group textarea:hover {
+  border-color: #c2d4df;
+}
 
-  background: #fbfdff;
+.form-group input:focus,
+.form-group textarea:focus {
+  border-color: #65a6c4;
+
+  background: #fcfeff;
 
   box-shadow:
-    0 0 0 3px rgba(104, 169, 199, 0.12);
-}
-
-.tambah-form-group small {
-  margin-top: 6px;
-
-  color: #91a0ab;
-
-  font-size: 9px;
-
-  line-height: 1.4;
+    0 0 0 3px
+    rgba(101, 166, 196, 0.12);
 }
 
 
 /* =========================================================
-   FULL WIDTH
+   SCAN INFO
 ========================================================= */
 
-.tambah-full {
-  margin: 0 22px;
+.scan-info {
+  margin: -8px 0 16px;
 
-  padding-top: 13px;
+  color: #7c8e9d;
+
+  font-size: 12px;
+}
+
+.scan-info strong {
+  color: #246080;
 }
 
 
 /* =========================================================
-   SCAN SURAT
+   TOMBOL SCAN
 ========================================================= */
 
-.tambah-scan-input {
-  padding: 10px !important;
+.btn-scan {
+  display: inline-flex;
 
-  height: auto !important;
+  align-items: center;
+  justify-content: center;
 
-  background: #ffffff;
-}
+  min-width: 155px;
 
-.tambah-btn-camera {
-  width: fit-content;
+  height: 43px;
+
+  padding: 0 20px;
 
   border: none;
 
-  border-radius: 9px;
+  border-radius: 10px;
 
-  background: #0b5d87;
+  background:
+    linear-gradient(
+      135deg,
+      #245b7a,
+      #327d9e
+    );
 
   color: #ffffff;
 
-  font-size: 11px;
+  font-family: Arial, Helvetica, sans-serif;
 
-  font-weight: 600;
+  font-size: 12px;
+
+  font-weight: 700;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 6px 15px
+    rgba(36, 91, 122, 0.16);
 
   transition:
     transform 0.2s ease,
+    box-shadow 0.2s ease,
     opacity 0.2s ease;
 }
 
-.tambah-btn-camera:hover {
+.btn-scan:hover:not(:disabled) {
   transform: translateY(-2px);
 
-  opacity: 0.9;
+  box-shadow:
+    0 9px 20px
+    rgba(36, 91, 122, 0.22);
 }
 
-.tambah-scan-selected {
-  margin-top: 10px;
-
-  padding: 10px 12px;
-
-  border-radius: 8px;
-
-  background: #edf8f2;
-
-  color: #27734d;
-
-  font-size: 11px;
-
-  font-weight: 600;
+.btn-scan:active:not(:disabled) {
+  transform: translateY(0);
 }
 
-.tambah-scan-info {
-  display: block;
+.btn-scan:disabled {
+  opacity: 0.6;
+
+  cursor: not-allowed;
 }
 
 
 /* =========================================================
-   FORM ACTIONS
+   HASIL SCAN
 ========================================================= */
 
-.tambah-form-actions {
+.scan-preview-section {
+  margin-top: 24px;
+
+  padding-top: 22px;
+
+  border-top:
+    1px solid #e8eef3;
+}
+
+.scan-preview-section h3 {
+  margin: 0 0 15px;
+
+  color: #244c65;
+
+  font-size: 14px;
+
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   GRID HASIL SCAN
+========================================================= */
+
+.scan-preview-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+
+  gap: 17px;
+}
+
+
+/* =========================================================
+   CARD HASIL SCAN
+========================================================= */
+
+.scan-preview-card {
+  min-width: 0;
+
+  overflow: hidden;
+
+  border:
+    1px solid #dce6ed;
+
+  border-radius: 13px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 5px 15px
+    rgba(24, 66, 96, 0.05);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.scan-preview-card:hover {
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 9px 22px
+    rgba(24, 66, 96, 0.08);
+}
+
+
+/* =========================================================
+   HEADER CARD SCAN
+========================================================= */
+
+.scan-preview-header {
+  min-height: 43px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 10px;
+
+  padding: 8px 11px;
+
+  border-bottom:
+    1px solid #e5edf2;
+
+  background:
+    #f7fafc;
+}
+
+.scan-preview-header strong {
+  color: #38576b;
+
+  font-size: 11px;
+}
+
+
+/* =========================================================
+   HAPUS SCAN
+========================================================= */
+
+.btn-remove-scan {
+  width: 27px;
+  height: 27px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: none;
+
+  border-radius: 7px;
+
+  background: #fff0f1;
+
+  color: #d24b59;
+
+  font-size: 13px;
+
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.btn-remove-scan:hover {
+  background: #ffe0e3;
+
+  transform: scale(1.05);
+}
+
+
+/* =========================================================
+   GAMBAR HASIL SCAN
+========================================================= */
+
+.scan-preview-image {
+  display: block;
+
+  width: 100%;
+
+  height: 360px;
+
+  object-fit: contain;
+
+  background:
+    #eef2f5;
+}
+
+
+/* =========================================================
+   AREA BUAT PDF
+========================================================= */
+
+.pdf-action-area {
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  margin-top: 22px;
+
+  padding-top: 20px;
+
+  border-top:
+    1px solid #e8eef3;
+}
+
+
+/* =========================================================
+   TOMBOL BUAT PDF
+========================================================= */
+
+.btn-create-pdf {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  min-width: 205px;
+
+  height: 44px;
+
+  padding: 0 22px;
+
+  border: none;
+
+  border-radius: 10px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #32698a,
+      #3b82a5
+    );
+
+  color: #ffffff;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 12px;
+
+  font-weight: 700;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 6px 16px
+    rgba(50, 105, 138, 0.16);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.btn-create-pdf:hover:not(:disabled) {
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 9px 20px
+    rgba(50, 105, 138, 0.23);
+}
+
+.btn-create-pdf:disabled {
+  opacity: 0.6;
+
+  cursor: not-allowed;
+}
+
+
+/* =========================================================
+   PDF PREVIEW
+========================================================= */
+
+.pdf-preview-section {
+  margin-top: 25px;
+
+  padding: 22px;
+
+  border:
+    1px solid #dce6ed;
+
+  border-radius: 15px;
+
+  background:
+    #f8fafc;
+
+  box-shadow:
+    0 6px 18px
+    rgba(24, 66, 96, 0.04);
+}
+
+
+/* =========================================================
+   HEADER PDF
+========================================================= */
+
+.pdf-preview-header {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 15px;
+
+  margin-bottom: 15px;
+}
+
+.pdf-preview-header h3 {
+  margin: 0 0 5px;
+
+  color: #244c65;
+
+  font-size: 15px;
+
+  font-weight: 700;
+}
+
+.pdf-preview-header p {
+  margin: 0;
+
+  color: #82929e;
+
+  font-size: 11px;
+
+  line-height: 1.5;
+}
+
+
+/* =========================================================
+   STATUS PDF
+========================================================= */
+
+.pdf-status {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  min-height: 32px;
+
+  padding: 0 12px;
+
+  border-radius: 20px;
+
+  background: #e9f7ef;
+
+  color: #268153;
+
+  font-size: 10px;
+
+  font-weight: 700;
+
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   PDF VIEWER
+========================================================= */
+
+.pdf-viewer {
+  width: 100%;
+
+  height: 650px;
+
+  overflow: hidden;
+
+  border:
+    1px solid #cfd9e0;
+
+  border-radius: 10px;
+
+  background: #525659;
+
+  box-shadow:
+    inset 0 0 0 1px
+    rgba(255, 255, 255, 0.05);
+}
+
+.pdf-viewer iframe {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  border: none;
+}
+
+
+/* =========================================================
+   INFORMASI PDF
+========================================================= */
+
+.pdf-info {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 15px;
+
+  margin-top: 10px;
+
+  padding: 9px 11px;
+
+  border-radius: 8px;
+
+  background: #ffffff;
+
+  border:
+    1px solid #e2e9ee;
+
+  color: #647987;
+
+  font-size: 10px;
+}
+
+.pdf-info span:first-child {
+  min-width: 0;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   CATATAN PDF
+========================================================= */
+
+.pdf-note {
+  margin: 12px 0 0;
+
+  padding: 11px 13px;
+
+  border:
+    1px solid #dce9f0;
+
+  border-radius: 8px;
+
+  background: #f2f8fb;
+
+  color: #637b89;
+
+  font-size: 10px;
+
+  line-height: 1.6;
+}
+
+.pdf-note strong {
+  color: #245d79;
+}
+
+
+/* =========================================================
+   TOMBOL AKHIR
+========================================================= */
+
+.form-actions {
   display: flex;
 
   align-items: center;
@@ -744,74 +816,63 @@
 
   gap: 10px;
 
-  padding: 20px 22px 22px;
-
-  margin-top: 8px;
+  padding: 20px 0 0;
 
   border-top:
-    1px solid #edf1f4;
-
-  background:
-    rgba(250, 252, 253, 0.8);
+    1px solid rgba(207, 222, 233, 0.8);
 }
 
 
 /* =========================================================
-   CANCEL BUTTON
+   BATAL
 ========================================================= */
 
-.tambah-btn-cancel {
-  display: inline-flex;
+.btn-batal {
+  min-width: 105px;
 
-  align-items: center;
-  justify-content: center;
+  height: 41px;
 
-  height: 40px;
-
-  padding: 0 18px;
-
-  border-radius: 9px;
+  padding: 0 17px;
 
   border:
-    1px solid #d6e2ea;
+    1px solid #d3e0e8;
+
+  border-radius: 9px;
 
   background: #ffffff;
 
   color: #607989;
 
-  text-decoration: none;
+  font-family: Arial, Helvetica, sans-serif;
 
   font-size: 11px;
 
   font-weight: 600;
 
+  cursor: pointer;
+
   transition:
-    background 0.2s ease,
-    transform 0.2s ease;
+    transform 0.2s ease,
+    background 0.2s ease;
 }
 
-.tambah-btn-cancel:hover {
-  background: #f3f8fb;
-
+.btn-batal:hover:not(:disabled) {
   transform: translateY(-1px);
+
+  background: #f5f9fb;
 }
 
 
 /* =========================================================
-   SAVE BUTTON
+   SIMPAN
 ========================================================= */
 
-.tambah-btn-save {
-  display: inline-flex;
+.btn-simpan {
+  min-width: 145px;
 
-  align-items: center;
-  justify-content: center;
+  height: 41px;
 
-  min-width: 135px;
-
-  height: 40px;
-
-  padding: 0 18px;
+  padding: 0 19px;
 
   border: none;
 
@@ -835,7 +896,8 @@
   cursor: pointer;
 
   box-shadow:
-    0 6px 15px rgba(36, 91, 122, 0.18);
+    0 6px 15px
+    rgba(36, 91, 122, 0.17);
 
   transition:
     transform 0.2s ease,
@@ -843,19 +905,21 @@
     opacity 0.2s ease;
 }
 
-.tambah-btn-save:hover:not(:disabled) {
+.btn-simpan:hover:not(:disabled) {
   transform: translateY(-2px);
 
   box-shadow:
-    0 9px 20px rgba(36, 91, 122, 0.24);
+    0 9px 20px
+    rgba(36, 91, 122, 0.23);
 }
 
-.tambah-btn-save:active:not(:disabled) {
+.btn-simpan:active:not(:disabled) {
   transform: translateY(0);
 }
 
-.tambah-btn-save:disabled {
-  opacity: 0.65;
+.btn-simpan:disabled,
+.btn-batal:disabled {
+  opacity: 0.6;
 
   cursor: not-allowed;
 }
@@ -867,28 +931,22 @@
 
 @media (max-width: 1000px) {
 
-  .tambah-sidebar {
-    width: 215px;
-  }
-
-  .tambah-main {
-    margin-left: 215px;
-  }
-
-  .tambah-content {
+  .tambah-container {
     padding: 25px;
   }
 
-  .tambah-page-header {
-    align-items: flex-start;
-
-    flex-direction: column;
+  .scan-preview-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
   }
 
-  .tambah-btn-back {
-    align-self: flex-end;
+  .scan-preview-image {
+    height: 330px;
   }
 
+  .pdf-viewer {
+    height: 600px;
+  }
 }
 
 
@@ -898,233 +956,205 @@
 
 @media (max-width: 650px) {
 
-  /* TOMBOL HAMBURGER */
-
-  .tambah-mobile-menu-btn {
-    display: flex;
-
-    position: fixed;
-
-    top: 15px;
-    left: 15px;
-
-    width: 45px;
-    height: 45px;
-
-    align-items: center;
-    justify-content: center;
-
-    border: none;
-
-    border-radius: 10px;
-
-    background: #0b2d52;
-
-    color: #ffffff;
-
-    font-size: 24px;
-
-    cursor: pointer;
-
-    z-index: 1000;
-
-    box-shadow:
-      0 5px 15px rgba(0, 0, 0, 0.2);
-  }
-
-
-  /* SIDEBAR DISEMBUNYIKAN */
-
-  .tambah-sidebar {
-    position: fixed;
-
-    left: -245px;
-    top: 0;
-
-    width: 245px;
-    height: 100vh;
-
-    padding: 30px 0;
-
-    z-index: 999;
-  }
-
-
-  /* SIDEBAR MUNCUL */
-
-  .tambah-sidebar.menu-open {
-    left: 0;
-  }
-
-
-  /* BRAND */
-
-  .tambah-brand {
-    margin-bottom: 25px;
-  }
-
-
-  /* MENU */
-
-  .tambah-menu-item {
-    margin-left: 12px;
-    margin-right: 12px;
-
-    border-radius: 9px;
-  }
-
-  .tambah-menu-item.active::before {
-    display: none;
-  }
-
-
-  /* MAIN */
-
-  .tambah-main {
-    margin-left: 0;
-  }
-
-
-  /* TOPBAR */
-
-  .tambah-topbar {
-    min-height: 75px;
-
-    height: auto;
-
-    padding: 16px 20px 16px 75px;
-  }
-
-  .tambah-topbar-left h1 {
-    font-size: 19px;
-  }
-
-  .tambah-topbar-left p {
-    font-size: 11px;
-  }
-
-
-  /* CONTENT */
-
-  .tambah-content {
-    padding: 20px;
+  .tambah-container {
+    padding: 18px 14px 30px;
   }
 
 
   /* HEADER */
 
-  .tambah-page-header {
+  .tambah-header {
     flex-direction: column;
 
     align-items: stretch;
+
+    gap: 13px;
+
+    margin-bottom: 18px;
   }
 
-  .tambah-page-title h2 {
-    font-size: 23px;
+  .tambah-header h1 {
+    font-size: 22px;
   }
 
-  .tambah-page-title p {
-    font-size: 11px;
-  }
-
-
-  /* BACK BUTTON */
-
-  .tambah-btn-back {
+  .btn-kembali {
     width: 100%;
-
-    align-self: stretch;
   }
 
 
   /* FORM */
 
-  .tambah-form-card {
-    border-radius: 15px;
+  .tambah-form {
+    gap: 15px;
   }
 
-  .tambah-form-grid {
+  .form-section {
+    padding: 19px 17px;
+
+    border-radius: 14px;
+  }
+
+  .form-section h2 {
+    margin-bottom: 17px;
+
+    padding-bottom: 12px;
+
+    font-size: 15px;
+  }
+
+
+  /* FORM GRID */
+
+  .form-grid {
     grid-template-columns: 1fr;
 
-    gap: 18px;
-
-    padding: 20px 18px 5px;
+    gap: 16px;
   }
 
-  .tambah-full {
-    margin: 0 18px;
-
-    padding-top: 15px;
+  .form-group.full-width {
+    grid-column: auto;
   }
 
 
-  /* CAMERA BUTTON */
+  /* INPUT */
 
-  .tambah-btn-camera {
+  .form-group input {
+    height: 42px;
+  }
+
+  .form-group textarea {
+    min-height: 100px;
+  }
+
+
+  /* SCAN */
+
+  .btn-scan {
     width: 100%;
   }
 
 
-  /* BUTTONS */
+  /* HASIL SCAN */
 
-  .tambah-form-actions {
-    padding: 18px;
+  .scan-preview-grid {
+    grid-template-columns: 1fr;
 
+    gap: 14px;
+  }
+
+  .scan-preview-image {
+    height: 400px;
+  }
+
+
+  /* PDF */
+
+  .pdf-action-area {
+    margin-top: 18px;
+
+    padding-top: 17px;
+  }
+
+  .btn-create-pdf {
+    width: 100%;
+  }
+
+  .pdf-preview-section {
+    padding: 14px;
+
+    border-radius: 12px;
+  }
+
+  .pdf-preview-header {
+    flex-direction: column;
+
+    align-items: flex-start;
+
+    gap: 10px;
+  }
+
+  .pdf-viewer {
+    height: 500px;
+
+    border-radius: 8px;
+  }
+
+  .pdf-info {
+    flex-direction: column;
+
+    align-items: flex-start;
+
+    gap: 5px;
+  }
+
+
+  /* TOMBOL AKHIR */
+
+  .form-actions {
     flex-direction: column-reverse;
 
     align-items: stretch;
+
+    padding-top: 16px;
   }
 
-  .tambah-btn-cancel,
-  .tambah-btn-save {
+  .btn-batal,
+  .btn-simpan {
     width: 100%;
   }
-
 }
 
 
 /* =========================================================
-   VERY SMALL
+   HP KECIL
 ========================================================= */
 
 @media (max-width: 400px) {
 
-  .tambah-content {
-    padding: 15px;
+  .tambah-container {
+    padding: 14px 11px 25px;
   }
 
-  .tambah-topbar {
-    padding: 14px 15px 14px 70px;
+  .tambah-header h1 {
+    font-size: 20px;
   }
 
-  .tambah-topbar-left h1 {
-    font-size: 17px;
+  .form-section {
+    padding: 17px 14px;
   }
 
-  .tambah-page-title h2 {
-    font-size: 21px;
+  .form-section h2 {
+    font-size: 14px;
   }
 
-  .tambah-form-top {
-    padding: 17px;
+  .scan-preview-image {
+    height: 330px;
   }
 
-  .tambah-form-grid {
-    padding-left: 15px;
-
-    padding-right: 15px;
+  .pdf-viewer {
+    height: 450px;
   }
 
-  .tambah-full {
-    margin-left: 15px;
-
-    margin-right: 15px;
+  .pdf-preview-section {
+    padding: 11px;
   }
+}
 
-  .tambah-form-actions {
-    padding-left: 15px;
 
-    padding-right: 15px;
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .btn-kembali,
+  .btn-scan,
+  .scan-preview-card,
+  .btn-remove-scan,
+  .btn-create-pdf,
+  .btn-batal,
+  .btn-simpan {
+    transition: none;
   }
 
 }

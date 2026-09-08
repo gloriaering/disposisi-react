@@ -4,16 +4,27 @@ import { Link, useNavigate } from "react-router-dom";
 import logoSulut from "../assets/images/logo-sulut.png";
 import "../assets/css/Dashboard.css";
 
+// =========================================================
+// URL BACKEND
+// =========================================================
+// Jika dibuka dari localhost:
+// gunakan backend lokal.
+//
+// Jika dibuka dari website online:
+// gunakan backend Vercel.
+// =========================================================
+
+const isLocalhost =
+  window.location.hostname === "localhost" ||
+  window.location.hostname === "127.0.0.1";
+
+const API_URL = isLocalhost
+  ? "http://localhost:5000"
+  : import.meta.env.VITE_API_URL ||
+    "https://disposisi-react-8vdu.vercel.app";
+
 function Dashboard() {
   const navigate = useNavigate();
-
-  // =========================================================
-  // URL BACKEND
-  // =========================================================
-
-  const API_URL =
-    import.meta.env.VITE_API_URL ||
-    "https://disposisi-react-8vdu.vercel.app";
 
   /* =========================================================
      MENU MOBILE
