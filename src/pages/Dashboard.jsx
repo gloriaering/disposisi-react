@@ -53,33 +53,34 @@ function Dashboard() {
   const [user, setUser] = useState(null);
 
   /* =========================================================
-     CEK LOGIN + AMBIL DATA USER
+     AMBIL DATA USER LOGIN
   ========================================================= */
 
   useEffect(() => {
     try {
       const token = localStorage.getItem("token");
 
-      // JIKA BELUM LOGIN
+      // Jika tidak ada token,
+      // ProtectedRoute di App.jsx sebenarnya sudah menangani.
+      // Ini hanya pengaman tambahan.
       if (!token) {
-        navigate("/login");
         return;
       }
 
-      const userLogin = JSON.parse(
-        localStorage.getItem("user")
-      );
+      const userLogin = localStorage.getItem("user");
 
-      setUser(userLogin);
+      if (userLogin) {
+        setUser(JSON.parse(userLogin));
+      }
     } catch (error) {
       console.error(
         "Gagal mengambil data user:",
         error
       );
 
-      navigate("/login");
+      setUser(null);
     }
-  }, [navigate]);
+  }, []);
 
   /* =========================================================
      LOGOUT
@@ -94,17 +95,23 @@ function Dashboard() {
       return;
     }
 
-    // HAPUS TOKEN
+    // =======================================================
+    // HAPUS SEMUA DATA LOGIN
+    // =======================================================
+
     localStorage.removeItem("token");
-
-    // HAPUS USER
     localStorage.removeItem("user");
-
-    // HAPUS BIDANG
     localStorage.removeItem("bidang");
 
+    // =======================================================
     // KEMBALI KE LOGIN
-    navigate("/login");
+    //
+    // Menggunakan window.location.href agar halaman Dashboard
+    // benar-benar dihentikan dan tidak terjadi navigasi
+    // berulang yang menyebabkan halaman putih.
+    // =======================================================
+
+    window.location.href = "/login";
   };
 
   /* =========================================================
@@ -116,16 +123,25 @@ function Dashboard() {
       setLoading(true);
       setError("");
 
+      // =====================================================
       // AMBIL TOKEN
+      // =====================================================
+
       const token = localStorage.getItem("token");
 
+      // =====================================================
       // JIKA TOKEN TIDAK ADA
+      // =====================================================
+
       if (!token) {
-        navigate("/login");
+        setLoading(false);
         return;
       }
 
+      // =====================================================
       // DEBUG
+      // =====================================================
+
       console.log(
         "Mengambil data surat dari:",
         `${API_URL}/api/surat`
@@ -147,10 +163,18 @@ function Dashboard() {
         }
       );
 
+      // =====================================================
+      // DEBUG RESPONSE
+      // =====================================================
+
       console.log(
         "STATUS DATA SURAT:",
         response.status
       );
+
+      // =====================================================
+      // AMBIL RESPONSE
+      // =====================================================
 
       const result = await response.json();
 
@@ -167,11 +191,14 @@ function Dashboard() {
         response.status === 401 ||
         response.status === 403
       ) {
+        // Hapus data login
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         localStorage.removeItem("bidang");
 
-        navigate("/login");
+        // Jangan menggunakan navigate() berulang.
+        // Reload langsung ke halaman login.
+        window.location.href = "/login";
 
         return;
       }
@@ -252,8 +279,19 @@ function Dashboard() {
         error
       );
 
+      // =====================================================
+      // JIKA FETCH DIBATALKAN / HALAMAN SUDAH MENINGGALKAN
+      // DASHBOARD, JANGAN TAMPILKAN ERROR.
+      // =====================================================
+
+      if (
+        error?.name === "AbortError"
+      ) {
+        return;
+      }
+
       setError(
-        error.message ||
+        error?.message ||
           "Tidak dapat mengambil data dari server."
       );
 
@@ -271,13 +309,17 @@ function Dashboard() {
   useEffect(() => {
     const token = localStorage.getItem("token");
 
+    // Tidak perlu navigate("/login") di sini.
+    // ProtectedRoute pada App.jsx sudah menangani
+    // pengguna yang tidak mempunyai token.
+
     if (!token) {
-      navigate("/login");
+      setLoading(false);
       return;
     }
 
     hitungStatistik();
-  }, [navigate]);
+  }, []);
 
   /* =========================================================
      RETURN
@@ -308,6 +350,7 @@ function Dashboard() {
           </div>
 
           <div className="brand-text">
+
             <h2>
               DISNAKERTRANS
             </h2>
@@ -315,6 +358,7 @@ function Dashboard() {
             <span>
               Sulawesi Utara
             </span>
+
           </div>
 
         </div>
@@ -406,6 +450,7 @@ function Dashboard() {
                 textAlign: "right",
               }}
             >
+
               <strong
                 style={{
                   display: "block",
@@ -426,6 +471,7 @@ function Dashboard() {
               >
                 Pengguna
               </span>
+
             </div>
 
             {/* TOMBOL LOGOUT */}
@@ -456,6 +502,7 @@ function Dashboard() {
                   "0 3px 8px rgba(220, 38, 38, 0.25)",
               }}
             >
+
               <span
                 style={{
                   fontSize: "15px",
@@ -465,6 +512,7 @@ function Dashboard() {
               </span>
 
               Logout
+
             </button>
 
           </div>
