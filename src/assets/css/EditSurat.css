@@ -1,0 +1,1023 @@
+/* =========================================================
+   EDIT SURAT
+   VISUAL MENGIKUTI DETAIL SURAT
+   ========================================================= */
+
+
+/* =========================================================
+   RESET
+   ========================================================= */
+
+   * {
+    box-sizing: border-box;
+  }
+  
+  
+  /* =========================================================
+     HALAMAN
+     ========================================================= */
+  
+  .tambah-page {
+    min-height: 100vh;
+    background: #f8fafc;
+    font-family: Arial, sans-serif;
+    overflow-x: hidden;
+  }
+  
+  
+  /* =========================================================
+     SIDEBAR
+     ========================================================= */
+  
+  .tambah-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+  
+    width: 250px;
+  
+    background: #173f5f;
+    color: #fff;
+  
+    padding: 25px 18px;
+  
+    box-sizing: border-box;
+  
+    z-index: 100;
+  
+    overflow-y: auto;
+  }
+  
+  
+  /* =========================================================
+     BRAND
+     ========================================================= */
+  
+  .tambah-brand {
+    display: flex;
+    align-items: center;
+  
+    gap: 12px;
+  
+    margin-bottom: 40px;
+  }
+  
+  .tambah-brand-logo {
+    width: 48px;
+    height: 48px;
+  
+    background: #fff;
+  
+    border-radius: 50%;
+  
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  
+    overflow: hidden;
+  
+    flex-shrink: 0;
+  }
+  
+  .tambah-brand-logo img {
+    width: 42px;
+    height: 42px;
+  
+    object-fit: contain;
+  }
+  
+  .tambah-brand-text h2 {
+    margin: 0;
+  
+    font-size: 18px;
+  
+    color: #fff;
+  }
+  
+  .tambah-brand-text span {
+    font-size: 13px;
+  
+    opacity: 0.8;
+  
+    color: #fff;
+  }
+  
+  
+  /* =========================================================
+     MENU
+     ========================================================= */
+  
+  .tambah-menu {
+    width: 100%;
+  }
+  
+  .tambah-menu-title {
+    font-size: 11px;
+  
+    opacity: 0.6;
+  
+    margin: 0 0 12px;
+  
+    color: #fff;
+  }
+  
+  .tambah-menu-item {
+    display: flex;
+  
+    align-items: center;
+  
+    gap: 12px;
+  
+    padding: 13px 14px;
+  
+    margin-bottom: 6px;
+  
+    border-radius: 8px;
+  
+    color: #fff;
+  
+    text-decoration: none;
+  
+    transition: background 0.2s ease;
+  }
+  
+  .tambah-menu-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+  
+  .tambah-menu-item.active {
+    background: rgba(255, 255, 255, 0.15);
+  }
+  
+  .tambah-menu-item span {
+    width: 20px;
+  
+    text-align: center;
+  
+    flex-shrink: 0;
+  }
+  
+  
+  /* =========================================================
+     MAIN
+     ========================================================= */
+  
+  .tambah-main {
+    margin-left: 250px;
+  
+    min-height: 100vh;
+  
+    width: auto;
+  }
+  
+  
+  /* =========================================================
+     TOPBAR
+     ========================================================= */
+  
+  .tambah-topbar {
+    background: #ffffff;
+  
+    border-bottom: 1px solid #e2e8f0;
+  
+    padding: 20px 30px;
+  }
+  
+  .tambah-topbar-left {
+    display: block;
+  }
+  
+  .tambah-topbar-left h1 {
+    margin: 0;
+  
+    font-size: 24px;
+  
+    color: #173f5f;
+  }
+  
+  .tambah-topbar-left p {
+    margin: 5px 0 0;
+  
+    color: #64748b;
+  
+    font-size: 14px;
+  }
+  
+  
+  /* =========================================================
+     CONTENT
+     ========================================================= */
+  
+  .tambah-content {
+    padding: 30px;
+  
+    max-width: 1400px;
+  
+    margin: 0 auto;
+  
+    width: 100%;
+  
+    box-sizing: border-box;
+  }
+  
+  
+  /* =========================================================
+     PAGE HEADER
+     ========================================================= */
+  
+  .tambah-page-header {
+    display: flex;
+  
+    justify-content: space-between;
+  
+    align-items: flex-start;
+  
+    gap: 20px;
+  
+    margin-bottom: 25px;
+  
+    flex-wrap: wrap;
+  }
+  
+  .tambah-page-title {
+    min-width: 0;
+  }
+  
+  .tambah-page-title span {
+    font-size: 12px;
+  
+    font-weight: bold;
+  
+    color: #64748b;
+  }
+  
+  .tambah-page-title h2 {
+    margin: 6px 0;
+  
+    color: #173f5f;
+  
+    font-size: 24px;
+  
+    line-height: 1.3;
+  }
+  
+  .tambah-page-title p {
+    margin: 0;
+  
+    color: #64748b;
+  
+    font-size: 14px;
+  
+    line-height: 1.5;
+  }
+  
+  
+  /* =========================================================
+     TOMBOL KEMBALI
+     ========================================================= */
+  
+  .tambah-btn-back {
+    display: inline-block;
+  
+    padding: 10px 16px;
+  
+    background: #e2e8f0;
+  
+    color: #334155;
+  
+    border-radius: 8px;
+  
+    text-decoration: none;
+  
+    font-size: 14px;
+  
+    transition: background 0.2s ease;
+  
+    white-space: nowrap;
+  }
+  
+  .tambah-btn-back:hover {
+    background: #cbd5e1;
+  }
+  
+  
+  /* =========================================================
+     ERROR
+     ========================================================= */
+  
+  .tambah-error {
+    background: #fef2f2;
+  
+    border: 1px solid #fecaca;
+  
+    color: #b91c1c;
+  
+    padding: 13px 15px;
+  
+    border-radius: 8px;
+  
+    margin-bottom: 20px;
+  
+    font-size: 14px;
+  
+    line-height: 1.5;
+  }
+  
+  
+  /* =========================================================
+     FORM CARD
+     ========================================================= */
+  
+  .tambah-form-card {
+    background: #fff;
+  
+    border: 1px solid #e2e8f0;
+  
+    border-radius: 12px;
+  
+    padding: 25px;
+  
+    margin-bottom: 25px;
+  
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  
+    width: 100%;
+  
+    box-sizing: border-box;
+  }
+  
+  
+  /* =========================================================
+     FORM TOP
+     ========================================================= */
+  
+  .tambah-form-top {
+    padding-bottom: 20px;
+  
+    margin-bottom: 25px;
+  
+    border-bottom: 1px solid #e2e8f0;
+  }
+  
+  .tambah-form-top h3 {
+    margin: 0;
+  
+    color: #173f5f;
+  
+    font-size: 18px;
+  
+    line-height: 1.4;
+  }
+  
+  .tambah-form-top p {
+    margin: 6px 0 0;
+  
+    color: #64748b;
+  
+    font-size: 14px;
+  
+    line-height: 1.5;
+  }
+  
+  
+  /* =========================================================
+     FORM GRID
+     ========================================================= */
+  
+  .tambah-form-grid {
+    display: grid;
+  
+    grid-template-columns: repeat(
+      2,
+      minmax(0, 1fr)
+    );
+  
+    gap: 20px;
+  
+    width: 100%;
+  }
+  
+  
+  /* =========================================================
+     FORM GROUP
+     ========================================================= */
+  
+  .tambah-form-group {
+    display: flex;
+  
+    flex-direction: column;
+  
+    min-width: 0;
+  }
+  
+  .tambah-form-group label {
+    margin-bottom: 7px;
+  
+    color: #64748b;
+  
+    font-size: 13px;
+  
+    font-weight: 600;
+  
+    line-height: 1.4;
+  }
+  
+  .tambah-form-group label b {
+    color: #dc2626;
+  }
+  
+  
+  /* =========================================================
+     INPUT TEXT
+     ========================================================= */
+  
+  .tambah-form-group input[type="text"],
+  .tambah-form-group input[type="time"],
+  .tambah-form-group input[type="date"],
+  .tambah-form-group textarea {
+    width: 100%;
+  
+    padding: 11px 13px;
+  
+    border: 1px solid #cbd5e1;
+  
+    border-radius: 8px;
+  
+    background: #fff;
+  
+    color: #334155;
+  
+    font-family: Arial, sans-serif;
+  
+    font-size: 14px;
+  
+    outline: none;
+  
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease;
+  
+    box-sizing: border-box;
+  }
+  
+  
+  /* =========================================================
+     UKURAN INPUT
+     ========================================================= */
+  
+  .tambah-form-group input[type="text"],
+  .tambah-form-group input[type="time"],
+  .tambah-form-group input[type="date"] {
+    height: 44px;
+  }
+  
+  .tambah-form-group textarea {
+    min-height: 110px;
+  
+    line-height: 1.6;
+  
+    resize: vertical;
+  }
+  
+  
+  /* =========================================================
+     FOCUS
+     ========================================================= */
+  
+  .tambah-form-group input:focus,
+  .tambah-form-group textarea:focus {
+    border-color: #173f5f;
+  
+    box-shadow:
+      0 0 0 3px rgba(23, 63, 95, 0.08);
+  }
+  
+  
+  /* =========================================================
+     READ ONLY
+     ========================================================= */
+  
+  .tambah-form-group input[readonly] {
+    background: #f8fafc;
+  
+    color: #64748b;
+  
+    cursor: default;
+  }
+  
+  
+  /* =========================================================
+     SELECT
+     ========================================================= */
+  
+  .tambah-form-group select {
+    width: 100%;
+  
+    height: 44px;
+  
+    padding: 0 13px;
+  
+    border: 1px solid #cbd5e1;
+  
+    border-radius: 8px;
+  
+    background: #fff;
+  
+    color: #334155;
+  
+    font-family: Arial, sans-serif;
+  
+    font-size: 14px;
+  
+    outline: none;
+  
+    box-sizing: border-box;
+  
+    cursor: pointer;
+  
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+  
+  .tambah-form-group select:focus {
+    border-color: #173f5f;
+  
+    box-shadow:
+      0 0 0 3px rgba(23, 63, 95, 0.08);
+  }
+  
+  
+  /* =========================================================
+     FULL WIDTH
+     ========================================================= */
+  
+  .tambah-full {
+    margin-top: 25px;
+  
+    width: 100%;
+  }
+  
+  
+  /* =========================================================
+     FILE INPUT
+     ========================================================= */
+  
+  .tambah-form-group input[type="file"] {
+    width: 100%;
+  
+    padding: 10px 12px;
+  
+    border: 1px solid #cbd5e1;
+  
+    border-radius: 8px;
+  
+    background: #fff;
+  
+    color: #334155;
+  
+    font-family: Arial, sans-serif;
+  
+    font-size: 13px;
+  
+    cursor: pointer;
+  
+    box-sizing: border-box;
+  }
+  
+  .tambah-form-group input[type="file"]:focus {
+    outline: none;
+  
+    border-color: #173f5f;
+  }
+  
+  
+  /* =========================================================
+     KETERANGAN
+     ========================================================= */
+  
+  .tambah-form-group small {
+    margin-top: 7px;
+  
+    color: #64748b;
+  
+    font-size: 12px;
+  
+    line-height: 1.5;
+  }
+  
+  
+  /* =========================================================
+     JUDUL ARSIP
+     ========================================================= */
+  
+  .tambah-form-group h3 {
+    margin: 0 0 15px;
+  
+    color: #173f5f;
+  
+    font-size: 18px;
+  
+    line-height: 1.4;
+  }
+  
+  
+  /* =========================================================
+     FILE CARD
+     ========================================================= */
+  
+  /*
+     Bagian file pada EditSurat menggunakan inline style.
+     CSS di bawah hanya mengatur VISUAL.
+     Tidak mengubah fungsi file.
+  */
+  
+  .tambah-form-group
+    > div[style*="border: 1px solid #ddd"] {
+    border-color: #e2e8f0 !important;
+  
+    border-radius: 12px !important;
+  
+    background: #fff !important;
+  
+    overflow: hidden;
+  }
+  
+  
+  /* =========================================================
+     HEADER FILE
+     ========================================================= */
+  
+  .tambah-form-group
+    > div
+    > div[style*="background"] {
+    color: #334155;
+  }
+  
+  
+  /* =========================================================
+     GAMBAR FILE
+     ========================================================= */
+  
+  .tambah-form-group img {
+    display: block;
+  
+    max-width: 100%;
+  
+    height: auto;
+  
+    object-fit: contain;
+  }
+  
+  
+  /* =========================================================
+     PDF FILE
+     ========================================================= */
+  
+  .tambah-form-group iframe {
+    display: block;
+  
+    width: 100%;
+  
+    border: none;
+  
+    background: #fff;
+  }
+  
+  
+  /* =========================================================
+     BUTTON HAPUS FILE
+     ========================================================= */
+  
+  .tambah-form-group button[type="button"] {
+    border: none;
+  
+    border-radius: 8px;
+  
+    background: #fee2e2;
+  
+    color: #b91c1c;
+  
+    font-family: Arial, sans-serif;
+  
+    font-size: 13px;
+  
+    font-weight: 600;
+  
+    cursor: pointer;
+  
+    transition:
+      background 0.2s ease,
+      transform 0.1s ease;
+  }
+  
+  .tambah-form-group button[type="button"]:hover {
+    background: #fecaca;
+  }
+  
+  .tambah-form-group button[type="button"]:active {
+    transform: scale(0.98);
+  }
+  
+  
+  /* =========================================================
+     ACTION BUTTON
+     ========================================================= */
+  
+  .tambah-form-actions {
+    display: flex;
+  
+    justify-content: flex-end;
+  
+    align-items: center;
+  
+    gap: 10px;
+  
+    margin-top: 30px;
+  
+    padding-top: 20px;
+  
+    border-top: 1px solid #e2e8f0;
+  }
+  
+  
+  /* =========================================================
+     BATAL
+     ========================================================= */
+  
+  .tambah-btn-cancel {
+    display: inline-block;
+  
+    padding: 10px 16px;
+  
+    background: #e2e8f0;
+  
+    color: #334155;
+  
+    border-radius: 8px;
+  
+    text-decoration: none;
+  
+    font-family: Arial, sans-serif;
+  
+    font-size: 14px;
+  
+    font-weight: 600;
+  
+    transition: background 0.2s ease;
+  
+    cursor: pointer;
+  }
+  
+  .tambah-btn-cancel:hover {
+    background: #cbd5e1;
+  }
+  
+  
+  /* =========================================================
+     SIMPAN
+     ========================================================= */
+  
+  .tambah-btn-save {
+    padding: 10px 16px;
+  
+    background: #173f5f;
+  
+    color: #fff;
+  
+    border: none;
+  
+    border-radius: 8px;
+  
+    font-family: Arial, sans-serif;
+  
+    font-size: 14px;
+  
+    font-weight: 600;
+  
+    cursor: pointer;
+  
+    transition:
+      background 0.2s ease,
+      opacity 0.2s ease;
+  }
+  
+  .tambah-btn-save:hover {
+    background: #12334d;
+  }
+  
+  .tambah-btn-save:disabled {
+    opacity: 0.6;
+  
+    cursor: not-allowed;
+  }
+  
+  
+  /* =========================================================
+     TABLET
+     SAMA SEPERTI DETAIL SURAT
+     ========================================================= */
+  
+  @media (max-width: 900px) {
+  
+    .tambah-sidebar {
+      width: 210px !important;
+  
+      padding: 20px 12px !important;
+    }
+  
+    .tambah-main {
+      margin-left: 210px !important;
+    }
+  
+    .tambah-content {
+      padding: 20px !important;
+    }
+  
+    .tambah-form-grid {
+      grid-template-columns: 1fr !important;
+    }
+  
+  }
+  
+  
+  /* =========================================================
+     HP
+     SAMA SEPERTI DETAIL SURAT
+     ========================================================= */
+  
+  @media (max-width: 650px) {
+  
+    body {
+      overflow-x: hidden !important;
+    }
+  
+    .tambah-sidebar {
+      position: relative !important;
+  
+      width: 100% !important;
+  
+      height: auto !important;
+  
+      min-height: auto !important;
+  
+      padding: 15px !important;
+    }
+  
+    .tambah-brand {
+      margin-bottom: 20px !important;
+    }
+  
+    .tambah-menu {
+      display: flex !important;
+  
+      flex-wrap: wrap !important;
+  
+      gap: 7px !important;
+    }
+  
+    .tambah-menu-title {
+      width: 100% !important;
+  
+      margin-bottom: 5px !important;
+    }
+  
+    .tambah-menu-item {
+      flex: 1 1 30% !important;
+  
+      min-width: 100px !important;
+  
+      justify-content: center !important;
+  
+      padding: 10px 7px !important;
+  
+      margin-bottom: 0 !important;
+  
+      font-size: 12px !important;
+  
+      text-align: center !important;
+    }
+  
+    .tambah-main {
+      margin-left: 0 !important;
+  
+      width: 100% !important;
+  
+      min-height: auto !important;
+    }
+  
+    .tambah-topbar {
+      padding: 15px !important;
+    }
+  
+    .tambah-topbar-left h1 {
+      font-size: 20px !important;
+    }
+  
+    .tambah-topbar-left p {
+      font-size: 12px !important;
+    }
+  
+    .tambah-content {
+      padding: 12px !important;
+  
+      width: 100% !important;
+  
+      max-width: 100% !important;
+    }
+  
+    .tambah-page-header {
+      flex-direction: column !important;
+  
+      align-items: stretch !important;
+  
+      gap: 15px !important;
+    }
+  
+    .tambah-page-title h2 {
+      font-size: 21px !important;
+    }
+  
+    .tambah-btn-back {
+      width: 100% !important;
+  
+      text-align: center !important;
+    }
+  
+    .tambah-form-card {
+      width: 100% !important;
+  
+      padding: 15px !important;
+  
+      border-radius: 10px !important;
+  
+      overflow: hidden !important;
+    }
+  
+    .tambah-form-grid {
+      grid-template-columns: 1fr !important;
+  
+      gap: 15px !important;
+    }
+  
+    .tambah-full {
+      margin-top: 20px !important;
+    }
+  
+    .tambah-form-actions {
+      flex-direction: column-reverse !important;
+  
+      align-items: stretch !important;
+    }
+  
+    .tambah-btn-cancel,
+    .tambah-btn-save {
+      width: 100% !important;
+  
+      text-align: center !important;
+    }
+  
+  }
+  
+  
+  /* =========================================================
+     HP KECIL
+     SAMA SEPERTI DETAIL SURAT
+     ========================================================= */
+  
+  @media (max-width: 400px) {
+  
+    .tambah-sidebar {
+      padding: 12px !important;
+    }
+  
+    .tambah-brand-text h2 {
+      font-size: 16px !important;
+    }
+  
+    .tambah-brand-text span {
+      font-size: 11px !important;
+    }
+  
+    .tambah-menu-item {
+      flex: 1 1 100% !important;
+  
+      width: 100% !important;
+  
+      min-width: 100% !important;
+    }
+  
+    .tambah-content {
+      padding: 10px !important;
+    }
+  
+    .tambah-form-card {
+      padding: 13px !important;
+    }
+  
+    .tambah-page-title h2 {
+      font-size: 19px !important;
+    }
+  
+  }

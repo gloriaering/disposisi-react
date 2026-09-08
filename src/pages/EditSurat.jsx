@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import logoSulut from "../assets/images/logo-sulut.png";
-import "../assets/css/TambahSurat.css";
+import "../assets/css/EditSurat.css";
 
 const API_URL = "https://disposisi-react-8vdu.vercel.app";
 

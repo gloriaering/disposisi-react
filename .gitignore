@@ -29,3 +29,9 @@ dist-ssr/
 *.njsproj
 *.sln
 *.sw?
+# Scanner installer files
+scanner-installer/app/node.exe
+scanner-installer/output/*.exe
+scanner-installer/app/node_modules/
+scanner-installer/app/scans/*.jpg
+scanner-bridge/scans/*.jpg
