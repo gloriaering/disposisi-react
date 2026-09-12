@@ -1093,13 +1093,7 @@ function EditSurat() {
 
     const hasScan = scanSurat.length > 0;
     const hasCameraFile = !!cameraFile;
-
-    if (!hasScan && !arsipBaru.length && !hasCameraFile) {
-      setError(
-        "Silakan pilih salah satu arsip baru: Scan Epson, Pilih File, atau Kamera."
-      );
-      return;
-    }
+    const hasNewArchive = hasScan || arsipBaru.length > 0 || hasCameraFile;
 
     try {
       setSaving(true);
@@ -1135,10 +1129,6 @@ function EditSurat() {
       }
 
       const filesToUpload = getFilesToUpload();
-
-      if (filesToUpload.length === 0) {
-        throw new Error("Arsip surat belum dipilih.");
-      }
 
       const data = new FormData();
 
