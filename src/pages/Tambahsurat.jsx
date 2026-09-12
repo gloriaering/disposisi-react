@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { jsPDF } from "jspdf";
 
@@ -34,6 +34,23 @@ const TambahSurat = () => {
   const [scanPreviews, setScanPreviews] = useState([]);
 
   // =========================================================
+  // FILE UPLOAD
+  // =========================================================
+  const [uploadedFile, setUploadedFile] = useState(null);
+  const [uploadedPreview, setUploadedPreview] = useState("");
+
+  // =========================================================
+  // CAMERA
+  // =========================================================
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [cameraFile, setCameraFile] = useState(null);
+  const [cameraPreview, setCameraPreview] = useState("");
+  const [cameraLoading, setCameraLoading] = useState(false);
+
+  const videoRef = useRef(null);
+  const cameraStreamRef = useRef(null);
+
+  // =========================================================
   // PDF HASIL GABUNGAN
   // =========================================================
   const [pdfPreview, setPdfPreview] = useState("");
@@ -65,6 +82,24 @@ const TambahSurat = () => {
   }, [scanSurat]);
 
   // =========================================================
+  // PREVIEW FILE UPLOAD
+  // =========================================================
+  useEffect(() => {
+    if (!uploadedFile) {
+      setUploadedPreview("");
+      return;
+    }
+
+    const url = URL.createObjectURL(uploadedFile);
+
+    setUploadedPreview(url);
+
+    return () => {
+      URL.revokeObjectURL(url);
+    };
+  }, [uploadedFile]);
+
+  // =========================================================
   // CLEANUP PDF PREVIEW
   // =========================================================
   useEffect(() => {
@@ -74,6 +109,15 @@ const TambahSurat = () => {
       }
     };
   }, [pdfPreview]);
+
+  // =========================================================
+  // CLEANUP CAMERA SAAT COMPONENT DIHAPUS
+  // =========================================================
+  useEffect(() => {
+    return () => {
+      stopCamera();
+    };
+  }, []);
 
   // =========================================================
   // HANDLE INPUT
@@ -88,6 +132,77 @@ const TambahSurat = () => {
   };
 
   // =========================================================
+  // VALIDASI JAM 24 JAM
+  // FORMAT: HH:mm
+  // =========================================================
+  const handleTimeChange = (e) => {
+    let value = e.target.value;
+
+    // Hanya angka dan titik dua
+    value = value.replace(/[^0-9:]/g, "");
+
+    // Maksimal 5 karakter
+    value = value.slice(0, 5);
+
+    // Tambahkan ":" otomatis setelah 2 angka
+    if (
+      value.length === 2 &&
+      !value.includes(":")
+    ) {
+      value = `${value}:`;
+    }
+
+    // Batasi jam
+    if (value.length >= 2) {
+      const jam = Number(
+        value.slice(0, 2)
+      );
+
+      if (jam > 23) {
+        value = `23${value.includes(":") ? ":" : ""}${value.slice(3)}`;
+      }
+    }
+
+    // Batasi menit
+    if (
+      value.length === 5 &&
+      value.includes(":")
+    ) {
+      const menit = Number(
+        value.slice(3, 5)
+      );
+
+      if (menit > 59) {
+        value = `${value.slice(0, 3)}59`;
+      }
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      jam_diterima: value,
+    }));
+  };
+
+  // =========================================================
+  // VALIDASI JAM SEBELUM SIMPAN
+  // =========================================================
+  const isValidTime = (value) => {
+    if (!/^\d{2}:\d{2}$/.test(value)) {
+      return false;
+    }
+
+    const [hours, minutes] =
+      value.split(":").map(Number);
+
+    return (
+      hours >= 0 &&
+      hours <= 23 &&
+      minutes >= 0 &&
+      minutes <= 59
+    );
+  };
+
+  // =========================================================
   // FILE → DATA URL
   // =========================================================
   const fileToDataURL = (file) => {
@@ -99,7 +214,9 @@ const TambahSurat = () => {
       };
 
       reader.onerror = () => {
-        reject(new Error("Gagal membaca file."));
+        reject(
+          new Error("Gagal membaca file.")
+        );
       };
 
       reader.readAsDataURL(file);
@@ -115,19 +232,28 @@ const TambahSurat = () => {
 
       image.onload = () => {
         try {
-          const canvas = document.createElement("canvas");
+          const canvas =
+            document.createElement(
+              "canvas"
+            );
 
-          const ctx = canvas.getContext("2d");
+          const ctx =
+            canvas.getContext("2d");
 
           if (!ctx) {
             reject(
-              new Error("Canvas browser tidak tersedia.")
+              new Error(
+                "Canvas browser tidak tersedia."
+              )
             );
             return;
           }
 
-          canvas.width = image.naturalWidth;
-          canvas.height = image.naturalHeight;
+          canvas.width =
+            image.naturalWidth;
+
+          canvas.height =
+            image.naturalHeight;
 
           // Background putih
           ctx.fillStyle = "#ffffff";
@@ -171,7 +297,7 @@ const TambahSurat = () => {
       image.onerror = () => {
         reject(
           new Error(
-            "Gagal membaca gambar hasil scan."
+            "Gagal membaca gambar."
           )
         );
       };
@@ -185,6 +311,35 @@ const TambahSurat = () => {
   };
 
   // =========================================================
+  // RESET PDF
+  // =========================================================
+  const resetPDF = () => {
+    if (pdfPreview) {
+      URL.revokeObjectURL(pdfPreview);
+    }
+
+    setPdfPreview("");
+    setPdfFile(null);
+  };
+
+  // =========================================================
+  // RESET FILE UPLOAD
+  // =========================================================
+  const clearUploadedFile = () => {
+    setUploadedFile(null);
+    setUploadedPreview("");
+    resetPDF();
+  };
+
+  // =========================================================
+  // RESET CAMERA
+  // =========================================================
+  const clearCameraFile = () => {
+    setCameraFile(null);
+    setCameraPreview("");
+  };
+
+  // =========================================================
   // SCAN DOKUMEN
   // =========================================================
   const handleScanDocument = async () => {
@@ -195,14 +350,30 @@ const TambahSurat = () => {
     try {
       setLoadingScan(true);
 
-      console.log("=================================");
-      console.log("MEMULAI SCAN DOKUMEN");
-      console.log("=================================");
+      // -----------------------------------------------------
+      // KARENA MEMILIH SCAN:
+      // HAPUS FILE / FOTO KAMERA SEBELUMNYA
+      // -----------------------------------------------------
+      clearUploadedFile();
+      clearCameraFile();
+
+      console.log(
+        "================================="
+      );
+
+      console.log(
+        "MEMULAI SCAN DOKUMEN"
+      );
+
+      console.log(
+        "================================="
+      );
 
       // -----------------------------------------------------
       // CEK SCANNER BRIDGE
       // -----------------------------------------------------
-      const bridgeCheck = await fetch(`${SCANNER_URL}/`);
+      const bridgeCheck =
+        await fetch(`${SCANNER_URL}/`);
 
       if (!bridgeCheck.ok) {
         throw new Error(
@@ -210,27 +381,34 @@ const TambahSurat = () => {
         );
       }
 
-      const bridgeData = await bridgeCheck.json();
+      const bridgeData =
+        await bridgeCheck.json();
 
-      console.log("SCANNER BRIDGE:", bridgeData);
+      console.log(
+        "SCANNER BRIDGE:",
+        bridgeData
+      );
 
       // -----------------------------------------------------
       // JALANKAN SCAN
       // -----------------------------------------------------
-      const response = await fetch(
-        `${SCANNER_URL}/scan`,
-        {
-          method: "POST",
+      const response =
+        await fetch(
+          `${SCANNER_URL}/scan`,
+          {
+            method: "POST",
 
-          headers: {
-            "Content-Type": "application/json",
-          },
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
 
-          body: JSON.stringify({
-            nama_file: `scan_${Date.now()}.jpg`,
-          }),
-        }
-      );
+            body: JSON.stringify({
+              nama_file:
+                `scan_${Date.now()}.jpg`,
+            }),
+          }
+        );
 
       console.log(
         "STATUS SCANNER:",
@@ -242,22 +420,27 @@ const TambahSurat = () => {
           "Scanner gagal melakukan scan.";
 
         try {
-          const errorData = await response.json();
+          const errorData =
+            await response.json();
 
           if (errorData?.message) {
-            errorMessage = errorData.message;
+            errorMessage =
+              errorData.message;
           }
         } catch {
           // Response bukan JSON
         }
 
-        throw new Error(errorMessage);
+        throw new Error(
+          errorMessage
+        );
       }
 
       // -----------------------------------------------------
       // AMBIL HASIL SCAN
       // -----------------------------------------------------
-      const blob = await response.blob();
+      const blob =
+        await response.blob();
 
       console.log(
         "UKURAN HASIL SCAN:",
@@ -269,8 +452,13 @@ const TambahSurat = () => {
         blob.type
       );
 
-      if (!blob || blob.size === 0) {
-        throw new Error("Hasil scan kosong.");
+      if (
+        !blob ||
+        blob.size === 0
+      ) {
+        throw new Error(
+          "Hasil scan kosong."
+        );
       }
 
       // -----------------------------------------------------
@@ -279,13 +467,14 @@ const TambahSurat = () => {
       const fileName =
         `scan_${Date.now()}.jpg`;
 
-      const file = new File(
-        [blob],
-        fileName,
-        {
-          type: "image/jpeg",
-        }
-      );
+      const file =
+        new File(
+          [blob],
+          fileName,
+          {
+            type: "image/jpeg",
+          }
+        );
 
       // -----------------------------------------------------
       // TAMBAHKAN KE DAFTAR SCAN
@@ -311,12 +500,7 @@ const TambahSurat = () => {
       // -----------------------------------------------------
       // PDF LAMA TIDAK BERLAKU LAGI
       // -----------------------------------------------------
-      if (pdfPreview) {
-        URL.revokeObjectURL(pdfPreview);
-      }
-
-      setPdfPreview("");
-      setPdfFile(null);
+      resetPDF();
 
       console.log(
         "Scan berhasil ditambahkan."
@@ -326,7 +510,10 @@ const TambahSurat = () => {
         "================================="
       );
 
-      console.error("GAGAL SCAN:");
+      console.error(
+        "GAGAL SCAN:"
+      );
+
       console.error(error);
 
       console.error(
@@ -353,19 +540,312 @@ const TambahSurat = () => {
     );
 
     // PDF harus dibuat ulang
-    if (pdfPreview) {
-      URL.revokeObjectURL(pdfPreview);
+    resetPDF();
+  };
+
+  // =========================================================
+  // PILIH FILE
+  // =========================================================
+  const handleFileSelect = (e) => {
+    const file =
+      e.target.files?.[0];
+
+    if (!file) {
+      return;
     }
 
-    setPdfPreview("");
-    setPdfFile(null);
+    const allowedTypes = [
+      "application/pdf",
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/webp",
+    ];
+
+    if (
+      !allowedTypes.includes(
+        file.type
+      )
+    ) {
+      alert(
+        "Format file tidak didukung.\n\nGunakan PDF, JPG, JPEG, PNG, atau WEBP."
+      );
+
+      e.target.value = "";
+      return;
+    }
+
+    if (
+      file.size >
+      20 * 1024 * 1024
+    ) {
+      alert(
+        "Ukuran file terlalu besar.\n\nMaksimal 20 MB."
+      );
+
+      e.target.value = "";
+      return;
+    }
+
+    // -------------------------------------------------------
+    // KARENA MEMILIH FILE:
+    // HAPUS HASIL SCAN DAN FOTO KAMERA
+    // -------------------------------------------------------
+    setScanSurat([]);
+    clearCameraFile();
+    resetPDF();
+
+    setUploadedFile(file);
+
+    console.log(
+      "FILE DIPILIH:",
+      file.name
+    );
+
+    console.log(
+      "TIPE FILE:",
+      file.type
+    );
+
+    console.log(
+      "UKURAN FILE:",
+      file.size
+    );
   };
+
+  // =========================================================
+  // BUKA CAMERA
+  // =========================================================
+  const startCamera = async () => {
+    if (cameraLoading) {
+      return;
+    }
+
+    try {
+      setCameraLoading(true);
+
+      // -----------------------------------------------------
+      // KARENA MEMILIH CAMERA:
+      // HAPUS SCAN DAN FILE UPLOAD
+      // -----------------------------------------------------
+      setScanSurat([]);
+      clearUploadedFile();
+      resetPDF();
+
+      if (
+        !navigator.mediaDevices ||
+        !navigator.mediaDevices.getUserMedia
+      ) {
+        throw new Error(
+          "Browser ini tidak mendukung akses kamera."
+        );
+      }
+
+      const stream =
+        await navigator.mediaDevices.getUserMedia(
+          {
+            video: {
+              facingMode: "environment",
+            },
+
+            audio: false,
+          }
+        );
+
+      cameraStreamRef.current =
+        stream;
+
+      setCameraOpen(true);
+
+      // Tunggu video muncul
+      setTimeout(() => {
+        if (
+          videoRef.current
+        ) {
+          videoRef.current.srcObject =
+            stream;
+
+          videoRef.current
+            .play()
+            .catch(() => {});
+        }
+      }, 100);
+    } catch (error) {
+      console.error(
+        "GAGAL MEMBUKA KAMERA:",
+        error
+      );
+
+      alert(
+        error.message ||
+          "Kamera tidak dapat dibuka."
+      );
+    } finally {
+      setCameraLoading(false);
+    }
+  };
+
+  // =========================================================
+  // STOP CAMERA
+  // =========================================================
+  const stopCamera = () => {
+    if (
+      cameraStreamRef.current
+    ) {
+      cameraStreamRef.current
+        .getTracks()
+        .forEach((track) => {
+          track.stop();
+        });
+
+      cameraStreamRef.current =
+        null;
+    }
+
+    if (videoRef.current) {
+      videoRef.current.srcObject =
+        null;
+    }
+
+    setCameraOpen(false);
+  };
+
+  // =========================================================
+  // AMBIL FOTO DARI CAMERA
+  // =========================================================
+  const captureCameraPhoto =
+    () => {
+      const video =
+        videoRef.current;
+
+      if (!video) {
+        alert(
+          "Kamera belum siap."
+        );
+        return;
+      }
+
+      if (
+        video.videoWidth <= 0 ||
+        video.videoHeight <= 0
+      ) {
+        alert(
+          "Kamera belum siap mengambil foto."
+        );
+        return;
+      }
+
+      const canvas =
+        document.createElement(
+          "canvas"
+        );
+
+      canvas.width =
+        video.videoWidth;
+
+      canvas.height =
+        video.videoHeight;
+
+      const context =
+        canvas.getContext("2d");
+
+      if (!context) {
+        alert(
+          "Canvas kamera tidak tersedia."
+        );
+        return;
+      }
+
+      // Background putih
+      context.fillStyle =
+        "#ffffff";
+
+      context.fillRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+
+      context.drawImage(
+        video,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            alert(
+              "Gagal mengambil foto."
+            );
+            return;
+          }
+
+          const fileName =
+            `kamera_${Date.now()}.jpg`;
+
+          const file =
+            new File(
+              [blob],
+              fileName,
+              {
+                type: "image/jpeg",
+              }
+            );
+
+          setCameraFile(file);
+
+          if (cameraPreview) {
+            URL.revokeObjectURL(
+              cameraPreview
+            );
+          }
+
+          const previewURL =
+            URL.createObjectURL(
+              file
+            );
+
+          setCameraPreview(
+            previewURL
+          );
+
+          stopCamera();
+
+          alert(
+            "Foto berhasil diambil."
+          );
+        },
+        "image/jpeg",
+        0.9
+      );
+    };
+
+  // =========================================================
+  // HAPUS FOTO KAMERA
+  // =========================================================
+  const handleRemoveCamera =
+    () => {
+      if (cameraPreview) {
+        URL.revokeObjectURL(
+          cameraPreview
+        );
+      }
+
+      setCameraFile(null);
+      setCameraPreview("");
+    };
 
   // =========================================================
   // BUAT PDF
   // =========================================================
   const createPDF = async () => {
-    if (scanSurat.length === 0) {
+    if (
+      scanSurat.length === 0
+    ) {
       throw new Error(
         "Belum ada hasil scan."
       );
@@ -407,12 +887,14 @@ const TambahSurat = () => {
     // -----------------------------------------------------
     // BUAT PDF A4
     // -----------------------------------------------------
-    const pdf = new jsPDF({
-      unit: "mm",
-      format: "a4",
-      orientation: "portrait",
-      compress: true,
-    });
+    const pdf =
+      new jsPDF({
+        unit: "mm",
+        format: "a4",
+        orientation:
+          "portrait",
+        compress: true,
+      });
 
     // -----------------------------------------------------
     // MASUKKAN SETIAP HASIL SCAN
@@ -422,7 +904,8 @@ const TambahSurat = () => {
       i < scanSurat.length;
       i++
     ) {
-      const file = scanSurat[i];
+      const file =
+        scanSurat[i];
 
       console.log(
         `Memasukkan halaman ${i + 1} ke PDF...`
@@ -453,7 +936,8 @@ const TambahSurat = () => {
       // ---------------------------------------------------
       // BACA UKURAN GAMBAR
       // ---------------------------------------------------
-      const image = new Image();
+      const image =
+        new Image();
 
       await new Promise(
         (resolve, reject) => {
@@ -476,9 +960,14 @@ const TambahSurat = () => {
       // ---------------------------------------------------
       // UKURAN A4
       // ---------------------------------------------------
-      const pageWidth = 210;
-      const pageHeight = 297;
-      const margin = 5;
+      const pageWidth =
+        210;
+
+      const pageHeight =
+        297;
+
+      const margin =
+        5;
 
       const maxWidth =
         pageWidth -
@@ -703,6 +1192,32 @@ const TambahSurat = () => {
     };
 
   // =========================================================
+  // TENTUKAN FILE YANG AKAN DIKIRIM
+  // =========================================================
+  const getFileToUpload = () => {
+    // -------------------------------------------------------
+    // PRIORITAS:
+    // PDF HASIL SCAN
+    // FILE UPLOAD
+    // FOTO CAMERA
+    // -------------------------------------------------------
+
+    if (pdfFile) {
+      return pdfFile;
+    }
+
+    if (uploadedFile) {
+      return uploadedFile;
+    }
+
+    if (cameraFile) {
+      return cameraFile;
+    }
+
+    return null;
+  };
+
+  // =========================================================
   // SIMPAN SURAT
   // =========================================================
   const handleSubmit =
@@ -771,6 +1286,20 @@ const TambahSurat = () => {
           return;
         }
 
+        // ---------------------------------------------------
+        // VALIDASI JAM 24 JAM
+        // ---------------------------------------------------
+        if (
+          !isValidTime(
+            formData.jam_diterima
+          )
+        ) {
+          alert(
+            "Jam diterima harus menggunakan format 24 jam HH:mm.\n\nContoh: 08:30 atau 23:59."
+          );
+          return;
+        }
+
         if (
           !formData.perihal.trim()
         ) {
@@ -780,12 +1309,30 @@ const TambahSurat = () => {
           return;
         }
 
+        // ---------------------------------------------------
+        // VALIDASI ARSIP
+        // ---------------------------------------------------
+        const hasScan =
+          scanSurat.length > 0;
+
+        const hasUploadedFile =
+          !!uploadedFile;
+
+        const hasCameraFile =
+          !!cameraFile;
+
+        const hasPDF =
+          !!pdfFile;
+
         if (
-          scanSurat.length === 0
+          !hasScan &&
+          !hasUploadedFile &&
+          !hasCameraFile
         ) {
           alert(
-            "Silakan scan surat terlebih dahulu."
+            "Silakan pilih salah satu arsip surat:\n\n• Scan Epson\n• Upload File\n• Kamera"
           );
+
           return;
         }
 
@@ -808,12 +1355,18 @@ const TambahSurat = () => {
         }
 
         // ---------------------------------------------------
-        // PDF BELUM DIBUAT
+        // SIAPKAN FILE
         // ---------------------------------------------------
-        let finalPDF =
-          pdfFile;
+        let finalFile =
+          getFileToUpload();
 
-        if (!finalPDF) {
+        // ---------------------------------------------------
+        // JIKA ADA SCAN TAPI PDF BELUM DIBUAT
+        // ---------------------------------------------------
+        if (
+          hasScan &&
+          !hasPDF
+        ) {
           const konfirmasi =
             window.confirm(
               "PDF belum dibuat.\n\nBuat PDF sekarang?"
@@ -825,7 +1378,7 @@ const TambahSurat = () => {
 
           setLoadingSave(true);
 
-          finalPDF =
+          finalFile =
             await createPDF();
 
           // -------------------------------------------------
@@ -839,7 +1392,7 @@ const TambahSurat = () => {
 
           const previewURL =
             URL.createObjectURL(
-              finalPDF
+              finalFile
             );
 
           setPdfPreview(
@@ -847,7 +1400,7 @@ const TambahSurat = () => {
           );
 
           setPdfFile(
-            finalPDF
+            finalFile
           );
 
           alert(
@@ -855,6 +1408,15 @@ const TambahSurat = () => {
           );
 
           return;
+        }
+
+        // ---------------------------------------------------
+        // PASTIKAN FILE ADA
+        // ---------------------------------------------------
+        if (!finalFile) {
+          throw new Error(
+            "Arsip surat belum dipilih."
+          );
         }
 
         // ---------------------------------------------------
@@ -904,12 +1466,12 @@ const TambahSurat = () => {
         );
 
         // ---------------------------------------------------
-        // HANYA 1 PDF YANG DIKIRIM
+        // KIRIM SATU ARSIP
         // ---------------------------------------------------
         data.append(
           "arsip_surat",
-          finalPDF,
-          finalPDF.name
+          finalFile,
+          finalFile.name
         );
 
         console.log(
@@ -926,13 +1488,18 @@ const TambahSurat = () => {
         );
 
         console.log(
-          "PDF:",
-          finalPDF.name
+          "ARSIP:",
+          finalFile.name
         );
 
         console.log(
-          "UKURAN PDF:",
-          finalPDF.size
+          "TIPE:",
+          finalFile.type
+        );
+
+        console.log(
+          "UKURAN:",
+          finalFile.size
         );
 
         console.log(
@@ -1014,10 +1581,28 @@ const TambahSurat = () => {
         }
 
         // ---------------------------------------------------
-        // BERHASIL
+        // PESAN BERHASIL
         // ---------------------------------------------------
+        let successMessage =
+          "Surat berhasil disimpan!";
+
+        if (hasScan) {
+          successMessage +=
+            `\n\n${scanSurat.length} halaman hasil scan telah digabung menjadi 1 PDF.`;
+        } else if (
+          hasUploadedFile
+        ) {
+          successMessage +=
+            `\n\nFile "${uploadedFile.name}" berhasil disimpan.`;
+        } else if (
+          hasCameraFile
+        ) {
+          successMessage +=
+            "\n\nFoto dari kamera berhasil disimpan.";
+        }
+
         alert(
-          `Surat berhasil disimpan!\n\n${scanSurat.length} halaman hasil scan telah digabung menjadi 1 PDF.`
+          successMessage
         );
 
         navigate("/surat");
@@ -1092,10 +1677,6 @@ const TambahSurat = () => {
           </h2>
 
           <div className="form-grid">
-
-            {/* =================================================
-                KOLOM KIRI
-            ================================================= */}
 
             {/* SURAT DARI */}
             <div className="form-group">
@@ -1208,22 +1789,34 @@ const TambahSurat = () => {
               </label>
 
               <input
-                type="time"
+                type="text"
                 name="jam_diterima"
                 value={
                   formData.jam_diterima
                 }
                 onChange={
-                  handleChange
+                  handleTimeChange
                 }
+                placeholder="00:00"
+                maxLength={5}
+                inputMode="numeric"
+                autoComplete="off"
               />
+
+              <small
+                style={{
+                  display: "block",
+                  marginTop: "6px",
+                  color: "#777",
+                }}
+              >
+                Format 24 jam, contoh:
+                08:30 atau 23:59
+              </small>
 
             </div>
 
-            {/* =================================================
-                PERIHAL - FULL WIDTH
-            ================================================= */}
-
+            {/* PERIHAL */}
             <div className="form-group full-width">
 
               <label>
@@ -1249,36 +1842,394 @@ const TambahSurat = () => {
         </div>
 
         {/* ===================================================
-            SCAN SURAT
+            ARSIP SURAT
         =================================================== */}
         <div className="form-section">
 
           <h2>
-            Scan Surat
+            Arsip Surat
           </h2>
 
-          <p className="scan-info">
-            Scanner:{" "}
+          <p
+            style={{
+              marginTop: 0,
+              color: "#666",
+              lineHeight: 1.6,
+            }}
+          >
+            Pilih salah satu cara untuk
+            memasukkan arsip surat:
             <strong>
-              Epson L3210
+              {" "}
+              Upload File, Kamera,
+              atau Scan Epson.
             </strong>
           </p>
 
-          {/* TOMBOL SCAN */}
-          <button
-            type="button"
-            className="btn-scan"
-            onClick={
-              handleScanDocument
-            }
-            disabled={
-              loadingScan
-            }
+          {/* =================================================
+              PILIHAN FILE / CAMERA / SCAN
+          ================================================= */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns:
+                "repeat(auto-fit, minmax(180px, 1fr))",
+              gap: "12px",
+              marginBottom: "20px",
+            }}
           >
-            {loadingScan
-              ? "⏳ Sedang Scan..."
-              : "📠 Scan Surat"}
-          </button>
+
+            {/* UPLOAD FILE */}
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent:
+                  "center",
+                minHeight: "90px",
+                padding: "15px",
+                border:
+                  "1px solid #ddd",
+                borderRadius: "10px",
+                background:
+                  "#fafafa",
+                cursor: "pointer",
+                fontWeight: 700,
+                textAlign: "center",
+              }}
+            >
+
+              <input
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp"
+                onChange={
+                  handleFileSelect
+                }
+                disabled={
+                  loadingSave ||
+                  loadingScan ||
+                  cameraLoading
+                }
+                style={{
+                  display: "none",
+                }}
+              />
+
+              📄 Upload File
+
+            </label>
+
+            {/* CAMERA */}
+            <button
+              type="button"
+              onClick={
+                startCamera
+              }
+              disabled={
+                loadingSave ||
+                loadingScan ||
+                cameraLoading
+              }
+              style={{
+                minHeight: "90px",
+                padding: "15px",
+                border:
+                  "1px solid #ddd",
+                borderRadius: "10px",
+                background:
+                  "#fafafa",
+                cursor: "pointer",
+                fontWeight: 700,
+                fontSize: "15px",
+              }}
+            >
+              {cameraLoading
+                ? "⏳ Membuka Kamera..."
+                : "📷 Gunakan Kamera"}
+            </button>
+
+            {/* SCAN */}
+            <button
+              type="button"
+              className="btn-scan"
+              onClick={
+                handleScanDocument
+              }
+              disabled={
+                loadingScan ||
+                loadingSave ||
+                cameraLoading
+              }
+              style={{
+                minHeight: "90px",
+                marginBottom: 0,
+              }}
+            >
+              {loadingScan
+                ? "⏳ Sedang Scan..."
+                : "📠 Scan Epson"}
+            </button>
+
+          </div>
+
+          {/* =================================================
+              FILE UPLOAD PREVIEW
+          ================================================= */}
+          {uploadedFile && (
+
+            <div
+              style={{
+                marginTop: "20px",
+                padding: "18px",
+                border:
+                  "1px solid #ddd",
+                borderRadius: "12px",
+                background: "#fafafa",
+              }}
+            >
+
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent:
+                    "space-between",
+                  alignItems:
+                    "center",
+                  gap: "10px",
+                  marginBottom:
+                    "15px",
+                }}
+              >
+
+                <div>
+
+                  <h3
+                    style={{
+                      margin:
+                        "0 0 5px",
+                    }}
+                  >
+                    📄 File Dipilih
+                  </h3>
+
+                  <div
+                    style={{
+                      color: "#666",
+                      fontSize:
+                        "14px",
+                    }}
+                  >
+                    {uploadedFile.name}
+                  </div>
+
+                </div>
+
+                <button
+                  type="button"
+                  onClick={
+                    clearUploadedFile
+                  }
+                  disabled={
+                    loadingSave
+                  }
+                  style={{
+                    border: "none",
+                    background:
+                      "transparent",
+                    color: "#d00",
+                    fontSize:
+                      "20px",
+                    fontWeight:
+                      "bold",
+                    cursor:
+                      "pointer",
+                  }}
+                >
+                  ✕
+                </button>
+
+              </div>
+
+              {uploadedFile.type ===
+                "application/pdf" ? (
+
+                <div
+                  style={{
+                    width: "100%",
+                    height: "600px",
+                    border:
+                      "1px solid #ccc",
+                    borderRadius:
+                      "8px",
+                    overflow:
+                      "hidden",
+                    background:
+                      "#525659",
+                  }}
+                >
+
+                  <iframe
+                    src={
+                      uploadedPreview
+                    }
+                    title="Preview file PDF"
+                    style={{
+                      width:
+                        "100%",
+                      height:
+                        "100%",
+                      border:
+                        "none",
+                    }}
+                  />
+
+                </div>
+
+              ) : (
+
+                <div
+                  style={{
+                    textAlign:
+                      "center",
+                  }}
+                >
+
+                  <img
+                    src={
+                      uploadedPreview
+                    }
+                    alt="Preview file"
+                    style={{
+                      maxWidth:
+                        "100%",
+                      maxHeight:
+                        "600px",
+                      objectFit:
+                        "contain",
+                      borderRadius:
+                        "8px",
+                      border:
+                        "1px solid #ddd",
+                    }}
+                  />
+
+                </div>
+
+              )}
+
+            </div>
+
+          )}
+
+          {/* =================================================
+              HASIL CAMERA
+          ================================================= */}
+          {cameraFile && (
+
+            <div
+              style={{
+                marginTop: "20px",
+                padding: "18px",
+                border:
+                  "1px solid #ddd",
+                borderRadius: "12px",
+                background: "#fafafa",
+              }}
+            >
+
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent:
+                    "space-between",
+                  alignItems:
+                    "center",
+                  gap: "10px",
+                  marginBottom:
+                    "15px",
+                }}
+              >
+
+                <div>
+
+                  <h3
+                    style={{
+                      margin:
+                        "0 0 5px",
+                    }}
+                  >
+                    📷 Foto Kamera
+                  </h3>
+
+                  <div
+                    style={{
+                      color: "#666",
+                      fontSize:
+                        "14px",
+                    }}
+                  >
+                    {cameraFile.name}
+                  </div>
+
+                </div>
+
+                <button
+                  type="button"
+                  onClick={
+                    handleRemoveCamera
+                  }
+                  disabled={
+                    loadingSave
+                  }
+                  style={{
+                    border: "none",
+                    background:
+                      "transparent",
+                    color: "#d00",
+                    fontSize:
+                      "20px",
+                    fontWeight:
+                      "bold",
+                    cursor:
+                      "pointer",
+                  }}
+                >
+                  ✕
+                </button>
+
+              </div>
+
+              <div
+                style={{
+                  textAlign:
+                    "center",
+                }}
+              >
+
+                <img
+                  src={
+                    cameraPreview
+                  }
+                  alt="Foto dari kamera"
+                  style={{
+                    maxWidth:
+                      "100%",
+                    maxHeight:
+                      "600px",
+                    objectFit:
+                      "contain",
+                    borderRadius:
+                      "8px",
+                    border:
+                      "1px solid #ddd",
+                  }}
+                />
+
+              </div>
+
+            </div>
+
+          )}
 
           {/* =================================================
               HASIL SCAN
@@ -1355,7 +2306,8 @@ const TambahSurat = () => {
                     handleCreatePDF
                   }
                   disabled={
-                    loadingPDF
+                    loadingPDF ||
+                    loadingSave
                   }
                 >
                   {loadingPDF
@@ -1482,6 +2434,182 @@ const TambahSurat = () => {
         </div>
 
       </form>
+
+      {/* =====================================================
+          CAMERA MODAL
+      ===================================================== */}
+      {cameraOpen && (
+
+        <div
+          style={{
+            position:
+              "fixed",
+            inset: 0,
+            zIndex: 9999,
+            background:
+              "rgba(0,0,0,0.75)",
+            display: "flex",
+            alignItems:
+              "center",
+            justifyContent:
+              "center",
+            padding: "20px",
+          }}
+        >
+
+          <div
+            style={{
+              width: "100%",
+              maxWidth:
+                "800px",
+              background:
+                "#fff",
+              borderRadius:
+                "14px",
+              padding: "20px",
+              boxSizing:
+                "border-box",
+            }}
+          >
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent:
+                  "space-between",
+                alignItems:
+                  "center",
+                marginBottom:
+                  "15px",
+              }}
+            >
+
+              <h2
+                style={{
+                  margin: 0,
+                }}
+              >
+                📷 Ambil Foto Surat
+              </h2>
+
+              <button
+                type="button"
+                onClick={
+                  stopCamera
+                }
+                style={{
+                  border:
+                    "none",
+                  background:
+                    "transparent",
+                  fontSize:
+                    "24px",
+                  cursor:
+                    "pointer",
+                }}
+              >
+                ✕
+              </button>
+
+            </div>
+
+            <div
+              style={{
+                width: "100%",
+                background:
+                  "#000",
+                borderRadius:
+                  "10px",
+                overflow:
+                  "hidden",
+              }}
+            >
+
+              <video
+                ref={
+                  videoRef
+                }
+                autoPlay
+                playsInline
+                muted
+                style={{
+                  display:
+                    "block",
+                  width:
+                    "100%",
+                  maxHeight:
+                    "70vh",
+                  objectFit:
+                    "contain",
+                }}
+              />
+
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent:
+                  "center",
+                gap: "10px",
+                marginTop:
+                  "15px",
+                flexWrap:
+                  "wrap",
+              }}
+            >
+
+              <button
+                type="button"
+                onClick={
+                  captureCameraPhoto
+                }
+                style={{
+                  padding:
+                    "12px 22px",
+                  border:
+                    "none",
+                  borderRadius:
+                    "8px",
+                  cursor:
+                    "pointer",
+                  fontWeight:
+                    700,
+                }}
+              >
+                📸 Ambil Foto
+              </button>
+
+              <button
+                type="button"
+                onClick={
+                  stopCamera
+                }
+                style={{
+                  padding:
+                    "12px 22px",
+                  border:
+                    "1px solid #ccc",
+                  borderRadius:
+                    "8px",
+                  cursor:
+                    "pointer",
+                  fontWeight:
+                    600,
+                  background:
+                    "#fff",
+                }}
+              >
+                Batal
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      )}
 
       {/* =====================================================
           STYLE TAMBAHAN
